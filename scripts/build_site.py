@@ -9,10 +9,10 @@ import pandas as pd
 ROOT = Path(__file__).parent.parent
 DATA_FILE  = ROOT / 'data' / 'records.csv'
 CHARTS_DIR = ROOT / 'output' / 'charts'
-SITE_DIR   = ROOT / 'docs'
+SITE_DIR   = ROOT          # GitHub Pages 從 repo 根目錄 / (root) 提供
 SITE_DIR.mkdir(exist_ok=True)
 
-# 把 charts 複製到 docs/charts/ 方便直接引用（GitHub Pages 用 /docs 資料夾）
+# 把 charts 複製到 repo 根目錄下的 charts/
 SITE_CHARTS = SITE_DIR / 'charts'
 SITE_CHARTS.mkdir(exist_ok=True)
 
