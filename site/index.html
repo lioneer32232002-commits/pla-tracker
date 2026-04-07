@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PLA Taiwan Strait Tracker</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<nav>
+  <a href="index.html">Dashboard</a>
+  <a href="records.html">Daily Records</a>
+  <a href="monthly.html">Monthly Analysis</a>
+</nav>
+<main>
+  <section class="hero">
+    <h1>PLA Taiwan Strait Tracker</h1>
+    <p class="subtitle">Latest: <strong>2026-04-07</strong></p>
+    <p class='special-event'>⚡ 進入西南空域</p>
+  </section>
+
+  <section class="cards">
+    <div class="card yellow">
+      <div class="card-label">AIRCRAFT SORTIES</div>
+      <div class="card-value">1</div>
+      <span class="delta down">▼ 2</span>
+    </div>
+    <div class="card yellow-dim">
+      <div class="card-label">MEDIAN LINE CROSS</div>
+      <div class="card-value">0</div>
+      <div class="card-sub">0.0% cross rate</div>
+    </div>
+    <div class="card red">
+      <div class="card-label">PLAN SHIPS</div>
+      <div class="card-value">9</div>
+      <span class="delta up">▲ 1</span>
+    </div>
+    <div class="card dim">
+      <div class="card-label">AIRCRAFT TYPE</div>
+      <div class="card-value type-badge manned">Manned</div>
+    </div>
+  </section>
+
+  <section class="chart-section">
+    <h2>30-Day Trend</h2>
+    <div class="chart-wrap">
+      <canvas id="trendChart" height="120"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-section">
+    <h2>Latest Chart</h2>
+    <div class="chart-imgs">
+      <img src='charts/split_2026-04-07.png' class='chart-img' alt='Split panel chart'>
+      <img src='charts/streak_2026-04-07.png' class='chart-img' alt='Streak chart'>
+      
+    </div>
+  </section>
+</main>
+
+<script>
+const labels = ["2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-14", "2026-03-15", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-21", "2026-03-22", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28", "2026-03-29", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "2026-04-05", "2026-04-06", "2026-04-07"];
+const acData  = [0, 0, 5, 3, 3, 26, 2, 2, 36, 12, 6, 6, 2, 0, 0, 3, 16, 4, 6, 13, 19, 1, 11, 25, 2, 2, 2, 0, 3, 1];
+const shData  = [6, 6, 6, 5, 5, 7, 7, 8, 8, 9, 8, 8, 8, 7, 10, 10, 12, 12, 12, 9, 11, 10, 8, 11, 9, 8, 8, 7, 8, 9];
+const crData  = [null, null, 60.0, 33.3, 100.0, 61.5, 0.0, 100.0, 66.7, 41.7, 66.7, 66.7, 50.0, null, null, 100.0, 81.3, 100.0, 66.7, 69.2, 68.4, 100.0, 100.0, 64.0, 100.0, 0.0, 0.0, null, 100.0, 0.0];
+
+const ctx = document.getElementById('trendChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Aircraft Sorties',
+        data: acData,
+        backgroundColor: acData.map((v,i) => i === acData.length-1 ? '#f5c842' : (v===0 ? '#3a4448' : '#8a7020')),
+        yAxisID: 'yAc',
+        order: 2,
+      },
+      {
+        label: 'PLAN Ships',
+        data: shData,
+        type: 'line',
+        borderColor: '#e05555',
+        backgroundColor: '#e0555540',
+        pointBackgroundColor: shData.map((v,i) => i === shData.length-1 ? '#e05555' : '#7a2a2a'),
+        pointRadius: shData.map((v,i) => i === shData.length-1 ? 6 : 4),
+        yAxisID: 'ySh',
+        order: 1,
+        tension: 0.3,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: '#dce8ec', font: { size: 13 } } },
+      tooltip: { backgroundColor: '#111c20', titleColor: '#f5c842', bodyColor: '#dce8ec' }
+    },
+    scales: {
+      x: { ticks: { color: '#7a9298', maxRotation: 45, font: { size: 11 } }, grid: { color: '#2a3336' } },
+      yAc: {
+        type: 'linear', position: 'left',
+        ticks: { color: '#f5c842' }, grid: { color: '#2a3336' },
+        title: { display: true, text: 'Aircraft Sorties', color: '#f5c842' }
+      },
+      ySh: {
+        type: 'linear', position: 'right',
+        ticks: { color: '#e05555' }, grid: { drawOnChartArea: false },
+        title: { display: true, text: 'Ships', color: '#e05555' }
+      }
+    }
+  }
+});
+</script>
+</body></html>
