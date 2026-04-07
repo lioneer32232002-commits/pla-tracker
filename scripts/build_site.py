@@ -9,10 +9,10 @@ import pandas as pd
 ROOT = Path(__file__).parent.parent
 DATA_FILE  = ROOT / 'data' / 'records.csv'
 CHARTS_DIR = ROOT / 'output' / 'charts'
-SITE_DIR   = ROOT / 'site'
+SITE_DIR   = ROOT / 'docs'
 SITE_DIR.mkdir(exist_ok=True)
 
-# 把 charts 複製到 site/charts/ 方便直接引用
+# 把 charts 複製到 docs/charts/ 方便直接引用（GitHub Pages 用 /docs 資料夾）
 SITE_CHARTS = SITE_DIR / 'charts'
 SITE_CHARTS.mkdir(exist_ok=True)
 
