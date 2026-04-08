@@ -60,190 +60,121 @@ def delta_span(cur, prev_val):
 # ── CSS ───────────────────────────────────────────────────────────────────────
 
 def build_css():
-    css = """
+    css = """\
 :root{
-  --bg:#1e2224; --bg-card:#111c20; --border:#2a3336;
-  --yellow:#f5c842; --yellow-dim:#8a7020; --yellow-zero:#3a4448;
-  --red:#e05555; --red-dim:#7a2a2a;
-  --text:#dce8ec; --sub:#7a9298; --fade:#3e5258;
-  --radius:8px;
+  --bg:#090d0f; --sur:#0e1618; --bdr:#1a2830;
+  --y:#f5c842;  --r:#e05555;
+  --tx:#c4d4dc; --sub:#4a6070; --grn:#4dba6a;
+  --rad:6px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px}
-body{
-  background:var(--bg);color:var(--text);
-  font-family:system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
-  font-weight:600;line-height:1.5;min-height:100vh
-}
+body{background:var(--bg);color:var(--tx);
+  font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-weight:500;min-height:100vh}
+
+/* ── Top bar ── */
+.top-bar{background:#04070a;border-bottom:1px solid var(--bdr);
+  padding:.3rem 1.5rem;display:flex;justify-content:space-between;
+  font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--sub)}
 
 /* ── Header ── */
-.site-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:.9rem 1.25rem}
-.header-inner{max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.site-header{border-bottom:1px solid var(--bdr);padding:.85rem 1.5rem}
+.header-inner{max-width:900px;margin:0 auto;display:flex;
+  align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .site-title{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
-.site-meta{font-size:.78rem;color:var(--sub);margin-top:.15rem}
-nav{display:flex;gap:1.25rem}
-nav a{color:var(--sub);text-decoration:none;font-size:.82rem;font-weight:700}
-nav a:hover{color:var(--text)}
+.site-sub{font-size:.65rem;color:var(--sub);letter-spacing:.05em;margin-top:.1rem}
+nav{display:flex;gap:1.5rem}
+nav a{color:var(--sub);text-decoration:none;font-size:.72rem;
+  font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+nav a.active,nav a:hover{color:var(--tx)}
 
 /* ── Main ── */
-main{max-width:860px;margin:0 auto;padding:1.25rem}
+main{max-width:900px;margin:0 auto;padding:1.5rem}
 
-/* ── Special event ── */
-.special-banner{
-  background:#222216;border:1px solid #4a4010;
-  color:var(--yellow);padding:.55rem .9rem;border-radius:var(--radius);
-  font-size:.85rem;font-weight:700;margin-bottom:1.1rem
-}
+/* ── Alert ── */
+.alert{background:#140f00;border:1px solid #2e2100;
+  border-left:3px solid var(--y);color:var(--y);
+  padding:.6rem 1rem;border-radius:var(--rad);
+  font-size:.83rem;font-weight:700;margin-bottom:2rem;letter-spacing:.02em}
 
-/* ── Stats cards ── */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem;margin-bottom:1.75rem}
-.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem .95rem}
-.stat-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--sub);margin-bottom:.35rem}
-.stat-val{font-size:2rem;font-weight:800;line-height:1}
-.stat-sub{font-size:.75rem;color:var(--sub);margin-top:.25rem}
-.stat-type{margin-top:.35rem}
-.yellow{color:var(--yellow)}
-.red{color:var(--red)}
-.delta-up{display:block;font-size:.72rem;color:#ff7070;margin-top:.2rem}
-.delta-dn{display:block;font-size:.72rem;color:#6fd96f;margin-top:.2rem}
+/* ── SITREP ── */
+.sitrep{margin-bottom:2.5rem}
+.sitrep-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.16em;
+  color:var(--sub);margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+.sitrep-label::after{content:'';flex:1;min-width:30px;height:1px;background:var(--bdr)}
 
-/* ── Type badge ── */
-.badge{display:inline-block;padding:.18em .6em;border-radius:4px;font-size:.82rem;font-weight:700}
-.badge.manned    {background:#1e3a14;color:#80d96a}
-.badge.uav       {background:#14293d;color:#6ab0e0}
-.badge.mixed     {background:#382e10;color:var(--yellow)}
-.badge.zero      {background:var(--bg);color:var(--fade);border:1px solid var(--border)}
-.badge.helicopter{background:#2a1a40;color:#c09adc}
+/* ── Stats ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{padding:0 1.5rem}
+.stat:first-child{padding-left:0}
+.stat:last-child{padding-right:0}
+.stat+.stat{border-left:1px solid var(--bdr)}
+.stat-n{font-size:3.2rem;font-weight:800;line-height:1;
+  letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.y{color:var(--y)}
+.r{color:var(--r)}
+.stat-l{font-size:.58rem;text-transform:uppercase;letter-spacing:.11em;
+  color:var(--sub);margin-top:.45rem}
+.stat-detail{font-size:.75rem;color:var(--sub);margin-top:.2rem}
+.delta-up{display:block;font-size:.7rem;color:var(--r);margin-top:.28rem;font-weight:700}
+.delta-dn{display:block;font-size:.7rem;color:var(--grn);margin-top:.28rem;font-weight:700}
 
-/* ── Sections ── */
-.section{margin-bottom:1.75rem}
-.section-title{
-  font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
-  color:var(--sub);margin-bottom:.75rem;padding-bottom:.45rem;border-bottom:1px solid var(--border)
-}
-.chart-block{
-  background:var(--bg-card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:.85rem .95rem .75rem;margin-bottom:.55rem
-}
-.chart-lbl{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
-.chart-lbl.ac{color:var(--yellow)}
-.chart-lbl.sh{color:var(--red)}
-.chart-wrap{position:relative;height:148px}
+/* ── Badge ── */
+.badge{display:inline-block;padding:.18em .6em;border-radius:3px;font-size:.78rem;font-weight:700}
+.badge.manned    {background:#152b0c;color:#7ed46a}
+.badge.uav       {background:#0d1d2e;color:#6aaee0}
+.badge.mixed     {background:#272008;color:var(--y)}
+.badge.zero      {background:var(--sur);color:var(--sub);border:1px solid var(--bdr)}
+.badge.helicopter{background:#20143a;color:#b898dc}
 
-/* ── Footer ── */
-footer{
-  background:var(--bg-card);border-top:1px solid var(--border);
-  padding:.9rem 1.25rem;font-size:.75rem;color:var(--fade);
-  display:flex;flex-wrap:wrap;gap:.3rem 1.25rem;align-items:center
-}
-footer a{color:var(--sub);text-decoration:none}
-footer a:hover{color:var(--text)}
+/* ── Chart sections ── */
+.chart-section{margin-bottom:2rem}
+.chart-header{display:flex;align-items:baseline;flex-wrap:wrap;
+  gap:.5rem 1rem;margin-bottom:.75rem;
+  padding-bottom:.5rem;border-bottom:1px solid var(--bdr)}
+.chart-title{font-size:.6rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:.15em;color:var(--sub);white-space:nowrap}
+.chart-obs{font-size:.76rem;color:var(--y);font-weight:600}
+.chart-img{display:block;width:100%;height:auto;border-radius:var(--rad)}
+.chart-missing{background:var(--sur);border:1px dashed var(--bdr);
+  border-radius:var(--rad);padding:2rem;text-align:center;
+  color:var(--sub);font-size:.78rem}
 
 /* ── Records table ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;font-size:.82rem;white-space:nowrap}
-th{background:var(--bg-card);color:var(--sub);padding:.6rem .75rem;text-align:left;
-   border-bottom:1px solid var(--border);font-size:.65rem;text-transform:uppercase;letter-spacing:.06em}
-td{padding:.55rem .75rem;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
-tr:hover td{background:#1c2628}
+table{width:100%;border-collapse:collapse;font-size:.8rem;white-space:nowrap}
+th{background:var(--sur);color:var(--sub);padding:.55rem .8rem;text-align:left;
+   border-bottom:1px solid var(--bdr);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em}
+td{padding:.5rem .8rem;border-bottom:1px solid var(--bdr);color:var(--tx);vertical-align:middle}
+tr:hover td{background:#0e1a20}
 .num{text-align:right;font-variant-numeric:tabular-nums}
-.special-cell{color:var(--sub);font-size:.76rem;max-width:200px;white-space:normal}
+.special-cell{color:var(--sub);font-size:.74rem;max-width:200px;white-space:normal}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--bdr);padding:1rem 1.5rem;margin-top:1rem;
+  display:flex;flex-wrap:wrap;gap:.5rem 2rem;
+  font-size:.65rem;color:var(--sub);letter-spacing:.05em}
+footer a{color:var(--sub);text-decoration:none}
+footer a:hover{color:var(--tx)}
 
 /* ── Mobile ── */
 @media(max-width:640px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .stat-val{font-size:1.75rem}
-  .site-title{font-size:1rem}
-  .chart-wrap{height:120px}
+  .top-bar{display:none}
+  .site-header{padding:.7rem 1rem}
   main{padding:1rem}
-  .site-header{padding:.75rem 1rem}
+  .stats-row{grid-template-columns:1fr 1fr;gap:1.5rem 0}
+  .stat{padding:0 1rem}
+  .stat:first-child,.stat:nth-child(3){border-left:none;padding-left:0}
+  .stat:nth-child(2),.stat:nth-child(4){border-left:1px solid var(--bdr)}
+  .stat-n{font-size:2.6rem}
   footer{padding:.75rem 1rem}
 }
-@media(max-width:360px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .stat-val{font-size:1.5rem}
-}
+@media(max-width:380px){.stat-n{font-size:2.1rem}}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
 
-
-# ── Chart.js 共用 JS ──────────────────────────────────────────────────────────
-
-CHART_JS = """
-const Y  = '#f5c842', Yd = '#8a7020', Yz = '#3a4448';
-const R  = '#e05555', Rd = '#7a2a2a';
-const GR = '#2a3336', TX = '#dce8ec', TS = '#7a9298';
-
-function acR(v, mx){ return v===0?4:Math.max(4,Math.min(18,4+(Math.log1p(v)/Math.log1p(mx||1))*14)); }
-function shR(v, mn, mx){ return mx===mn?8:5+((v-mn)/(mx-mn))*10; }
-
-function makeAC(id, labels, vals, ti){
-  const mx=Math.max(...vals,1);
-  new Chart(document.getElementById(id),{
-    type:'line',
-    data:{labels,datasets:[{
-      data:vals, showLine:false,
-      pointStyle:'circle',
-      pointRadius:vals.map(v=>acR(v,mx)),
-      pointHoverRadius:vals.map(v=>acR(v,mx)+3),
-      pointBackgroundColor:vals.map((v,i)=>i===ti?Y:(v===0?Yz:Yd)),
-      pointBorderWidth:0
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      animation:{duration:400},
-      plugins:{
-        legend:{display:false},
-        tooltip:{backgroundColor:'#111c20',titleColor:Y,bodyColor:TX,
-          callbacks:{label:it=>it.parsed.y+' 架次'}}
-      },
-      scales:{
-        x:{grid:{color:GR},ticks:{
-          color:ctx=>ctx.index===ti?TX:TS,
-          font:{size:10,weight:'700'},maxRotation:0,autoSkip:true,maxTicksLimit:16
-        }},
-        y:{min:0,suggestedMax:mx*1.35,grid:{color:GR},ticks:{
-          color:Y,font:{size:10,weight:'600'},maxTicksLimit:4
-        }}
-      }
-    }
-  });
-}
-
-function makeSH(id, labels, vals, ti){
-  const mx=Math.max(...vals,1), mn=Math.min(...vals);
-  new Chart(document.getElementById(id),{
-    type:'line',
-    data:{labels,datasets:[{
-      data:vals, showLine:false,
-      pointStyle:'rectRot',
-      pointRadius:vals.map(v=>shR(v,mn,mx)),
-      pointHoverRadius:vals.map(v=>shR(v,mn,mx)+3),
-      pointBackgroundColor:vals.map((v,i)=>i===ti?R:Rd),
-      pointBorderWidth:0
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      animation:{duration:400},
-      plugins:{
-        legend:{display:false},
-        tooltip:{backgroundColor:'#111c20',titleColor:R,bodyColor:TX,
-          callbacks:{label:it=>it.parsed.y+' 艘'}}
-      },
-      scales:{
-        x:{grid:{color:GR},ticks:{
-          color:ctx=>ctx.index===ti?TX:TS,
-          font:{size:10,weight:'700'},maxRotation:0,autoSkip:true,maxTicksLimit:16
-        }},
-        y:{min:0,suggestedMax:mx*1.35,grid:{color:GR},ticks:{
-          color:R,font:{size:10,weight:'600'},maxTicksLimit:4
-        }}
-      }
-    }
-  });
-}
-"""
 
 HEAD = """<!DOCTYPE html>
 <html lang="zh-TW">
@@ -252,8 +183,19 @@ HEAD = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>中國擾台趨勢數據分析</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>"""
+
+
+def find_latest_chart(prefix):
+    """找 charts/ 下最新的 {prefix}_YYYY-MM-DD.png，回傳相對路徑或 None"""
+    matches = sorted(SITE_CHARTS.glob(f'{prefix}_????-??-??.png'), reverse=True)
+    if matches:
+        return f'charts/{matches[0].name}'
+    # fallback: output/charts
+    matches = sorted(CHARTS_DIR.glob(f'{prefix}_????-??-??.png'), reverse=True)
+    if matches:
+        return f'charts/{matches[0].name}'
+    return None
 
 
 def nav_html(active='index'):
@@ -271,18 +213,15 @@ def footer_html(update_label):
 </footer>"""
 
 
-def chart_section(title, ac_id, sh_id):
-    return f"""
-  <section class="section">
-    <div class="section-title">{title}</div>
-    <div class="chart-block">
-      <div class="chart-lbl ac">● 共機架次</div>
-      <div class="chart-wrap"><canvas id="{ac_id}"></canvas></div>
+def chart_section(title, img_path, obs=''):
+    obs_html = f'<span class="chart-obs">{obs}</span>' if obs else ''
+    inner = (f'<img class="chart-img" src="{img_path}" alt="{title}">'
+             if img_path else '<div class="chart-missing">（圖表尚未產生）</div>')
+    return f"""  <section class="chart-section">
+    <div class="chart-header">
+      <span class="chart-title">{title}</span>{obs_html}
     </div>
-    <div class="chart-block">
-      <div class="chart-lbl sh">◆ 解放軍艦艇</div>
-      <div class="chart-wrap"><canvas id="{sh_id}"></canvas></div>
-    </div>
+    {inner}
   </section>"""
 
 
@@ -292,15 +231,13 @@ def build_index(df):
     latest = df.iloc[-1]
     prev   = df.iloc[-2] if len(df) > 1 else latest
 
-    today_date  = latest['date']
-    today_label = fmt_date(today_date)
-    update_dt   = pd.to_datetime(today_date)
-    update_label = f"{update_dt.month}/{update_dt.day}"
+    today_date   = latest['date']
+    today_label  = fmt_date(today_date)
+    update_label = today_label
 
-    # 今日數字
-    ac_val  = int(latest['aircraft_total'])  if pd.notna(latest['aircraft_total'])  else 0
+    ac_val  = int(latest['aircraft_total'])    if pd.notna(latest['aircraft_total'])    else 0
     ml_val  = int(latest['median_line_cross']) if pd.notna(latest['median_line_cross']) else 0
-    sh_val  = int(latest['ships_total'])     if pd.notna(latest['ships_total'])     else 0
+    sh_val  = int(latest['ships_total'])       if pd.notna(latest['ships_total'])       else 0
     cr_str  = (f"{float(latest['cross_rate']):.0f}%"
                if str(latest['cross_rate']) not in ('', 'nan') else '—')
     atype   = latest['aircraft_type'] if pd.notna(latest['aircraft_type']) else '—'
@@ -313,73 +250,73 @@ def build_index(df):
     type_label = {'zero':'零架次','manned':'有人機','uav':'UAV',
                   'mixed':'混合','helicopter':'直升機'}.get(type_lower, atype)
 
-    # 三段資料
-    df_apr = df[df['date'].str.startswith('2026-04')].reset_index(drop=True)
-    df_mar = df[df['date'].str.startswith('2026-03')].reset_index(drop=True)
-    df_ytd = df.reset_index(drop=True)
+    split_img  = find_latest_chart('split')
+    streak_img = find_latest_chart('streak')
 
-    al, aa, as_, ai = section_data(df_apr, today_date)
-    ml, ma, ms, mi  = section_data(df_mar, today_date)
-    yl, ya, ys, yi  = section_data(df_ytd, today_date)
+    df_mo = df[df['date'].str.startswith(today_date[:7])].reset_index(drop=True)
+    mo_max = int(df_mo['aircraft_total'].max()) if len(df_mo) else 0
+    mo_max_d = fmt_date(df_mo.loc[df_mo['aircraft_total'].idxmax(), 'date']) if mo_max > 0 else ''
+    sh_lo = int(df['ships_total'].min())
+    sh_hi = int(df['ships_total'].max())
 
-    js_calls = f"""
-makeAC('aprAC',{json.dumps(al)},{json.dumps(aa)},{ai});
-makeSH('aprSH',{json.dumps(al)},{json.dumps(as_)},{ai});
-makeAC('marAC',{json.dumps(ml)},{json.dumps(ma)},{mi});
-makeSH('marSH',{json.dumps(ml)},{json.dumps(ms)},{mi});
-makeAC('ytdAC',{json.dumps(yl)},{json.dumps(ya)},{yi});
-makeSH('ytdSH',{json.dumps(yl)},{json.dumps(ys)},{yi});
-"""
+    split_obs  = f"今日 {ac_val} 架次　{sh_val} 艘艦艇" + (f"　{special}" if special else "")
+    streak_obs = (f"本月峰值 {mo_max} 架次（{mo_max_d}）　艦艇 {sh_lo}–{sh_hi} 艘"
+                  if mo_max > 0 else f"艦艇 {sh_lo}–{sh_hi} 艘")
 
     html = f"""{HEAD}
 <body>
+<div class="top-bar">
+  <span>UNCLASSIFIED // OPEN SOURCE</span>
+  <span>ROC MND · {today_label}</span>
+</div>
 <header class="site-header">
   <div class="header-inner">
-    <div>
-      <h1 class="site-title">中國擾台趨勢數據分析</h1>
-      <p class="site-meta">最新資料：{today_label}　<span class="badge {type_lower}">{type_label}</span></p>
+    <div class="site-brand">
+      <div class="site-title">中國擾台趨勢數據分析</div>
+      <div class="site-sub">PLA Activity Around Taiwan</div>
     </div>
     {nav_html('index')}
   </div>
 </header>
 
 <main>
-  {"<div class='special-banner'>⚡ " + special + "</div>" if special else ""}
+  {"<div class='alert'>⚡ " + special + "</div>" if special else ""}
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">共機架次</div>
-      <div class="stat-val yellow">{ac_val}</div>
-      {ac_delta}
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">逾越中線</div>
-      <div class="stat-val yellow">{ml_val}</div>
-      <div class="stat-sub">{cr_str}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">解放軍艦艇</div>
-      <div class="stat-val red">{sh_val}</div>
-      {sh_delta}
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">機型</div>
-      <div class="stat-type"><span class="badge {type_lower}">{type_label}</span></div>
+  <div class="sitrep">
+    <div class="sitrep-label">SITREP &nbsp;·&nbsp; {today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-n y">{ac_val}</div>
+        <div class="stat-l">共機架次</div>
+        {ac_delta}
+      </div>
+      <div class="stat">
+        <div class="stat-n y">{ml_val}</div>
+        <div class="stat-l">逾越中線</div>
+        <div class="stat-detail">{cr_str}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n r">{sh_val}</div>
+        <div class="stat-l">解放軍艦艇</div>
+        {sh_delta}
+      </div>
+      <div class="stat">
+        <div class="stat-n" style="font-size:1.8rem;margin-top:.2rem"><span class="badge {type_lower}">{type_label}</span></div>
+        <div class="stat-l">機型</div>
+      </div>
     </div>
   </div>
 
-  {chart_section("四月至今", "aprAC", "aprSH")}
-  {chart_section("三月趨勢", "marAC", "marSH")}
-  {chart_section("2026 年至今", "ytdAC", "ytdSH")}
+  {chart_section("今日觀察", split_img, split_obs)}
+  {chart_section("近期趨勢", streak_img, streak_obs)}
 
 </main>
 
-{footer_html(update_label)}
-
-<script>
-{CHART_JS}
-{js_calls}
-</script>
+<footer>
+  <span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank">中華民國國防部</a></span>
+  <span>製作：Adam Pan</span>
+  <span>更新：{update_label}</span>
+</footer>
 </body></html>"""
 
     (SITE_DIR / 'index.html').write_text(html, encoding='utf-8')

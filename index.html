@@ -5,79 +5,61 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>中國擾台趨勢數據分析</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
 <body>
+<div class="top-bar">
+  <span>UNCLASSIFIED // OPEN SOURCE</span>
+  <span>ROC MND · 4/7</span>
+</div>
 <header class="site-header">
   <div class="header-inner">
-    <div>
-      <h1 class="site-title">中國擾台趨勢數據分析</h1>
-      <p class="site-meta">最新資料：4/7　<span class="badge manned">有人機</span></p>
+    <div class="site-brand">
+      <div class="site-title">中國擾台趨勢數據分析</div>
+      <div class="site-sub">PLA Activity Around Taiwan</div>
     </div>
     <nav><a href="index.html" class=active>總覽</a><a href="records.html">每日紀錄</a></nav>
   </div>
 </header>
 
 <main>
-  <div class='special-banner'>⚡ 進入西南空域</div>
+  <div class='alert'>⚡ 進入西南空域</div>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">共機架次</div>
-      <div class="stat-val yellow">1</div>
-      <span class="delta-dn">▼2</span>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">逾越中線</div>
-      <div class="stat-val yellow">0</div>
-      <div class="stat-sub">0%</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">解放軍艦艇</div>
-      <div class="stat-val red">9</div>
-      <span class="delta-up">▲1</span>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">機型</div>
-      <div class="stat-type"><span class="badge manned">有人機</span></div>
+  <div class="sitrep">
+    <div class="sitrep-label">SITREP &nbsp;·&nbsp; 4/7 &nbsp;·&nbsp; <span class="badge manned">有人機</span></div>
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-n y">1</div>
+        <div class="stat-l">共機架次</div>
+        <span class="delta-dn">▼2</span>
+      </div>
+      <div class="stat">
+        <div class="stat-n y">0</div>
+        <div class="stat-l">逾越中線</div>
+        <div class="stat-detail">0%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n r">9</div>
+        <div class="stat-l">解放軍艦艇</div>
+        <span class="delta-up">▲1</span>
+      </div>
+      <div class="stat">
+        <div class="stat-n" style="font-size:1.8rem;margin-top:.2rem"><span class="badge manned">有人機</span></div>
+        <div class="stat-l">機型</div>
+      </div>
     </div>
   </div>
 
-  
-  <section class="section">
-    <div class="section-title">四月至今</div>
-    <div class="chart-block">
-      <div class="chart-lbl ac">● 共機架次</div>
-      <div class="chart-wrap"><canvas id="aprAC"></canvas></div>
+    <section class="chart-section">
+    <div class="chart-header">
+      <span class="chart-title">今日觀察</span><span class="chart-obs">今日 1 架次　9 艘艦艇　進入西南空域</span>
     </div>
-    <div class="chart-block">
-      <div class="chart-lbl sh">◆ 解放軍艦艇</div>
-      <div class="chart-wrap"><canvas id="aprSH"></canvas></div>
-    </div>
+    <img class="chart-img" src="charts/split_2026-04-07.png" alt="今日觀察">
   </section>
-  
-  <section class="section">
-    <div class="section-title">三月趨勢</div>
-    <div class="chart-block">
-      <div class="chart-lbl ac">● 共機架次</div>
-      <div class="chart-wrap"><canvas id="marAC"></canvas></div>
+    <section class="chart-section">
+    <div class="chart-header">
+      <span class="chart-title">近期趨勢</span><span class="chart-obs">本月峰值 25 架次（4/1）　艦艇 5–12 艘</span>
     </div>
-    <div class="chart-block">
-      <div class="chart-lbl sh">◆ 解放軍艦艇</div>
-      <div class="chart-wrap"><canvas id="marSH"></canvas></div>
-    </div>
-  </section>
-  
-  <section class="section">
-    <div class="section-title">2026 年至今</div>
-    <div class="chart-block">
-      <div class="chart-lbl ac">● 共機架次</div>
-      <div class="chart-wrap"><canvas id="ytdAC"></canvas></div>
-    </div>
-    <div class="chart-block">
-      <div class="chart-lbl sh">◆ 解放軍艦艇</div>
-      <div class="chart-wrap"><canvas id="ytdSH"></canvas></div>
-    </div>
+    <img class="chart-img" src="charts/streak_2026-04-07.png" alt="近期趨勢">
   </section>
 
 </main>
@@ -87,89 +69,4 @@
   <span>製作：Adam Pan</span>
   <span>更新：4/7</span>
 </footer>
-
-<script>
-
-const Y  = '#f5c842', Yd = '#8a7020', Yz = '#3a4448';
-const R  = '#e05555', Rd = '#7a2a2a';
-const GR = '#2a3336', TX = '#dce8ec', TS = '#7a9298';
-
-function acR(v, mx){ return v===0?4:Math.max(4,Math.min(18,4+(Math.log1p(v)/Math.log1p(mx||1))*14)); }
-function shR(v, mn, mx){ return mx===mn?8:5+((v-mn)/(mx-mn))*10; }
-
-function makeAC(id, labels, vals, ti){
-  const mx=Math.max(...vals,1);
-  new Chart(document.getElementById(id),{
-    type:'line',
-    data:{labels,datasets:[{
-      data:vals, showLine:false,
-      pointStyle:'circle',
-      pointRadius:vals.map(v=>acR(v,mx)),
-      pointHoverRadius:vals.map(v=>acR(v,mx)+3),
-      pointBackgroundColor:vals.map((v,i)=>i===ti?Y:(v===0?Yz:Yd)),
-      pointBorderWidth:0
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      animation:{duration:400},
-      plugins:{
-        legend:{display:false},
-        tooltip:{backgroundColor:'#111c20',titleColor:Y,bodyColor:TX,
-          callbacks:{label:it=>it.parsed.y+' 架次'}}
-      },
-      scales:{
-        x:{grid:{color:GR},ticks:{
-          color:ctx=>ctx.index===ti?TX:TS,
-          font:{size:10,weight:'700'},maxRotation:0,autoSkip:true,maxTicksLimit:16
-        }},
-        y:{min:0,suggestedMax:mx*1.35,grid:{color:GR},ticks:{
-          color:Y,font:{size:10,weight:'600'},maxTicksLimit:4
-        }}
-      }
-    }
-  });
-}
-
-function makeSH(id, labels, vals, ti){
-  const mx=Math.max(...vals,1), mn=Math.min(...vals);
-  new Chart(document.getElementById(id),{
-    type:'line',
-    data:{labels,datasets:[{
-      data:vals, showLine:false,
-      pointStyle:'rectRot',
-      pointRadius:vals.map(v=>shR(v,mn,mx)),
-      pointHoverRadius:vals.map(v=>shR(v,mn,mx)+3),
-      pointBackgroundColor:vals.map((v,i)=>i===ti?R:Rd),
-      pointBorderWidth:0
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      animation:{duration:400},
-      plugins:{
-        legend:{display:false},
-        tooltip:{backgroundColor:'#111c20',titleColor:R,bodyColor:TX,
-          callbacks:{label:it=>it.parsed.y+' 艘'}}
-      },
-      scales:{
-        x:{grid:{color:GR},ticks:{
-          color:ctx=>ctx.index===ti?TX:TS,
-          font:{size:10,weight:'700'},maxRotation:0,autoSkip:true,maxTicksLimit:16
-        }},
-        y:{min:0,suggestedMax:mx*1.35,grid:{color:GR},ticks:{
-          color:R,font:{size:10,weight:'600'},maxTicksLimit:4
-        }}
-      }
-    }
-  });
-}
-
-
-makeAC('aprAC',["4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7"],[25, 2, 2, 2, 0, 3, 1],6);
-makeSH('aprSH',["4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7"],[11, 9, 8, 8, 7, 8, 9],6);
-makeAC('marAC',["3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31"],[0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 3, 3, 26, 2, 2, 36, 12, 6, 6, 2, 0, 0, 3, 16, 4, 6, 13, 19, 1, 11],-1);
-makeSH('marSH',["3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31"],[7, 5, 5, 6, 7, 7, 8, 8, 6, 6, 6, 5, 5, 7, 7, 8, 8, 9, 8, 8, 8, 7, 10, 10, 12, 12, 12, 9, 11, 10, 8],-1);
-makeAC('ytdAC',["3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31", "4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7"],[0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 3, 3, 26, 2, 2, 36, 12, 6, 6, 2, 0, 0, 3, 16, 4, 6, 13, 19, 1, 11, 25, 2, 2, 2, 0, 3, 1],37);
-makeSH('ytdSH',["3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31", "4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7"],[7, 5, 5, 6, 7, 7, 8, 8, 6, 6, 6, 5, 5, 7, 7, 8, 8, 9, 8, 8, 8, 7, 10, 10, 12, 12, 12, 9, 11, 10, 8, 11, 9, 8, 8, 7, 8, 9],37);
-
-</script>
 </body></html>
