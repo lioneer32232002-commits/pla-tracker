@@ -82,19 +82,26 @@ def get_mnd_latest_image_url():
 
     soup = BeautifulSoup(resp.text, 'html.parser')
 
+    def abs_url(href):
+        if href.startswith('http'):
+            return href
+        if not href.startswith('/'):
+            href = '/' + href
+        return MND_BASE_URL + href
+
     # 找第一筆公告連結
     article_link = None
     for a in soup.find_all('a', href=True):
         href = a['href']
         if '/news/plaact/' in href or '/plaact/' in href.lower():
-            article_link = href if href.startswith('http') else MND_BASE_URL + href
+            article_link = abs_url(href)
             break
 
     if not article_link:
         # 備用：找列表中任何含 plaact 的連結
         for a in soup.find_all('a', href=True):
             if 'plaact' in a['href'].lower():
-                article_link = a['href'] if a['href'].startswith('http') else MND_BASE_URL + a['href']
+                article_link = abs_url(a['href'])
                 break
 
     if not article_link:
@@ -112,7 +119,7 @@ def get_mnd_latest_image_url():
         src = img['src']
         if any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
             if 'plaact' in src.lower() or 'military' in src.lower() or '/upload' in src.lower():
-                img_url = src if src.startswith('http') else MND_BASE_URL + src
+                img_url = abs_url(src)
                 break
 
     # 備用：找最大的圖片
@@ -121,7 +128,7 @@ def get_mnd_latest_image_url():
             src = img['src']
             if any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.png']):
                 if not any(x in src.lower() for x in ['logo', 'icon', 'banner', 'header']):
-                    img_url = src if src.startswith('http') else MND_BASE_URL + src
+                    img_url = abs_url(src)
                     break
 
     if not img_url:
