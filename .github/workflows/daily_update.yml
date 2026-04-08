@@ -1,0 +1,47 @@
+name: Daily PLA Tracker Update
+
+on:
+  schedule:
+    # 台灣時間 12:00 = UTC 04:00
+    - cron: '0 4 * * *'
+    # 台灣時間 14:00 = UTC 06:00 (備用，若12點MND尚未更新)
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # 允許手動觸發
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 允許 push 回 repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install CJK fonts (for matplotlib)
+        run: |
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -fv
+
+      - name: Run fetch and update
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/fetch_and_update.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "pla-tracker-bot"
+          git config user.email "bot@pla-tracker"
+          git add data/records.csv charts/ index.html records.html style.css
+          # 若沒有變更就靜默退出
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "auto: daily update $(date -u +%Y-%m-%d)"
+          git push
