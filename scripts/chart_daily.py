@@ -1,7 +1,7 @@
 """
 chart_daily.py — PLA Taiwan Strait Tracker
 圖表一：每日追蹤分割面板圖（Split Panel — Daily, 最近 7–8 天）
-圖表二：月度面積趨勢圖（Area Chart — Monthly）
+圖表二：2026 至今面積趨勢圖（Area Chart — YTD）
 """
 
 import pandas as pd
@@ -165,7 +165,11 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         ax.set_xlim(-0.7, n - 0.3)
         ax.tick_params(axis='x', bottom=False, labelbottom=False)
 
-    # ── 上面板：飛機 ──
+    # ── 上面板：飛機（fill_between 面積圖）──
+    ac_arr   = ac_vals.values.astype(float)
+    cr_arr   = df_plot['median_line_cross'].fillna(0).astype(float).values
+    nc_arr   = ac_arr - cr_arr
+
     ylim_ac = max(ac_max * 1.8, 5)
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(range(0, ceil5(ylim_ac) + 1, 5))
@@ -174,28 +178,25 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
                      labelpad=labelpad, fontfamily=FONT)
     ax_ac.yaxis.label.set_color(AC_BRIGHT)
 
-    # connector dashed line
-    ax_ac.plot(xs, ac_vals.tolist(), '--', color='#555c62', linewidth=1.5, zorder=2)
+    ax_ac.fill_between(xs, 0, ac_arr, color=AC_DIM, alpha=0.4, zorder=2)
+    ax_ac.fill_between(xs, nc_arr, ac_arr, color=AC_BRIGHT, alpha=0.75, zorder=3)
+    ax_ac.plot(xs, ac_arr, color=AC_BRIGHT, linewidth=2.5, zorder=4)
+    ax_ac.plot(xs, cr_arr, '--', color=CROSS_COL, linewidth=2.0, zorder=4)
 
     for i, row in df_plot.iterrows():
         is_today = (row['date'] == today_date)
-        v     = int(ac_vals[i])
-        sz    = dot_size_aircraft(v, ac_max)
-        color = AC_BRIGHT if is_today else (AC_ZERO if v == 0 else AC_DIM)
-        alpha = 1.0 if is_today else 0.75
-        ax_ac.scatter(i, v, c=color, s=sz, alpha=alpha, zorder=3, clip_on=False)
+        v = int(ac_arr[i])
+        if v == 0 and not is_today:
+            continue
+        fs = 42 if is_today else 37
+        fw = 'bold' if is_today else 'normal'
+        fc = AC_BRIGHT if is_today else AC_DIM
+        gap = label_gap_y(ax_ac, fig, fs) * 0.8
+        ax_ac.text(i, v + gap, str(v),
+                   ha='center', va='bottom', color=fc,
+                   fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
 
-        if v > 0 or is_today:
-            fs = 42 if is_today else 37
-            fw = 'bold' if is_today else 'normal'
-            fc = AC_BRIGHT if is_today else AC_DIM
-            r_d = scatter_radius_y(ax_ac, fig, sz)
-            gap = label_gap_y(ax_ac, fig, fs) * 1.0
-            ax_ac.text(i, v + r_d + gap, str(v),
-                       ha='center', va='bottom', color=fc,
-                       fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
-
-    # panel title: anchored at ylim_ac × 0.97 in data coords
+    # panel title: anchored at ylim_ac × 0.97
     ax_ac.text(-0.5, ylim_ac * 0.97, 'AIRCRAFT SORTIES',
                ha='left', va='top', color=AC_BRIGHT,
                fontsize=45, fontweight='bold', fontfamily=FONT, clip_on=False)
@@ -278,13 +279,54 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     return str(out_path)
 
 
-# ── 圖表二：Area Chart（月度面積趨勢）────────────────────────────────────────
+# ── 圖表二：Area Chart（2026 至今）──────────────────────────────────────────
+
+def _silence_runs(sorties, min_days=2):
+    """偵測連續零架次區間，回傳 [(start_i, end_i), ...]"""
+    runs, start = [], None
+    for i, v in enumerate(sorties):
+        if v == 0:
+            if start is None:
+                start = i
+        else:
+            if start is not None:
+                if i - start >= min_days:
+                    runs.append((start, i - 1))
+                start = None
+    if start is not None and len(sorties) - start >= min_days:
+        runs.append((start, len(sorties) - 1))
+    return runs
+
+
+def _is_local_max(vals, i, window=2):
+    lo = max(0, i - window)
+    hi = min(len(vals) - 1, i + window)
+    return vals[i] > 0 and vals[i] >= max(vals[lo:hi + 1])
+
+
+def _xaxis_show(i, n, dates, today_date):
+    """決定這個 x 位置是否顯示日期標籤"""
+    if dates[i] == today_date:
+        return True
+    dt = pd.to_datetime(dates[i])
+    # 每月第一天
+    if dt.day == 1:
+        return True
+    # 資料少時全顯示
+    if n <= 20:
+        return True
+    # 每 7 天一格
+    if i % 7 == 0:
+        return True
+    return False
+
 
 def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     """
-    figsize (22, 22)，GridSpec hspace=0.30 top=0.82 bottom=0.08
-    上圖：fill_between 面積圖（base + cross 疊層）
-    下圖：diamond scatter + 數字標籤
+    figsize 動態寬度，GridSpec hspace=0.30 top=0.82 bottom=0.10
+    上圖：fill_between 面積圖 + silence 標示 + peak 亮色標籤
+    下圖：diamond scatter + 機動標籤（避免重疊）
+    X 軸：選擇性顯示（月首 / 每 7 天 / 今日）
     """
     if today_date is None:
         today_date = df['date'].iloc[-1]
@@ -304,19 +346,28 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     crosses  = df_plot['median_line_cross'].fillna(0).astype(float).values
     noncross = sorties - crosses
     ships    = df_plot['ships_total'].fillna(0).astype(int).values
+    dates    = df_plot['date'].tolist()
 
-    ac_max = float(sorties.max())
-    sh_min = int(ships.min())
-    sh_max = int(ships.max())
+    ac_max  = float(sorties.max())
+    sh_min  = int(ships.min())
+    sh_max  = int(ships.max())
+    PEAK_TH = max(ac_max * 0.25, 10)  # 高峰門檻：25% 或 10，取大值
 
-    date_labels = [f"{pd.to_datetime(r['date']).month}/{pd.to_datetime(r['date']).day}"
-                   for _, r in df_plot.iterrows()]
+    # ── 動態 figsize（資料多時加寬）──
+    fig_w = max(22, n * 0.55)
+    fig_h = 22
+
+    # ── 自適應字體 ──
+    def afs(base):
+        return max(base * min(1.0, 20 / n), base * 0.45)
+
+    date_labels = [f"{pd.to_datetime(d).month}/{pd.to_datetime(d).day}" for d in dates]
 
     # ── 圖形建立 ──
-    fig = plt.figure(figsize=(22, 22), facecolor=BG)
+    fig = plt.figure(figsize=(fig_w, fig_h), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
-                            hspace=0.30, top=0.82, bottom=0.08,
-                            left=0.08,  right=0.96)
+                            hspace=0.30, top=0.82, bottom=0.10,
+                            left=0.07,  right=0.97)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
 
@@ -325,76 +376,151 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
         ax.set_xlim(-0.5, n - 0.5)
 
     # ── 上面板：飛機面積圖 ──
-    ylim_ac = max(ac_max * 1.35, 5)
+    ylim_ac = max(ac_max * 1.45, 5)
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(range(0, ceil5(ylim_ac) + 1, 5))
-    ax_ac.tick_params(axis='y', colors=AC_BRIGHT, labelsize=22)
+    ax_ac.tick_params(axis='y', colors=AC_BRIGHT, labelsize=afs(20))
     ax_ac.tick_params(axis='x', bottom=False, labelbottom=False)
 
-    # base layer: 總架次（含未越線部分），AC_DIM alpha=0.4
-    ax_ac.fill_between(xs, 0, sorties, color=AC_DIM, alpha=0.4, zorder=2)
-    # top layer: 越線部分，AC_BRIGHT alpha=0.75
-    ax_ac.fill_between(xs, noncross, sorties, color=AC_BRIGHT, alpha=0.75, zorder=3)
-    # lines
+    # silence 區間底色
+    for s, e in _silence_runs(sorties, min_days=2):
+        ax_ac.axvspan(s - 0.5, e + 0.5, color=AC_ZERO, alpha=0.18, zorder=1)
+        mid = (s + e) / 2
+        ax_ac.text(mid, ylim_ac * 0.06, 'SILENCE',
+                   ha='center', va='bottom', color=TXTFADE,
+                   fontsize=afs(13), alpha=0.8, fontfamily=FONT,
+                   rotation=90 if (e - s) < 3 else 0)
+
+    # 面積填充
+    ax_ac.fill_between(xs, 0, sorties, color=AC_DIM, alpha=0.35, zorder=2)
+    ax_ac.fill_between(xs, noncross, sorties, color=AC_BRIGHT, alpha=0.70, zorder=3)
     ax_ac.plot(xs, sorties, color=AC_BRIGHT, linewidth=2, zorder=4)
-    ax_ac.plot(xs, crosses, '--', color=CROSS_COL, linewidth=1.8, zorder=4)
+    ax_ac.plot(xs, crosses, '--', color=CROSS_COL, linewidth=1.6, zorder=4)
+
+    # 機動數字標籤：峰值 + 今日 + 局部高點
+    for i, v in enumerate(sorties):
+        is_today = (dates[i] == today_date)
+        is_peak  = (v >= PEAK_TH)
+        is_lmax  = _is_local_max(sorties, i, window=2)
+
+        if not (is_today or is_peak or is_lmax):
+            continue
+        if v == 0 and not is_today:
+            continue
+
+        if is_today:
+            fs, fw, fc = afs(28), 'bold', AC_BRIGHT
+        elif is_peak:
+            fs, fw, fc = afs(26), 'bold', AC_BRIGHT
+        else:
+            fs, fw, fc = afs(20), 'normal', AC_DIM
+
+        gap = label_gap_y(ax_ac, fig, fs) * 0.7
+        ax_ac.text(i, v + gap, str(int(v)),
+                   ha='center', va='bottom', color=fc,
+                   fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
+
+    # 月份分隔線
+    for i in range(1, n):
+        if pd.to_datetime(dates[i]).month != pd.to_datetime(dates[i - 1]).month:
+            ax_ac.axvline(i - 0.5, color='#2a3a42', linewidth=1.2, zorder=1)
 
     ax_ac.text(0.01, 0.97, 'AIRCRAFT SORTIES',
                transform=ax_ac.transAxes, ha='left', va='top',
-               color=AC_BRIGHT, fontsize=38, fontweight='bold', fontfamily=FONT)
+               color=AC_BRIGHT, fontsize=afs(34), fontweight='bold', fontfamily=FONT)
 
     # ── 下面板：艦艇 ──
     ylim_sh = max(sh_max * 1.8, sh_max + 5, 5)
     ax_sh.set_ylim(0, ylim_sh)
     ax_sh.set_yticks(range(0, ceil5(ylim_sh) + 1, 5))
-    ax_sh.tick_params(axis='y', colors=SH_BRIGHT, labelsize=22)
+    ax_sh.tick_params(axis='y', colors=SH_BRIGHT, labelsize=afs(20))
 
-    # connector dotted line
+    # silence 區間底色（同飛機面板）
+    for s, e in _silence_runs(sorties, min_days=2):
+        ax_sh.axvspan(s - 0.5, e + 0.5, color=AC_ZERO, alpha=0.12, zorder=1)
+
+    # 月份分隔線
+    for i in range(1, n):
+        if pd.to_datetime(dates[i]).month != pd.to_datetime(dates[i - 1]).month:
+            ax_sh.axvline(i - 0.5, color='#2a3a42', linewidth=1.2, zorder=1)
+
     ax_sh.plot(xs, ships, ':', color='#555c62', linewidth=1.5, zorder=2)
 
+    # 機動標籤：避免垂直重疊（記錄已繪製的 y 位置）
+    last_label_y = {}  # i → actual y used
+    min_ygap_pts = afs(20) * 1.2  # 最小垂直間距（points）
+
+    def y_clear(y_data, ax, fig, new_i):
+        """檢查新標籤與鄰近已繪標籤是否有足夠間距"""
+        fig_h = fig.get_figheight()
+        ax_h_pts = ax.get_position().height * fig_h * 72
+        ylim = ax.get_ylim()
+        pt_per_data = ax_h_pts / (ylim[1] - ylim[0])
+        for prev_i, prev_y in last_label_y.items():
+            if abs(prev_i - new_i) <= 2:
+                if abs((y_data - prev_y) * pt_per_data) < min_ygap_pts:
+                    return False
+        return True
+
     for i, v in enumerate(ships):
-        is_today = (df_plot.iloc[i]['date'] == today_date)
+        is_today = (dates[i] == today_date)
+        is_lmax  = _is_local_max(ships, i, window=1)
+
         sz    = dot_size_ships(v, sh_min, sh_max)
         color = SH_BRIGHT if is_today else SH_DIM
         alpha = 0.95 if is_today else 0.7
         ax_sh.scatter(i, v, c=color, s=sz, alpha=alpha, marker='D',
                       zorder=3, clip_on=False)
 
-        fs = 33 if is_today else 29
+        if not (is_today or is_lmax):
+            continue
+
+        fs = afs(26) if is_today else afs(20)
         fw = 'bold' if is_today else 'normal'
         fc = SH_BRIGHT if is_today else SH_DIM
         r_d = scatter_radius_y(ax_sh, fig, sz)
-        gap = label_gap_y(ax_sh, fig, fs) * 1.5
-        ax_sh.text(i, v + r_d + gap, str(v),
+        gap = label_gap_y(ax_sh, fig, fs) * 1.2
+
+        y_base = v + r_d + gap
+        # 若重疊則往上偏移
+        y_used = y_base
+        if not y_clear(y_used, ax_sh, fig, i):
+            y_used = y_base + label_gap_y(ax_sh, fig, fs) * 1.5
+
+        ax_sh.text(i, y_used, str(v),
                    ha='center', va='bottom', color=fc,
                    fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
+        last_label_y[i] = y_used
 
     ax_sh.text(0.01, 0.97, 'PLAN SHIPS',
                transform=ax_sh.transAxes, ha='left', va='top',
-               color=SH_BRIGHT, fontsize=38, fontweight='bold', fontfamily=FONT)
+               color=SH_BRIGHT, fontsize=afs(34), fontweight='bold', fontfamily=FONT)
 
-    # ── X 軸：所有日期，今日 bold，35pt ──
-    ax_sh.set_xticks(range(n))
-    ax_sh.set_xticklabels(date_labels, fontsize=35, fontfamily=FONT)
-    for i, tick in enumerate(ax_sh.get_xticklabels()):
-        is_today = (df_plot.iloc[i]['date'] == today_date)
+    # ── X 軸：選擇性顯示，今日 bold ──
+    show_ticks = [i for i in range(n) if _xaxis_show(i, n, dates, today_date)]
+    ax_sh.set_xticks(show_ticks)
+    ax_sh.set_xticklabels([date_labels[i] for i in show_ticks],
+                          fontsize=afs(26), fontfamily=FONT)
+    for tick, i in zip(ax_sh.get_xticklabels(), show_ticks):
+        is_today = (dates[i] == today_date)
         tick.set_color(TXTDARK if is_today else TXTSUB)
         tick.set_fontweight('bold' if is_today else 'normal')
-    ax_sh.tick_params(axis='x', pad=8)
+    ax_sh.tick_params(axis='x', pad=6)
 
     # ── 標題區 ──
-    source_str = (f"Day {today_pos + 1}  ·  {today_dt.strftime('%Y-%m-%d')}  ·  "
+    first_date = df_plot['date'].iloc[0]
+    source_str = (f"{first_date} → {today_date}  ·  {n} days  ·  "
                   f"Source: ROC Ministry of National Defense")
 
-    fig.text(0.04, 0.964, 'PLA ACTIVITY AROUND TAIWAN',
+    fig.text(0.04, 0.964, 'PLA ACTIVITY AROUND TAIWAN — 2026 YTD',
              ha='left', va='top', color=TXTDARK,
-             fontsize=46, fontweight='bold', fontfamily=FONT)
+             fontsize=afs(44), fontweight='bold', fontfamily=FONT)
     fig.text(0.04, 0.932, obs_text,
              ha='left', va='top', color=AC_BRIGHT,
-             fontsize=30, fontweight='bold', fontfamily=FONT)
-    fig.text(0.04, 0.905, source_str,
+             fontsize=afs(28), fontweight='bold', fontfamily=FONT)
+    fig.text(0.04, 0.907, source_str,
              ha='left', va='top', color=TXTSUB,
-             fontsize=26, fontfamily=FONT)
+             fontsize=afs(24), fontfamily=FONT)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"streak_{today_date}.png"
@@ -440,13 +566,8 @@ if __name__ == '__main__':
         df_split = df_all.tail(args.days).reset_index(drop=True)
         today_date = df_split['date'].iloc[-1]
 
-    # ── area chart：當月資料 ──
-    month_str = args.month or today_date[:7]
-    df_area = load_data(month=month_str)
-    if today_date not in df_area['date'].values:
-        # fallback: 使用 df_all 最後一筆所在月份
-        month_str = df_all['date'].iloc[-1][:7]
-        df_area = load_data(month=month_str)
+    # ── area chart：2026 至今全部資料 ──
+    df_area = df_all  # 全部資料，不限月份
 
     if args.type in ('split', 'both'):
         make_split_panel_chart(df_split, today_date=today_date)
