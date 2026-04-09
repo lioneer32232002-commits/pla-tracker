@@ -148,17 +148,25 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     date_labels = [f"{pd.to_datetime(r['date']).month}/{pd.to_datetime(r['date']).day}"
                    for _, r in df_plot.iterrows()]
 
-    # ── 圖形建立 ──
+    # ── 自適應 y 軸刻度 ──
+    def _ystep(top):
+        if top <= 10:   return 2
+        elif top <= 30: return 5
+        else:           return 10
+
+    def _ceil_s(x, s):
+        return int(np.ceil(max(x, s) / s) * s)
+
+    # ── 圖形建立（去掉 ylabel 後 left 縮小）──
     fig = plt.figure(figsize=(30, 27), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
-                            left=0.10, right=0.92,
-                            top=0.84,  bottom=0.14,
+                            left=0.06, right=0.96,
+                            top=0.84,  bottom=0.16,
                             hspace=0.38)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
 
     xs = list(range(n))
-    labelpad = int(1.5 * 25 * 0.6)
 
     for ax in [ax_ac, ax_sh]:
         setup_ax(ax)
@@ -170,39 +178,34 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     cr_arr   = df_plot['median_line_cross'].fillna(0).astype(float).values
     nc_arr   = ac_arr - cr_arr
 
-    ylim_ac = max(ac_max * 1.8, 5)
+    ylim_ac_raw = max(ac_max * 1.8, 4)
+    step_ac     = _ystep(ylim_ac_raw)
+    ylim_ac     = _ceil_s(ylim_ac_raw, step_ac)
     ax_ac.set_ylim(0, ylim_ac)
-    ax_ac.set_yticks(range(0, ceil5(ylim_ac) + 1, 5))
+    ax_ac.set_yticks(range(0, ylim_ac + 1, step_ac))
     ax_ac.tick_params(axis='y', colors=AC_BRIGHT, labelsize=27)
-    ax_ac.set_ylabel('Sorties', color=AC_BRIGHT, fontsize=25,
-                     labelpad=labelpad, fontfamily=FONT)
-    ax_ac.yaxis.label.set_color(AC_BRIGHT)
 
     ax_ac.fill_between(xs, 0, ac_arr, color=AC_DIM, alpha=0.4, zorder=2)
     ax_ac.fill_between(xs, nc_arr, ac_arr, color=AC_BRIGHT, alpha=0.75, zorder=3)
     ax_ac.plot(xs, ac_arr, color=AC_BRIGHT, linewidth=2.5, zorder=4)
     ax_ac.plot(xs, cr_arr, '--', color=CROSS_COL, linewidth=2.0, zorder=4)
-    # 今日觀察飛機面板不顯示數字（圖說已有當日資訊）
 
-    # panel title: anchored at ylim_ac × 0.97
-    ax_ac.text(-0.5, ylim_ac * 0.97, 'AIRCRAFT SORTIES',
-               ha='left', va='top', color=AC_BRIGHT,
-               fontsize=45, fontweight='bold', fontfamily=FONT, clip_on=False)
+    # 面板標題：右側靠右對齊（修改3）
+    ax_ac.text(0.99, 0.97, 'AIRCRAFT SORTIES',
+               transform=ax_ac.transAxes, ha='right', va='top',
+               color=AC_BRIGHT, fontsize=45, fontweight='bold',
+               fontfamily=FONT)
 
     # ── 下面板：艦艇 ──
-    sh_range = max(sh_max - sh_min, 1)
-    ylim_sh  = sh_max + sh_range * 2.5 + 2
-    ax_sh.set_ylim(0, max(ylim_sh, sh_max * 1.5, 5))
-    ax_sh.set_yticks(range(0, ceil5(ax_sh.get_ylim()[1]) + 1, 5))
+    ylim_sh_raw = max(sh_max * 2.2, sh_max + 5, 5)
+    step_sh     = _ystep(ylim_sh_raw)
+    ylim_sh_top = _ceil_s(ylim_sh_raw, step_sh)
+    ax_sh.set_ylim(-0.5, ylim_sh_top)   # -0.5 讓 y=0 的菱形不貼軸（修改4）
+    ax_sh.set_yticks(range(0, ylim_sh_top + 1, step_sh))
     ax_sh.tick_params(axis='y', colors=SH_BRIGHT, labelsize=27)
-    ax_sh.set_ylabel('Ships', color=SH_BRIGHT, fontsize=25,
-                     labelpad=labelpad, fontfamily=FONT)
-    ax_sh.yaxis.label.set_color(SH_BRIGHT)
 
     # connector dotted line
     ax_sh.plot(xs, sh_vals.tolist(), ':', color='#555c62', linewidth=1.5, zorder=2)
-
-    ylim_sh_top = ax_sh.get_ylim()[1]
 
     for i, row in df_plot.iterrows():
         is_today = (row['date'] == today_date)
@@ -222,15 +225,16 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
                    ha='center', va='bottom', color=fc,
                    fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
 
-    ax_sh.text(-0.5, ylim_sh_top * 0.97, 'PLAN SHIPS',
-               ha='left', va='top', color=SH_BRIGHT,
-               fontsize=45, fontweight='bold', fontfamily=FONT, clip_on=False)
+    # 面板標題：右側靠右對齊（修改3）
+    ax_sh.text(0.99, 0.97, 'PLAN SHIPS',
+               transform=ax_sh.transAxes, ha='right', va='top',
+               color=SH_BRIGHT, fontsize=45, fontweight='bold',
+               fontfamily=FONT)
 
     # ── X 軸（figure coordinates，只在下圖底部）──
     fig.canvas.draw()
     for i in range(n):
         is_today = (df_plot.iloc[i]['date'] == today_date)
-        # data coord (i, 0) → display → figure fraction
         disp = ax_sh.transData.transform((i, 0))
         xf, yf = fig.transFigure.inverted().transform(disp)
 
@@ -238,15 +242,16 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         fc  = TXTDARK if is_today else TXTSUB
         fw  = 'bold' if is_today else 'normal'
 
-        fig.text(xf, yf - 0.018, f'Day {i + 1}',
+        fig.text(xf, yf - 0.020, f'Day {i + 1}',
                  ha='center', va='top',
                  color=fc, fontsize=fs, fontweight=fw, fontfamily=FONT)
-        fig.text(xf, yf - 0.018 - 0.040, date_labels[i],
+        # 修改5：兩行間距縮小 0.040→0.022
+        fig.text(xf, yf - 0.020 - 0.022, date_labels[i],
                  ha='center', va='top',
                  color=fc, fontsize=fs, fontweight=fw, fontfamily=FONT)
 
-    # ── 標題區 ──
-    source_str = (f"Day {today_pos + 1}  ·  {today_dt.strftime('%Y-%m-%d')}  ·  "
+    # ── 標題區（修改1：移除 Day N）──
+    source_str = (f"{today_dt.strftime('%Y-%m-%d')}  ·  "
                   f"Source: ROC Ministry of National Defense")
 
     fig.text(0.04, 0.968, 'PLA ACTIVITY AROUND TAIWAN',
