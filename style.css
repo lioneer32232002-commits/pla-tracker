@@ -131,10 +131,10 @@ main{max-width:960px;margin:0 auto;padding:1.75rem 1.5rem}
 .y{color:var(--y);text-shadow:var(--glow-y)}
 .r{color:var(--r);text-shadow:var(--glow-r)}
 .stat-l{
-  font-size:.56rem;text-transform:uppercase;letter-spacing:.12em;
-  color:var(--sub);margin-top:.5rem;
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.10em;
+  color:var(--sub2);margin-top:.5rem;
 }
-.stat-detail{font-size:.74rem;color:var(--sub2);margin-top:.2rem}
+.stat-detail{font-size:.76rem;color:var(--sub2);margin-top:.2rem}
 .delta-up{display:block;font-size:.68rem;color:var(--r);margin-top:.3rem;font-weight:700}
 .delta-dn{display:block;font-size:.68rem;color:var(--grn);margin-top:.3rem;font-weight:700}
 
