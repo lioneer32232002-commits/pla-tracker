@@ -359,7 +359,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     # ── 圖形建立 ──
     fig = plt.figure(figsize=(fig_w, fig_h), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
-                            hspace=0.30, top=0.82, bottom=0.10,
+                            hspace=0.30, top=0.88, bottom=0.10,
                             left=0.07,  right=0.97)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
@@ -506,20 +506,10 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
         tick.set_fontweight('bold' if is_today else 'normal')
     ax_sh.tick_params(axis='x', pad=6)
 
-    # ── 標題區 ──
-    first_date = df_plot['date'].iloc[0]
-    source_str = (f"{first_date} → {today_date}  ·  {n} days  ·  "
-                  f"Source: ROC Ministry of National Defense")
-
+    # ── 標題區（只保留 PLA 標題行）──
     fig.text(0.04, 0.964, 'PLA ACTIVITY AROUND TAIWAN — 2026 YTD',
              ha='left', va='top', color=TXTDARK,
              fontsize=50, fontweight='bold', fontfamily=FONT)
-    fig.text(0.04, 0.932, obs_text,
-             ha='left', va='top', color=AC_BRIGHT,
-             fontsize=36, fontweight='bold', fontfamily=FONT)
-    fig.text(0.04, 0.907, source_str,
-             ha='left', va='top', color=TXTSUB,
-             fontsize=30, fontfamily=FONT)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"streak_{today_date}.png"
