@@ -386,7 +386,6 @@ def build_records(df):
 if __name__ == '__main__':
     df = load_df()
     sync_charts()
-    build_css()
     build_index(df)
     build_records(df)
     print('[DONE] Site built →', SITE_DIR)
