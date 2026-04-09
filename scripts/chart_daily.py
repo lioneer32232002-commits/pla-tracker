@@ -182,19 +182,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.fill_between(xs, nc_arr, ac_arr, color=AC_BRIGHT, alpha=0.75, zorder=3)
     ax_ac.plot(xs, ac_arr, color=AC_BRIGHT, linewidth=2.5, zorder=4)
     ax_ac.plot(xs, cr_arr, '--', color=CROSS_COL, linewidth=2.0, zorder=4)
-
-    for i, row in df_plot.iterrows():
-        is_today = (row['date'] == today_date)
-        v = int(ac_arr[i])
-        if v == 0 and not is_today:
-            continue
-        fs = 42 if is_today else 37
-        fw = 'bold' if is_today else 'normal'
-        fc = AC_BRIGHT if is_today else AC_DIM
-        gap = label_gap_y(ax_ac, fig, fs) * 0.8
-        ax_ac.text(i, v + gap, str(v),
-                   ha='center', va='bottom', color=fc,
-                   fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
+    # 今日觀察飛機面板不顯示數字（圖說已有當日資訊）
 
     # panel title: anchored at ylim_ac × 0.97
     ax_ac.text(-0.5, ylim_ac * 0.97, 'AIRCRAFT SORTIES',
@@ -354,12 +342,12 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     PEAK_TH = max(ac_max * 0.25, 10)  # 高峰門檻：25% 或 10，取大值
 
     # ── 動態 figsize（資料多時加寬）──
-    fig_w = max(22, n * 0.55)
+    fig_w = max(28, n * 0.62)
     fig_h = 22
 
-    # ── 自適應字體 ──
-    def afs(base):
-        return max(base * min(1.0, 20 / n), base * 0.45)
+    # ── 自適應字體（只縮到 65%，保留可讀性）──
+    def afs(base, floor=0.65):
+        return max(base * min(1.0, 20 / max(n, 1)), base * floor)
 
     date_labels = [f"{pd.to_datetime(d).month}/{pd.to_datetime(d).day}" for d in dates]
 
@@ -379,7 +367,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ylim_ac = max(ac_max * 1.45, 5)
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(range(0, ceil5(ylim_ac) + 1, 5))
-    ax_ac.tick_params(axis='y', colors=AC_BRIGHT, labelsize=afs(20))
+    ax_ac.tick_params(axis='y', colors=AC_BRIGHT, labelsize=22)
     ax_ac.tick_params(axis='x', bottom=False, labelbottom=False)
 
     # silence 區間底色
@@ -427,13 +415,13 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
 
     ax_ac.text(0.01, 0.97, 'AIRCRAFT SORTIES',
                transform=ax_ac.transAxes, ha='left', va='top',
-               color=AC_BRIGHT, fontsize=afs(34), fontweight='bold', fontfamily=FONT)
+               color=AC_BRIGHT, fontsize=38, fontweight='bold', fontfamily=FONT)
 
     # ── 下面板：艦艇 ──
     ylim_sh = max(sh_max * 1.8, sh_max + 5, 5)
     ax_sh.set_ylim(0, ylim_sh)
     ax_sh.set_yticks(range(0, ceil5(ylim_sh) + 1, 5))
-    ax_sh.tick_params(axis='y', colors=SH_BRIGHT, labelsize=afs(20))
+    ax_sh.tick_params(axis='y', colors=SH_BRIGHT, labelsize=22)
 
     # silence 區間底色（同飛機面板）
     for s, e in _silence_runs(sorties, min_days=2):
@@ -462,11 +450,17 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
                     return False
         return True
 
+    # 菱形縮小，避免重疊；streak chart 用較小 size range
+    sh_sz_max = max(400, 1600 - n * 20)  # n=39 → 820; n=99 → 640
+    sh_sz_min = max(200, sh_sz_max * 0.45)
+
     for i, v in enumerate(ships):
         is_today = (dates[i] == today_date)
         is_lmax  = _is_local_max(ships, i, window=1)
 
-        sz    = dot_size_ships(v, sh_min, sh_max)
+        raw_sz = dot_size_ships(v, sh_min, sh_max)
+        sz = sh_sz_min + (sh_sz_max - sh_sz_min) * (raw_sz - 2500) / (5500 - 2500)
+        sz = max(sh_sz_min, min(sh_sz_max, sz))
         color = SH_BRIGHT if is_today else SH_DIM
         alpha = 0.95 if is_today else 0.7
         ax_sh.scatter(i, v, c=color, s=sz, alpha=alpha, marker='D',
@@ -494,13 +488,13 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
 
     ax_sh.text(0.01, 0.97, 'PLAN SHIPS',
                transform=ax_sh.transAxes, ha='left', va='top',
-               color=SH_BRIGHT, fontsize=afs(34), fontweight='bold', fontfamily=FONT)
+               color=SH_BRIGHT, fontsize=38, fontweight='bold', fontfamily=FONT)
 
     # ── X 軸：選擇性顯示，今日 bold ──
     show_ticks = [i for i in range(n) if _xaxis_show(i, n, dates, today_date)]
     ax_sh.set_xticks(show_ticks)
     ax_sh.set_xticklabels([date_labels[i] for i in show_ticks],
-                          fontsize=afs(26), fontfamily=FONT)
+                          fontsize=22, fontfamily=FONT)
     for tick, i in zip(ax_sh.get_xticklabels(), show_ticks):
         is_today = (dates[i] == today_date)
         tick.set_color(TXTDARK if is_today else TXTSUB)
@@ -514,13 +508,13 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
 
     fig.text(0.04, 0.964, 'PLA ACTIVITY AROUND TAIWAN — 2026 YTD',
              ha='left', va='top', color=TXTDARK,
-             fontsize=afs(44), fontweight='bold', fontfamily=FONT)
+             fontsize=50, fontweight='bold', fontfamily=FONT)
     fig.text(0.04, 0.932, obs_text,
              ha='left', va='top', color=AC_BRIGHT,
-             fontsize=afs(28), fontweight='bold', fontfamily=FONT)
+             fontsize=36, fontweight='bold', fontfamily=FONT)
     fig.text(0.04, 0.907, source_str,
              ha='left', va='top', color=TXTSUB,
-             fontsize=afs(24), fontfamily=FONT)
+             fontsize=30, fontfamily=FONT)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"streak_{today_date}.png"
