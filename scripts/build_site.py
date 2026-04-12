@@ -225,6 +225,41 @@ def chart_section(title, img_path, obs=''):
   </section>"""
 
 
+def monthly_stats_html(df, today_date):
+    """本月至今統計區塊"""
+    month_prefix = today_date[:7]
+    df_mo = df[df['date'].str.startswith(month_prefix)].copy()
+    if df_mo.empty:
+        return ''
+    mo_ac  = int(df_mo['aircraft_total'].fillna(0).sum())
+    mo_cr  = int(df_mo['median_line_cross'].fillna(0).sum())
+    mo_sh_avg = df_mo['ships_total'].fillna(0).mean()
+    days   = len(df_mo)
+    mo_label = f"{pd.to_datetime(today_date).month}月"
+
+    cr_rate = f"{mo_cr/mo_ac*100:.0f}%" if mo_ac > 0 else '—'
+
+    return f"""<div class="sitrep" style="margin-top:2.5rem">
+    <div class="sitrep-label">{mo_label}至今 &nbsp;·&nbsp; {days} 天</div>
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-n y">{mo_ac}</div>
+        <div class="stat-l">共機架次</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n y">{mo_cr}</div>
+        <div class="stat-l">越中線</div>
+        <div class="stat-detail">{cr_rate}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n r">{mo_sh_avg:.1f}</div>
+        <div class="stat-l">艦艇日均</div>
+        <div class="stat-detail">艘</div>
+      </div>
+    </div>
+  </div>"""
+
+
 # ── index.html ────────────────────────────────────────────────────────────────
 
 def build_index(df):
@@ -303,8 +338,10 @@ def build_index(df):
     </div>
   </div>
 
-  {chart_section("今日觀察", split_img, split_obs)}
-  {chart_section("近期趨勢", streak_img, streak_obs)}
+  {chart_section("10日觀察", split_img)}
+  {chart_section("近期趨勢", streak_img)}
+
+  {monthly_stats_html(df, today_date)}
 
 </main>
 

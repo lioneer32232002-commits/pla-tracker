@@ -198,7 +198,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     fig = plt.figure(figsize=(30, 27), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
                             left=0.06, right=0.96,
-                            top=0.96,  bottom=0.22,
+                            top=0.96,  bottom=0.14,
                             hspace=0.38)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
@@ -289,12 +289,9 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         fs  = 54 if is_today else 46
         fc  = TXTDARK if is_today else TXTSUB
 
-        t1 = fig.text(xf, yf - 0.022, f'Day {i + 1}',
+        t1 = fig.text(xf, yf - 0.022, date_labels[i],
                       ha='center', va='top', color=fc, fontsize=fs, fontfamily=FONT)
         bold_stroke(t1)
-        t2 = fig.text(xf, yf - 0.022 - 0.038, date_labels[i],
-                      ha='center', va='top', color=fc, fontsize=fs, fontfamily=FONT)
-        bold_stroke(t2)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"split_{today_date}.png"
@@ -509,7 +506,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--date',  default=None, help='YYYY-MM-DD，預設最新一筆')
     parser.add_argument('--month', default=None, help='YYYY-MM，area chart 月份')
-    parser.add_argument('--days',  type=int, default=8, help='split panel 顯示天數')
+    parser.add_argument('--days',  type=int, default=10, help='split panel 顯示天數')
     parser.add_argument('--type',  choices=['streak', 'split', 'both'], default='both')
     args = parser.parse_args()
 
