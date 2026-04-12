@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.font_manager as fm
 from matplotlib.font_manager import FontProperties
+import matplotlib.patheffects as pe
 import numpy as np
 import sys
 from pathlib import Path
@@ -148,6 +149,12 @@ def make_obs_text(row):
     return f"{base}　{special}" if special else base
 
 
+def bold_stroke(obj, lw=2.0):
+    """Simulate bold via path stroke — works on any single-weight CJK font."""
+    c = obj.get_color() if hasattr(obj, 'get_color') else obj.get_facecolor()
+    obj.set_path_effects([pe.Stroke(linewidth=lw, foreground=c), pe.Normal()])
+
+
 def setup_ax(ax):
     ax.set_facecolor(BG)
     for sp in ax.spines.values():
@@ -215,9 +222,9 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(ticks_ac)
     ax_ac.set_yticklabels([str(t) for t in ticks_ac])
-    _fp_ac = FontProperties(family=FONT, weight='bold', size=27)
+    _fp_ac = FontProperties(family=FONT, size=33)
     for lbl in ax_ac.get_yticklabels():
-        lbl.set_fontproperties(_fp_ac); lbl.set_color(AC_BRIGHT)
+        lbl.set_fontproperties(_fp_ac); lbl.set_color(AC_BRIGHT); bold_stroke(lbl)
     ax_ac.tick_params(axis='y', length=0)
 
     ax_ac.fill_between(xs, 0, ac_arr, color=AC_DIM, alpha=0.4, zorder=2)
@@ -226,10 +233,10 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.plot(xs, cr_arr, '--', color=CROSS_COL, linewidth=2.0, zorder=4)
 
     # 面板標題：右側靠右對齊（修改3）
-    ax_ac.text(0.99, 0.97, '共機架次',
+    _t = ax_ac.text(0.99, 0.97, '共機架次',
                transform=ax_ac.transAxes, ha='right', va='top',
-               color=AC_BRIGHT, fontsize=45, fontweight='bold',
-               fontfamily=FONT)
+               color=AC_BRIGHT, fontsize=45, fontfamily=FONT)
+    bold_stroke(_t)
 
     # ── 下面板：艦艇 ──
     ylim_sh_raw = max(sh_max * 2.2, sh_max + 5, 5)
@@ -239,9 +246,9 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_sh.set_ylim(-0.5, ylim_sh_top)   # -0.5 讓 y=0 的菱形不貼軸
     ax_sh.set_yticks(ticks_sh)
     ax_sh.set_yticklabels([str(t) for t in ticks_sh])
-    _fp_sh = FontProperties(family=FONT, weight='bold', size=27)
+    _fp_sh = FontProperties(family=FONT, size=33)
     for lbl in ax_sh.get_yticklabels():
-        lbl.set_fontproperties(_fp_sh); lbl.set_color(SH_BRIGHT)
+        lbl.set_fontproperties(_fp_sh); lbl.set_color(SH_BRIGHT); bold_stroke(lbl)
     ax_sh.tick_params(axis='y', length=0)
     ax_sh.spines['bottom'].set_visible(False)  # 隱藏底部 spine，避免與 y=0 grid 重疊
 
@@ -258,19 +265,19 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
                       zorder=3, clip_on=False)
 
         fs = 42 if is_today else 37
-        fw = 'bold' if is_today else 'normal'
         fc = SH_BRIGHT if is_today else SH_DIM
         r_d = scatter_radius_y(ax_sh, fig, sz)
         gap = label_gap_y(ax_sh, fig, fs) * 1.5
-        ax_sh.text(i, v + r_d + gap, str(v),
-                   ha='center', va='bottom', color=fc,
-                   fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
+        _lbl = ax_sh.text(i, v + r_d + gap, str(v),
+                          ha='center', va='bottom', color=fc,
+                          fontsize=fs, fontfamily=FONT, clip_on=False)
+        bold_stroke(_lbl)
 
     # 面板標題：右側靠右對齊（修改3）
-    ax_sh.text(0.99, 0.97, '解放軍艦艇',
+    _t2 = ax_sh.text(0.99, 0.97, '解放軍艦艇',
                transform=ax_sh.transAxes, ha='right', va='top',
-               color=SH_BRIGHT, fontsize=45, fontweight='bold',
-               fontfamily=FONT)
+               color=SH_BRIGHT, fontsize=45, fontfamily=FONT)
+    bold_stroke(_t2)
 
     # ── X 軸（figure coordinates，只在下圖底部）──
     fig.canvas.draw()
@@ -279,15 +286,15 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         disp = ax_sh.transData.transform((i, 0))
         xf, yf = fig.transFigure.inverted().transform(disp)
 
-        fs  = 47 if is_today else 40
+        fs  = 54 if is_today else 46
         fc  = TXTDARK if is_today else TXTSUB
 
-        fig.text(xf, yf - 0.022, f'Day {i + 1}',
-                 ha='center', va='top',
-                 color=fc, fontsize=fs, fontweight='bold', fontfamily=FONT)
-        fig.text(xf, yf - 0.022 - 0.034, date_labels[i],
-                 ha='center', va='top',
-                 color=fc, fontsize=fs, fontweight='bold', fontfamily=FONT)
+        t1 = fig.text(xf, yf - 0.022, f'Day {i + 1}',
+                      ha='center', va='top', color=fc, fontsize=fs, fontfamily=FONT)
+        bold_stroke(t1)
+        t2 = fig.text(xf, yf - 0.022 - 0.038, date_labels[i],
+                      ha='center', va='top', color=fc, fontsize=fs, fontfamily=FONT)
+        bold_stroke(t2)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"split_{today_date}.png"
@@ -401,9 +408,9 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(sticks_ac)
     ax_ac.set_yticklabels([str(t) for t in sticks_ac])
-    _sfp_ac = FontProperties(family=FONT, weight='bold', size=22)
+    _sfp_ac = FontProperties(family=FONT, size=27)
     for lbl in ax_ac.get_yticklabels():
-        lbl.set_fontproperties(_sfp_ac); lbl.set_color(AC_BRIGHT)
+        lbl.set_fontproperties(_sfp_ac); lbl.set_color(AC_BRIGHT); bold_stroke(lbl)
     ax_ac.tick_params(axis='y', length=0)
     ax_ac.tick_params(axis='x', bottom=False, labelbottom=False)
 
@@ -427,9 +434,10 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
         if pd.to_datetime(dates[i]).month != pd.to_datetime(dates[i - 1]).month:
             ax_ac.axvline(i - 0.5, color='#2a3a42', linewidth=1.2, zorder=1)
 
-    ax_ac.text(0.99, 0.97, '共機架次',
+    _pt = ax_ac.text(0.99, 0.97, '共機架次',
                transform=ax_ac.transAxes, ha='right', va='top',
-               color=AC_BRIGHT, fontsize=48, fontweight='bold', fontfamily=FONT)
+               color=AC_BRIGHT, fontsize=48, fontfamily=FONT)
+    bold_stroke(_pt)
 
     # ── 下面板：艦艇 ──
     ylim_sh_raw2 = max(sh_max * 1.8, sh_max + 5, 5)
@@ -439,9 +447,9 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_sh.set_ylim(0, ylim_sh2)
     ax_sh.set_yticks(sticks_sh2)
     ax_sh.set_yticklabels([str(t) for t in sticks_sh2])
-    _sfp_sh = FontProperties(family=FONT, weight='bold', size=22)
+    _sfp_sh = FontProperties(family=FONT, size=27)
     for lbl in ax_sh.get_yticklabels():
-        lbl.set_fontproperties(_sfp_sh); lbl.set_color(SH_BRIGHT)
+        lbl.set_fontproperties(_sfp_sh); lbl.set_color(SH_BRIGHT); bold_stroke(lbl)
     ax_sh.tick_params(axis='y', length=0)
 
     # silence 區間底色（同飛機面板）
@@ -469,18 +477,20 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
         ax_sh.scatter(i, v, c=color, s=sz, alpha=alpha, marker='D',
                       zorder=3, clip_on=False)
 
-    ax_sh.text(0.99, 0.97, '解放軍艦艇',
+    _pt2 = ax_sh.text(0.99, 0.97, '解放軍艦艇',
                transform=ax_sh.transAxes, ha='right', va='top',
-               color=SH_BRIGHT, fontsize=48, fontweight='bold', fontfamily=FONT)
+               color=SH_BRIGHT, fontsize=48, fontfamily=FONT)
+    bold_stroke(_pt2)
 
     # ── X 軸：選擇性顯示，全粗體，今日亮色 ──
     show_ticks = [i for i in range(n) if _xaxis_show(i, n, dates, today_date)]
     ax_sh.set_xticks(show_ticks)
     ax_sh.set_xticklabels([date_labels[i] for i in show_ticks])
-    _xfp = FontProperties(family=FONT, weight='bold', size=28)
+    _xfp = FontProperties(family=FONT, size=34)
     for tick, i in zip(ax_sh.get_xticklabels(), show_ticks):
         tick.set_fontproperties(_xfp)
         tick.set_color(TXTDARK if dates[i] == today_date else TXTSUB)
+        bold_stroke(tick)
     ax_sh.tick_params(axis='x', pad=6, length=0)
 
     if out_path is None:
