@@ -244,7 +244,7 @@ def monthly_stats_html(df, today_date):
     <div class="stats-row">
       <div class="stat">
         <div class="stat-n y">{mo_ac}</div>
-        <div class="stat-l">共機架次</div>
+        <div class="stat-l">中共軍機架次</div>
       </div>
       <div class="stat">
         <div class="stat-n y">{mo_cr}</div>
@@ -321,7 +321,7 @@ def build_index(df):
     <div class="stats-row">
       <div class="stat">
         <div class="stat-n y">{ac_val}</div>
-        <div class="stat-l">共機架次</div>
+        <div class="stat-l">中共軍機架次</div>
         {ac_delta}
       </div>
       <div class="stat">
@@ -331,7 +331,7 @@ def build_index(df):
       </div>
       <div class="stat">
         <div class="stat-n r">{sh_val}</div>
-        <div class="stat-l">解放軍艦艇</div>
+        <div class="stat-l">中共艦艇</div>
         {sh_delta}
       </div>
     </div>

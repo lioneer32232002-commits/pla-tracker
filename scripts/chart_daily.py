@@ -235,7 +235,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.plot(xs, cr_arr, '--', color=CROSS_COL, linewidth=2.0, zorder=4)
 
     # 面板標題：右側靠右對齊
-    _t = ax_ac.text(0.99, 0.97, '共機架次',
+    _t = ax_ac.text(0.99, 0.97, '中共軍機架次',
                transform=ax_ac.transAxes, ha='right', va='top',
                color=AC_BRIGHT, fontsize=46, fontfamily=FONT)
     bold_stroke(_t)
@@ -276,7 +276,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         bold_stroke(_lbl)
 
     # 面板標題：右側靠右對齊
-    _t2 = ax_sh.text(0.99, 0.97, '解放軍艦艇',
+    _t2 = ax_sh.text(0.99, 0.97, '中共艦艇',
                transform=ax_sh.transAxes, ha='right', va='top',
                color=SH_BRIGHT, fontsize=46, fontfamily=FONT)
     bold_stroke(_t2)
@@ -395,7 +395,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(sticks_ac)
     ax_ac.set_yticklabels([str(t) for t in sticks_ac])
-    _sfp_ac = FontProperties(family=FONT, size=27)
+    _sfp_ac = FontProperties(family=FONT, size=34)
     for lbl in ax_ac.get_yticklabels():
         lbl.set_fontproperties(_sfp_ac); lbl.set_color(AC_BRIGHT); bold_stroke(lbl)
     ax_ac.tick_params(axis='y', length=0)
@@ -421,9 +421,9 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
         if pd.to_datetime(dates[i]).month != pd.to_datetime(dates[i - 1]).month:
             ax_ac.axvline(i - 0.5, color='#2a3a42', linewidth=1.2, zorder=1)
 
-    _pt = ax_ac.text(0.99, 0.97, '共機架次',
+    _pt = ax_ac.text(0.99, 0.97, '中共軍機架次',
                transform=ax_ac.transAxes, ha='right', va='top',
-               color=AC_BRIGHT, fontsize=48, fontfamily=FONT)
+               color=AC_BRIGHT, fontsize=56, fontfamily=FONT)
     bold_stroke(_pt)
 
     # ── 下面板：艦艇 ──
@@ -434,7 +434,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_sh.set_ylim(0, ylim_sh2)
     ax_sh.set_yticks(sticks_sh2)
     ax_sh.set_yticklabels([str(t) for t in sticks_sh2])
-    _sfp_sh = FontProperties(family=FONT, size=27)
+    _sfp_sh = FontProperties(family=FONT, size=34)
     for lbl in ax_sh.get_yticklabels():
         lbl.set_fontproperties(_sfp_sh); lbl.set_color(SH_BRIGHT); bold_stroke(lbl)
     ax_sh.tick_params(axis='y', length=0)
@@ -464,9 +464,9 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
         ax_sh.scatter(i, v, c=color, s=sz, alpha=alpha, marker='D',
                       zorder=3, clip_on=False)
 
-    _pt2 = ax_sh.text(0.99, 0.97, '解放軍艦艇',
+    _pt2 = ax_sh.text(0.99, 0.97, '中共艦艇',
                transform=ax_sh.transAxes, ha='right', va='top',
-               color=SH_BRIGHT, fontsize=48, fontfamily=FONT)
+               color=SH_BRIGHT, fontsize=56, fontfamily=FONT)
     bold_stroke(_pt2)
 
     # ── X 軸：選擇性顯示，全粗體，今日亮色 ──
