@@ -318,7 +318,7 @@ def build_index(df):
   {"<div class='alert'>⚡ " + special + "</div>" if special else ""}
 
   <div class="sitrep">
-    <div class="sitrep-label">{today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
+    <div class="sitrep-label">SITREP &nbsp;·&nbsp; {today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
     <div class="stats-row">
       <div class="stat">
         <div class="stat-n y">{ac_val}</div>
