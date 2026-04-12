@@ -253,8 +253,7 @@ def monthly_stats_html(df, today_date):
       </div>
       <div class="stat">
         <div class="stat-n r">{mo_sh_avg:.1f}</div>
-        <div class="stat-l">艦艇日均</div>
-        <div class="stat-detail">艘</div>
+        <div class="stat-l">艦艇日均（艘）</div>
       </div>
     </div>
   </div>"""
