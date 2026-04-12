@@ -197,11 +197,11 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
                    else [f"{d.month}/{d.day}" for d in _dts])
 
     # ── 圖形建立（去掉 ylabel 後 left 縮小）──
-    fig = plt.figure(figsize=(18, 22), facecolor=BG)
+    fig = plt.figure(figsize=(22, 16), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
-                            left=0.09, right=0.97,
-                            top=0.96,  bottom=0.12,
-                            hspace=0.40)
+                            left=0.08, right=0.97,
+                            top=0.96,  bottom=0.13,
+                            hspace=0.38)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
 
@@ -224,20 +224,20 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(ticks_ac)
     ax_ac.set_yticklabels([str(t) for t in ticks_ac])
-    _fp_ac = FontProperties(family=FONT, size=52)
+    _fp_ac = FontProperties(family=FONT, size=34)
     for lbl in ax_ac.get_yticklabels():
         lbl.set_fontproperties(_fp_ac); lbl.set_color(AC_BRIGHT); bold_stroke(lbl)
     ax_ac.tick_params(axis='y', length=0)
 
     ax_ac.fill_between(xs, 0, ac_arr, color=AC_DIM, alpha=0.4, zorder=2)
     ax_ac.fill_between(xs, nc_arr, ac_arr, color=AC_BRIGHT, alpha=0.75, zorder=3)
-    ax_ac.plot(xs, ac_arr, color=AC_BRIGHT, linewidth=3.5, zorder=4)
-    ax_ac.plot(xs, cr_arr, '--', color=CROSS_COL, linewidth=2.8, zorder=4)
+    ax_ac.plot(xs, ac_arr, color=AC_BRIGHT, linewidth=2.5, zorder=4)
+    ax_ac.plot(xs, cr_arr, '--', color=CROSS_COL, linewidth=2.0, zorder=4)
 
     # 面板標題：右側靠右對齊
     _t = ax_ac.text(0.99, 0.97, '共機架次',
                transform=ax_ac.transAxes, ha='right', va='top',
-               color=AC_BRIGHT, fontsize=72, fontfamily=FONT)
+               color=AC_BRIGHT, fontsize=46, fontfamily=FONT)
     bold_stroke(_t)
 
     # ── 下面板：艦艇 ──
@@ -248,25 +248,25 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_sh.set_ylim(-0.5, ylim_sh_top)   # -0.5 讓 y=0 的菱形不貼軸
     ax_sh.set_yticks(ticks_sh)
     ax_sh.set_yticklabels([str(t) for t in ticks_sh])
-    _fp_sh = FontProperties(family=FONT, size=52)
+    _fp_sh = FontProperties(family=FONT, size=34)
     for lbl in ax_sh.get_yticklabels():
         lbl.set_fontproperties(_fp_sh); lbl.set_color(SH_BRIGHT); bold_stroke(lbl)
     ax_sh.tick_params(axis='y', length=0)
-    ax_sh.spines['bottom'].set_visible(False)  # 隱藏底部 spine，避免與 y=0 grid 重疊
+    ax_sh.spines['bottom'].set_visible(False)
 
     # connector dotted line
-    ax_sh.plot(xs, sh_vals.tolist(), ':', color='#555c62', linewidth=2.5, zorder=2)
+    ax_sh.plot(xs, sh_vals.tolist(), ':', color='#555c62', linewidth=1.8, zorder=2)
 
     for i, row in df_plot.iterrows():
         is_today = (row['date'] == today_date)
         v     = int(sh_vals[i])
-        sz    = dot_size_ships(v, sh_min, sh_max) * 2.2
+        sz    = dot_size_ships(v, sh_min, sh_max) * 1.4
         color = SH_BRIGHT if is_today else SH_DIM
         alpha = 0.95 if is_today else 0.7
         ax_sh.scatter(i, v, c=color, s=sz, alpha=alpha, marker='D',
                       zorder=3, clip_on=False)
 
-        fs = 66 if is_today else 58
+        fs = 44 if is_today else 36
         fc = SH_BRIGHT if is_today else SH_DIM
         r_d = scatter_radius_y(ax_sh, fig, sz)
         gap = label_gap_y(ax_sh, fig, fs) * 1.5
@@ -278,7 +278,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     # 面板標題：右側靠右對齊
     _t2 = ax_sh.text(0.99, 0.97, '解放軍艦艇',
                transform=ax_sh.transAxes, ha='right', va='top',
-               color=SH_BRIGHT, fontsize=72, fontfamily=FONT)
+               color=SH_BRIGHT, fontsize=46, fontfamily=FONT)
     bold_stroke(_t2)
 
     # ── X 軸（figure coordinates，只在下圖底部）──
@@ -288,7 +288,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         disp = ax_sh.transData.transform((i, 0))
         xf, yf = fig.transFigure.inverted().transform(disp)
 
-        fs  = 64 if is_today else 52
+        fs  = 50 if is_today else 42
         fc  = TXTDARK if is_today else TXTSUB
 
         t1 = fig.text(xf, yf - 0.022, date_labels[i],
