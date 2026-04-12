@@ -71,6 +71,7 @@ def get_font():
 
 FONT = get_font()
 plt.rcParams['font.family'] = FONT
+plt.rcParams['font.weight'] = 'bold'
 plt.rcParams['axes.unicode_minus'] = False
 
 

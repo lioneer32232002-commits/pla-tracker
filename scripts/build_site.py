@@ -215,12 +215,11 @@ def footer_html(update_label):
 
 
 def chart_section(title, img_path, obs=''):
-    obs_html = f'<span class="chart-obs">{obs}</span>' if obs else ''
     inner = (f'<img class="chart-img" src="{img_path}" alt="{title}">'
              if img_path else '<div class="chart-missing">（圖表尚未產生）</div>')
     return f"""  <section class="chart-section">
     <div class="chart-header">
-      <span class="chart-title">{title}</span>{obs_html}
+      <span class="chart-title">{title}</span>
     </div>
     {inner}
   </section>"""

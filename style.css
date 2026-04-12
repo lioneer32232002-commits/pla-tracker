@@ -167,14 +167,13 @@ main{max-width:960px;margin:0 auto;padding:1.75rem 1.5rem}
 }
 .chart-header{
   display:flex;align-items:baseline;flex-wrap:wrap;
-  gap:.4rem .9rem;margin-bottom:1rem;
-  padding-bottom:.75rem;border-bottom:1px solid var(--bdr);
+  gap:.4rem .9rem;margin-bottom:.6rem;
+  padding-bottom:.5rem;border-bottom:1px solid var(--bdr);
 }
 .chart-title{
   font-size:.72rem;font-weight:800;text-transform:uppercase;
   letter-spacing:.16em;color:var(--sub2);white-space:nowrap;
 }
-.chart-obs{font-size:.95rem;color:var(--y);font-weight:600}
 .chart-img{
   display:block;width:100%;height:auto;
   border-radius:6px;
