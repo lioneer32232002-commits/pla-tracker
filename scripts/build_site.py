@@ -340,7 +340,7 @@ def build_index(df):
   {monthly_stats_html(df, today_date)}
 
   {chart_section("10日觀察", split_img)}
-  {chart_section("近期趨勢", streak_img)}
+  {chart_section("2026 至今", streak_img)}
 
 </main>
 
