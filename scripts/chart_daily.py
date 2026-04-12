@@ -190,7 +190,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     fig = plt.figure(figsize=(30, 27), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
                             left=0.06, right=0.96,
-                            top=0.84,  bottom=0.22,
+                            top=0.88,  bottom=0.22,
                             hspace=0.38)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
@@ -210,9 +210,12 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ylim_ac_raw = max(ac_max * 1.8, 4)
     step_ac     = _ystep(ylim_ac_raw)
     ylim_ac     = _ceil_s(ylim_ac_raw, step_ac)
+    ticks_ac = list(range(0, ylim_ac + 1, step_ac))
     ax_ac.set_ylim(0, ylim_ac)
-    ax_ac.set_yticks(range(0, ylim_ac + 1, step_ac))
-    ax_ac.tick_params(axis='y', colors=AC_BRIGHT, labelsize=27)
+    ax_ac.set_yticks(ticks_ac)
+    ax_ac.set_yticklabels([str(t) for t in ticks_ac],
+                          fontsize=27, fontweight='bold', color=AC_BRIGHT, fontfamily=FONT)
+    ax_ac.tick_params(axis='y', length=0)
 
     ax_ac.fill_between(xs, 0, ac_arr, color=AC_DIM, alpha=0.4, zorder=2)
     ax_ac.fill_between(xs, nc_arr, ac_arr, color=AC_BRIGHT, alpha=0.75, zorder=3)
@@ -229,9 +232,12 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ylim_sh_raw = max(sh_max * 2.2, sh_max + 5, 5)
     step_sh     = _ystep(ylim_sh_raw)
     ylim_sh_top = _ceil_s(ylim_sh_raw, step_sh)
+    ticks_sh = list(range(0, ylim_sh_top + 1, step_sh))
     ax_sh.set_ylim(-0.5, ylim_sh_top)   # -0.5 讓 y=0 的菱形不貼軸
-    ax_sh.set_yticks(range(0, ylim_sh_top + 1, step_sh))
-    ax_sh.tick_params(axis='y', colors=SH_BRIGHT, labelsize=27)
+    ax_sh.set_yticks(ticks_sh)
+    ax_sh.set_yticklabels([str(t) for t in ticks_sh],
+                          fontsize=27, fontweight='bold', color=SH_BRIGHT, fontfamily=FONT)
+    ax_sh.tick_params(axis='y', length=0)
     ax_sh.spines['bottom'].set_visible(False)  # 隱藏底部 spine，避免與 y=0 grid 重疊
 
     # connector dotted line
@@ -270,28 +276,24 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
 
         fs  = 47 if is_today else 40
         fc  = TXTDARK if is_today else TXTSUB
-        fw  = 'bold' if is_today else 'normal'
 
         fig.text(xf, yf - 0.022, f'Day {i + 1}',
                  ha='center', va='top',
-                 color=fc, fontsize=fs, fontweight=fw, fontfamily=FONT)
+                 color=fc, fontsize=fs, fontweight='bold', fontfamily=FONT)
         fig.text(xf, yf - 0.022 - 0.034, date_labels[i],
                  ha='center', va='top',
-                 color=fc, fontsize=fs, fontweight=fw, fontfamily=FONT)
+                 color=fc, fontsize=fs, fontweight='bold', fontfamily=FONT)
 
-    # ── 標題區（修改1：移除 Day N）──
+    # ── 標題區 ──
     source_str = (f"{today_dt.strftime('%Y-%m-%d')}  ·  "
                   f"資料來源：中華民國國防部")
 
     fig.text(0.04, 0.968, '中共擾台動態',
              ha='left', va='top', color=TXTDARK,
              fontsize=54, fontweight='bold', fontfamily=FONT)
-    fig.text(0.04, 0.934, obs_text,
-             ha='left', va='top', color=AC_BRIGHT,
-             fontsize=38, fontweight='bold', fontfamily=FONT)
-    fig.text(0.04, 0.900, source_str,
+    fig.text(0.04, 0.934, source_str,
              ha='left', va='top', color=TXTSUB,
-             fontsize=33, fontfamily=FONT)
+             fontsize=33, fontweight='bold', fontfamily=FONT)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"split_{today_date}.png"
@@ -401,9 +403,12 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ylim_ac_raw = max(ac_max * 1.45, 5)
     step_ac     = _ystep(ylim_ac_raw)
     ylim_ac     = _ceil_s(ylim_ac_raw, step_ac)
+    sticks_ac   = list(range(0, ylim_ac + 1, step_ac))
     ax_ac.set_ylim(0, ylim_ac)
-    ax_ac.set_yticks(range(0, ylim_ac + 1, step_ac))
-    ax_ac.tick_params(axis='y', colors=AC_BRIGHT, labelsize=22)
+    ax_ac.set_yticks(sticks_ac)
+    ax_ac.set_yticklabels([str(t) for t in sticks_ac],
+                          fontsize=22, fontweight='bold', color=AC_BRIGHT, fontfamily=FONT)
+    ax_ac.tick_params(axis='y', length=0)
     ax_ac.tick_params(axis='x', bottom=False, labelbottom=False)
 
     # silence 區間底色
@@ -457,9 +462,12 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ylim_sh_raw2 = max(sh_max * 1.8, sh_max + 5, 5)
     step_sh2     = _ystep(ylim_sh_raw2)
     ylim_sh2     = _ceil_s(ylim_sh_raw2, step_sh2)
+    sticks_sh2   = list(range(0, ylim_sh2 + 1, step_sh2))
     ax_sh.set_ylim(0, ylim_sh2)
-    ax_sh.set_yticks(range(0, ylim_sh2 + 1, step_sh2))
-    ax_sh.tick_params(axis='y', colors=SH_BRIGHT, labelsize=22)
+    ax_sh.set_yticks(sticks_sh2)
+    ax_sh.set_yticklabels([str(t) for t in sticks_sh2],
+                          fontsize=22, fontweight='bold', color=SH_BRIGHT, fontfamily=FONT)
+    ax_sh.tick_params(axis='y', length=0)
 
     # silence 區間底色（同飛機面板）
     for s, e in _silence_runs(sorties, min_days=2):
@@ -528,16 +536,14 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
                transform=ax_sh.transAxes, ha='right', va='top',
                color=SH_BRIGHT, fontsize=48, fontweight='bold', fontfamily=FONT)
 
-    # ── X 軸：選擇性顯示，今日 bold ──
+    # ── X 軸：選擇性顯示，全粗體，今日亮色 ──
     show_ticks = [i for i in range(n) if _xaxis_show(i, n, dates, today_date)]
     ax_sh.set_xticks(show_ticks)
     ax_sh.set_xticklabels([date_labels[i] for i in show_ticks],
-                          fontsize=28, fontfamily=FONT)
+                          fontsize=28, fontweight='bold', fontfamily=FONT)
     for tick, i in zip(ax_sh.get_xticklabels(), show_ticks):
-        is_today = (dates[i] == today_date)
-        tick.set_color(TXTDARK if is_today else TXTSUB)
-        tick.set_fontweight('bold' if is_today else 'normal')
-    ax_sh.tick_params(axis='x', pad=6)
+        tick.set_color(TXTDARK if dates[i] == today_date else TXTSUB)
+    ax_sh.tick_params(axis='x', pad=6, length=0)
 
     # ── 標題區（只保留主標題行）──
     fig.text(0.04, 0.964, '中共擾台動態 — 2026 年至今',
