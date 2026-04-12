@@ -330,9 +330,7 @@ def _is_local_max(vals, i, window=2):
 
 
 def _xaxis_show(i, n, dates, today_date):
-    """只顯示每月月首，且跳過 i==0（緊貼 Y 軸）"""
-    if i == 0:
-        return False
+    """只顯示每月月首"""
     return pd.to_datetime(dates[i]).day == 1
 
 
@@ -388,7 +386,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
 
     for ax in [ax_ac, ax_sh]:
         setup_ax(ax)
-        ax.set_xlim(-0.5, n - 0.5)
+        ax.set_xlim(-2.5, n - 0.5)
 
     # ── 上面板：飛機面積圖 ──
     ylim_ac_raw = max(ac_max * 1.45, 5)
