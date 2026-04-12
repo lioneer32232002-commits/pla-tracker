@@ -237,6 +237,8 @@ footer a:hover{color:var(--cyan)}
   .stat{padding:0 .75rem}
   .stat:first-child{border-left:none;padding-left:0}
   .stat-n{font-size:2.3rem}
+  .chart-title{font-size:.8rem}
+  .chart-obs{font-size:1.05rem;line-height:1.5}
   footer{padding:.75rem 1rem}
 }
-@media(max-width:380px){.stat-n{font-size:1.9rem}}
+@media(max-width:380px){.stat-n{font-size:1.9rem};.chart-obs{font-size:.95rem}}

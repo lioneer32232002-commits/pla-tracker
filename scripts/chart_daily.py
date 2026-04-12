@@ -34,12 +34,39 @@ CROSS_COL = '#ff9933'
 
 # ── 字型 ──────────────────────────────────────────────────────────────────────
 def get_font():
-    candidates = ['Noto Sans CJK TC', 'Microsoft JhengHei', 'PingFang TC',
-                  'STHeiti', 'Arial Unicode MS', 'DejaVu Sans']
+    import glob, os
+    candidates = [
+        'Noto Sans CJK TC', 'Noto Sans TC',
+        'Noto Sans CJK SC', 'Noto Sans SC',
+        'Microsoft JhengHei', 'PingFang TC',
+        'STHeiti', 'Arial Unicode MS',
+    ]
     available = {f.name for f in fm.fontManager.ttflist}
     for c in candidates:
         if c in available:
             return c
+
+    # Ubuntu / CI：直接搜尋字型檔案並手動載入
+    search_dirs = [
+        '/usr/share/fonts', '/usr/local/share/fonts',
+        os.path.expanduser('~/.local/share/fonts'),
+        os.path.expanduser('~/.fonts'),
+    ]
+    patterns = ['*Noto*CJK*TC*', '*NotoSansCJKtc*', '*NotoSansCJK*TC*',
+                '*NotoSansCJK-Regular*', '*Noto*CJK*']
+    for d in search_dirs:
+        if not os.path.isdir(d):
+            continue
+        for pat in patterns:
+            for path in glob.glob(os.path.join(d, '**', pat), recursive=True):
+                if path.endswith(('.otf', '.ttf', '.ttc')):
+                    try:
+                        fm.fontManager.addfont(path)
+                        name = fm.FontProperties(fname=path).get_name()
+                        if name:
+                            return name
+                    except Exception:
+                        pass
     return 'DejaVu Sans'
 
 FONT = get_font()
