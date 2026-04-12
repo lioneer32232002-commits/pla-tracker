@@ -61,6 +61,8 @@ def delta_span(cur, prev_val):
 
 def build_css():
     css = """\
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
 :root{
   --bg:#090d0f; --sur:#0e1618; --bdr:#1a2830;
   --y:#f5c842;  --r:#e05555;
@@ -70,7 +72,7 @@ def build_css():
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px}
 body{background:var(--bg);color:var(--tx);
-  font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-family:'Noto Sans TC','Microsoft JhengHei',system-ui,-apple-system,sans-serif;
   font-weight:500;min-height:100vh}
 
 /* ── Top bar ── */
@@ -105,7 +107,7 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .sitrep-label::after{content:'';flex:1;min-width:30px;height:1px;background:var(--bdr)}
 
 /* ── Stats ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr)}
 .stat{padding:0 1.5rem}
 .stat:first-child{padding-left:0}
 .stat:last-child{padding-right:0}
@@ -133,9 +135,9 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .chart-header{display:flex;align-items:baseline;flex-wrap:wrap;
   gap:.5rem 1rem;margin-bottom:.75rem;
   padding-bottom:.5rem;border-bottom:1px solid var(--bdr)}
-.chart-title{font-size:.6rem;font-weight:800;text-transform:uppercase;
+.chart-title{font-size:.72rem;font-weight:800;text-transform:uppercase;
   letter-spacing:.15em;color:var(--sub);white-space:nowrap}
-.chart-obs{font-size:.76rem;color:var(--y);font-weight:600}
+.chart-obs{font-size:.95rem;color:var(--y);font-weight:600}
 .chart-img{display:block;width:100%;height:auto;border-radius:var(--rad)}
 .chart-missing{background:var(--sur);border:1px dashed var(--bdr);
   border-radius:var(--rad);padding:2rem;text-align:center;
@@ -163,14 +165,13 @@ footer a:hover{color:var(--tx)}
   .top-bar{display:none}
   .site-header{padding:.7rem 1rem}
   main{padding:1rem}
-  .stats-row{grid-template-columns:1fr 1fr;gap:1.5rem 0}
-  .stat{padding:0 1rem}
-  .stat:first-child,.stat:nth-child(3){border-left:none;padding-left:0}
-  .stat:nth-child(2),.stat:nth-child(4){border-left:1px solid var(--bdr)}
-  .stat-n{font-size:2.6rem}
+  .stats-row{grid-template-columns:repeat(3,1fr);gap:0}
+  .stat{padding:0 .75rem}
+  .stat:first-child{border-left:none;padding-left:0}
+  .stat-n{font-size:2.3rem}
   footer{padding:.75rem 1rem}
 }
-@media(max-width:380px){.stat-n{font-size:2.1rem}}
+@media(max-width:380px){.stat-n{font-size:1.9rem}}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
@@ -299,10 +300,6 @@ def build_index(df):
         <div class="stat-n r">{sh_val}</div>
         <div class="stat-l">解放軍艦艇</div>
         {sh_delta}
-      </div>
-      <div class="stat">
-        <div class="stat-n" style="font-size:1.8rem;margin-top:.2rem"><span class="badge {type_lower}">{type_label}</span></div>
-        <div class="stat-l">機型</div>
       </div>
     </div>
   </div>
