@@ -260,7 +260,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     for i, row in df_plot.iterrows():
         is_today = (row['date'] == today_date)
         v     = int(sh_vals[i])
-        sz    = dot_size_ships(v, sh_min, sh_max) * 1.4
+        sz    = dot_size_ships(v, sh_min, sh_max) * 0.7
         color = SH_BRIGHT if is_today else SH_DIM
         alpha = 0.95 if is_today else 0.7
         ax_sh.scatter(i, v, c=color, s=sz, alpha=alpha, marker='D',
@@ -269,7 +269,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         fs = 44 if is_today else 36
         fc = SH_BRIGHT if is_today else SH_DIM
         r_d = scatter_radius_y(ax_sh, fig, sz)
-        gap = label_gap_y(ax_sh, fig, fs) * 1.5
+        gap = label_gap_y(ax_sh, fig, fs) * 0.6
         _lbl = ax_sh.text(i, v + r_d + gap, str(v),
                           ha='center', va='bottom', color=fc,
                           fontsize=fs, fontfamily=FONT, clip_on=False)
@@ -294,14 +294,6 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         t1 = fig.text(xf, yf - 0.022, date_labels[i],
                       ha='center', va='top', color=fc, fontsize=fs, fontfamily=FONT)
         bold_stroke(t1)
-
-    # 若同一月份，於左下顯示月份標示
-    if _same_month:
-        mo = pd.to_datetime(today_date).month
-        disp0 = ax_sh.transData.transform((0, 0))
-        xf0, yf0 = fig.transFigure.inverted().transform(disp0)
-        fig.text(xf0, yf0 - 0.075, f'{mo}月',
-                 ha='center', va='top', color=TXTSUB, fontsize=52, fontfamily=FONT)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"split_{today_date}.png"
