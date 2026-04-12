@@ -330,20 +330,10 @@ def _is_local_max(vals, i, window=2):
 
 
 def _xaxis_show(i, n, dates, today_date):
-    """決定這個 x 位置是否顯示日期標籤"""
-    if dates[i] == today_date:
-        return True
-    dt = pd.to_datetime(dates[i])
-    # 每月第一天
-    if dt.day == 1:
-        return True
-    # 資料少時全顯示
-    if n <= 20:
-        return True
-    # 每 7 天一格
-    if i % 7 == 0:
-        return True
-    return False
+    """只顯示每月月首，且跳過 i==0（緊貼 Y 軸）"""
+    if i == 0:
+        return False
+    return pd.to_datetime(dates[i]).day == 1
 
 
 def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
@@ -487,9 +477,9 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_sh.set_xticks(show_ticks)
     ax_sh.set_xticklabels([date_labels[i] for i in show_ticks])
     _xfp = FontProperties(family=FONT, size=34)
-    for tick, i in zip(ax_sh.get_xticklabels(), show_ticks):
+    for tick in ax_sh.get_xticklabels():
         tick.set_fontproperties(_xfp)
-        tick.set_color(TXTDARK if dates[i] == today_date else TXTSUB)
+        tick.set_color(TXTSUB)
         bold_stroke(tick)
     ax_sh.tick_params(axis='x', pad=6, length=0)
 
