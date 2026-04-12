@@ -10,6 +10,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.font_manager as fm
+from matplotlib.font_manager import FontProperties
 import numpy as np
 import sys
 from pathlib import Path
@@ -190,7 +191,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     fig = plt.figure(figsize=(30, 27), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
                             left=0.06, right=0.96,
-                            top=0.88,  bottom=0.22,
+                            top=0.96,  bottom=0.22,
                             hspace=0.38)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
@@ -213,8 +214,10 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ticks_ac = list(range(0, ylim_ac + 1, step_ac))
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(ticks_ac)
-    ax_ac.set_yticklabels([str(t) for t in ticks_ac],
-                          fontsize=27, fontweight='bold', color=AC_BRIGHT, fontfamily=FONT)
+    ax_ac.set_yticklabels([str(t) for t in ticks_ac])
+    _fp_ac = FontProperties(family=FONT, weight='bold', size=27)
+    for lbl in ax_ac.get_yticklabels():
+        lbl.set_fontproperties(_fp_ac); lbl.set_color(AC_BRIGHT)
     ax_ac.tick_params(axis='y', length=0)
 
     ax_ac.fill_between(xs, 0, ac_arr, color=AC_DIM, alpha=0.4, zorder=2)
@@ -235,8 +238,10 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ticks_sh = list(range(0, ylim_sh_top + 1, step_sh))
     ax_sh.set_ylim(-0.5, ylim_sh_top)   # -0.5 讓 y=0 的菱形不貼軸
     ax_sh.set_yticks(ticks_sh)
-    ax_sh.set_yticklabels([str(t) for t in ticks_sh],
-                          fontsize=27, fontweight='bold', color=SH_BRIGHT, fontfamily=FONT)
+    ax_sh.set_yticklabels([str(t) for t in ticks_sh])
+    _fp_sh = FontProperties(family=FONT, weight='bold', size=27)
+    for lbl in ax_sh.get_yticklabels():
+        lbl.set_fontproperties(_fp_sh); lbl.set_color(SH_BRIGHT)
     ax_sh.tick_params(axis='y', length=0)
     ax_sh.spines['bottom'].set_visible(False)  # 隱藏底部 spine，避免與 y=0 grid 重疊
 
@@ -283,17 +288,6 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
         fig.text(xf, yf - 0.022 - 0.034, date_labels[i],
                  ha='center', va='top',
                  color=fc, fontsize=fs, fontweight='bold', fontfamily=FONT)
-
-    # ── 標題區 ──
-    source_str = (f"{today_dt.strftime('%Y-%m-%d')}  ·  "
-                  f"資料來源：中華民國國防部")
-
-    fig.text(0.04, 0.968, '中共擾台動態',
-             ha='left', va='top', color=TXTDARK,
-             fontsize=54, fontweight='bold', fontfamily=FONT)
-    fig.text(0.04, 0.934, source_str,
-             ha='left', va='top', color=TXTSUB,
-             fontsize=33, fontweight='bold', fontfamily=FONT)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"split_{today_date}.png"
@@ -390,7 +384,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     # ── 圖形建立 ──
     fig = plt.figure(figsize=(fig_w, fig_h), facecolor=BG)
     gs  = gridspec.GridSpec(2, 1,
-                            hspace=0.30, top=0.88, bottom=0.10,
+                            hspace=0.30, top=0.96, bottom=0.10,
                             left=0.07,  right=0.97)
     ax_ac = fig.add_subplot(gs[0])
     ax_sh = fig.add_subplot(gs[1])
@@ -406,8 +400,10 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     sticks_ac   = list(range(0, ylim_ac + 1, step_ac))
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(sticks_ac)
-    ax_ac.set_yticklabels([str(t) for t in sticks_ac],
-                          fontsize=22, fontweight='bold', color=AC_BRIGHT, fontfamily=FONT)
+    ax_ac.set_yticklabels([str(t) for t in sticks_ac])
+    _sfp_ac = FontProperties(family=FONT, weight='bold', size=22)
+    for lbl in ax_ac.get_yticklabels():
+        lbl.set_fontproperties(_sfp_ac); lbl.set_color(AC_BRIGHT)
     ax_ac.tick_params(axis='y', length=0)
     ax_ac.tick_params(axis='x', bottom=False, labelbottom=False)
 
@@ -426,29 +422,6 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.plot(xs, sorties, color=AC_BRIGHT, linewidth=2, zorder=4)
     ax_ac.plot(xs, crosses, '--', color=CROSS_COL, linewidth=1.6, zorder=4)
 
-    # 機動數字標籤：峰值 + 今日 + 局部高點
-    for i, v in enumerate(sorties):
-        is_today = (dates[i] == today_date)
-        is_peak  = (v >= PEAK_TH)
-        is_lmax  = _is_local_max(sorties, i, window=2)
-
-        if not (is_today or is_peak or is_lmax):
-            continue
-        if v == 0 and not is_today:
-            continue
-
-        if is_today:
-            fs, fw, fc = afs(38), 'bold', AC_BRIGHT
-        elif is_peak:
-            fs, fw, fc = afs(34), 'bold', AC_BRIGHT
-        else:
-            fs, fw, fc = afs(26), 'normal', AC_DIM
-
-        gap = label_gap_y(ax_ac, fig, fs) * 0.7
-        ax_ac.text(i, v + gap, str(int(v)),
-                   ha='center', va='bottom', color=fc,
-                   fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
-
     # 月份分隔線
     for i in range(1, n):
         if pd.to_datetime(dates[i]).month != pd.to_datetime(dates[i - 1]).month:
@@ -465,8 +438,10 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     sticks_sh2   = list(range(0, ylim_sh2 + 1, step_sh2))
     ax_sh.set_ylim(0, ylim_sh2)
     ax_sh.set_yticks(sticks_sh2)
-    ax_sh.set_yticklabels([str(t) for t in sticks_sh2],
-                          fontsize=22, fontweight='bold', color=SH_BRIGHT, fontfamily=FONT)
+    ax_sh.set_yticklabels([str(t) for t in sticks_sh2])
+    _sfp_sh = FontProperties(family=FONT, weight='bold', size=22)
+    for lbl in ax_sh.get_yticklabels():
+        lbl.set_fontproperties(_sfp_sh); lbl.set_color(SH_BRIGHT)
     ax_sh.tick_params(axis='y', length=0)
 
     # silence 區間底色（同飛機面板）
@@ -480,30 +455,12 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
 
     ax_sh.plot(xs, ships, ':', color='#555c62', linewidth=1.5, zorder=2)
 
-    # 機動標籤：避免垂直重疊（記錄已繪製的 y 位置）
-    last_label_y = {}  # i → actual y used
-    min_ygap_pts = afs(20) * 1.2  # 最小垂直間距（points）
-
-    def y_clear(y_data, ax, fig, new_i):
-        """檢查新標籤與鄰近已繪標籤是否有足夠間距"""
-        fig_h = fig.get_figheight()
-        ax_h_pts = ax.get_position().height * fig_h * 72
-        ylim = ax.get_ylim()
-        pt_per_data = ax_h_pts / (ylim[1] - ylim[0])
-        for prev_i, prev_y in last_label_y.items():
-            if abs(prev_i - new_i) <= 2:
-                if abs((y_data - prev_y) * pt_per_data) < min_ygap_pts:
-                    return False
-        return True
-
     # 菱形縮小，避免重疊；streak chart 用較小 size range
     sh_sz_max = max(400, 1600 - n * 20)  # n=39 → 820; n=99 → 640
     sh_sz_min = max(200, sh_sz_max * 0.45)
 
     for i, v in enumerate(ships):
         is_today = (dates[i] == today_date)
-        is_lmax  = _is_local_max(ships, i, window=1)
-
         raw_sz = dot_size_ships(v, sh_min, sh_max)
         sz = sh_sz_min + (sh_sz_max - sh_sz_min) * (raw_sz - 2500) / (5500 - 2500)
         sz = max(sh_sz_min, min(sh_sz_max, sz))
@@ -512,26 +469,6 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
         ax_sh.scatter(i, v, c=color, s=sz, alpha=alpha, marker='D',
                       zorder=3, clip_on=False)
 
-        if not (is_today or is_lmax):
-            continue
-
-        fs = afs(34) if is_today else afs(26)
-        fw = 'bold' if is_today else 'normal'
-        fc = SH_BRIGHT if is_today else SH_DIM
-        r_d = scatter_radius_y(ax_sh, fig, sz)
-        gap = label_gap_y(ax_sh, fig, fs) * 1.2
-
-        y_base = v + r_d + gap
-        # 若重疊則往上偏移
-        y_used = y_base
-        if not y_clear(y_used, ax_sh, fig, i):
-            y_used = y_base + label_gap_y(ax_sh, fig, fs) * 1.5
-
-        ax_sh.text(i, y_used, str(v),
-                   ha='center', va='bottom', color=fc,
-                   fontsize=fs, fontweight=fw, fontfamily=FONT, clip_on=False)
-        last_label_y[i] = y_used
-
     ax_sh.text(0.99, 0.97, '解放軍艦艇',
                transform=ax_sh.transAxes, ha='right', va='top',
                color=SH_BRIGHT, fontsize=48, fontweight='bold', fontfamily=FONT)
@@ -539,16 +476,12 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     # ── X 軸：選擇性顯示，全粗體，今日亮色 ──
     show_ticks = [i for i in range(n) if _xaxis_show(i, n, dates, today_date)]
     ax_sh.set_xticks(show_ticks)
-    ax_sh.set_xticklabels([date_labels[i] for i in show_ticks],
-                          fontsize=28, fontweight='bold', fontfamily=FONT)
+    ax_sh.set_xticklabels([date_labels[i] for i in show_ticks])
+    _xfp = FontProperties(family=FONT, weight='bold', size=28)
     for tick, i in zip(ax_sh.get_xticklabels(), show_ticks):
+        tick.set_fontproperties(_xfp)
         tick.set_color(TXTDARK if dates[i] == today_date else TXTSUB)
     ax_sh.tick_params(axis='x', pad=6, length=0)
-
-    # ── 標題區（只保留主標題行）──
-    fig.text(0.04, 0.964, '中共擾台動態 — 2026 年至今',
-             ha='left', va='top', color=TXTDARK,
-             fontsize=60, fontweight='bold', fontfamily=FONT)
 
     if out_path is None:
         out_path = OUTPUT_DIR / f"streak_{today_date}.png"
