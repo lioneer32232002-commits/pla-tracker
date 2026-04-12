@@ -318,7 +318,7 @@ def build_index(df):
   {"<div class='alert'>⚡ " + special + "</div>" if special else ""}
 
   <div class="sitrep">
-    <div class="sitrep-label">SITREP &nbsp;·&nbsp; {today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
+    <div class="sitrep-label">{today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
     <div class="stats-row">
       <div class="stat">
         <div class="stat-n y">{ac_val}</div>
@@ -338,10 +338,10 @@ def build_index(df):
     </div>
   </div>
 
+  {monthly_stats_html(df, today_date)}
+
   {chart_section("10日觀察", split_img)}
   {chart_section("近期趨勢", streak_img)}
-
-  {monthly_stats_html(df, today_date)}
 
 </main>
 
