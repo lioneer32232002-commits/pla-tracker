@@ -7,6 +7,11 @@ on:
     # 台灣時間 14:00 = UTC 06:00 (備用，若12點MND尚未更新)
     - cron: '0 6 * * *'
   workflow_dispatch:  # 允許手動觸發
+    inputs:
+      force_rebuild:
+        description: '強制重新產圖（即使今日數據已存在）'
+        required: false
+        default: 'false'
 
 jobs:
   update:
@@ -35,6 +40,7 @@ jobs:
       - name: Run fetch and update
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FORCE_REBUILD: ${{ github.event.inputs.force_rebuild || 'false' }}
         run: python scripts/fetch_and_update.py
 
       - name: Commit and push if changed
