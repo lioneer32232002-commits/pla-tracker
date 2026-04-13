@@ -161,10 +161,11 @@ footer a:hover{color:var(--tx)}
 # ── Chart.js 圖表產生 ─────────────────────────────────────────────────────────
 
 # JS 模板：用 __PLACEHOLDER__ 取代資料，避免 Python f-string 跳脫問題
+# __XTICKS_EXTRA__ 可插入額外 ticks 設定（如 YTD 的 callback 過濾）
 _CHART_JS = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
-var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0},border:{color:'#2a3336'}};
+var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0__XTICKS_EXTRA__},border:{color:'#2a3336'}};
 var yA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxTicksLimit:4},border:{color:'#2a3336'},beginAtZero:true};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
   {type:'bar',data:AC,backgroundColor:ACbg,borderRadius:2,order:2},
@@ -176,8 +177,10 @@ new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
 })();"""
 
 
-def _chartjs_panels(uid, df_slice, today_date):
-    """兩格 Chart.js 面板：上架次、下艦艇。回傳 HTML 字串。"""
+def _chartjs_panels(uid, df_slice, today_date, xticks_extra=''):
+    """兩格 Chart.js 面板：上架次、下艦艇。回傳 HTML 字串。
+    xticks_extra: 插入 ticks 物件的額外屬性（含前置逗號），如 YTD 的 callback。
+    """
     data = df_slice.reset_index(drop=True)
     today_idx = next(
         (i for i, (_, r) in enumerate(data.iterrows()) if r['date'] == today_date),
@@ -194,13 +197,14 @@ def _chartjs_panels(uid, df_slice, today_date):
     sh_bg = ['#e05555' if i == today_idx else '#7a2a2a' for i in range(n)]
 
     js = (_CHART_JS
-          .replace('__L__',    json.dumps(labels))
-          .replace('__AC__',   json.dumps(aircraft))
-          .replace('__CR__',   json.dumps(crosses))
-          .replace('__SH__',   json.dumps(ships))
-          .replace('__ACbg__', json.dumps(ac_bg))
-          .replace('__SHbg__', json.dumps(sh_bg))
-          .replace('__UID__',  uid))
+          .replace('__L__',           json.dumps(labels))
+          .replace('__AC__',          json.dumps(aircraft))
+          .replace('__CR__',          json.dumps(crosses))
+          .replace('__SH__',          json.dumps(ships))
+          .replace('__ACbg__',        json.dumps(ac_bg))
+          .replace('__SHbg__',        json.dumps(sh_bg))
+          .replace('__UID__',         uid)
+          .replace('__XTICKS_EXTRA__', xticks_extra))
 
     return (f'<div class="split-panels">'
             f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
@@ -297,9 +301,10 @@ def build_index(df):
 
     # 近10日圖表
     recent_html  = _chartjs_panels('rc',  df.tail(10),   today_date)
-    # YTD 圖表（2026 起全部資料）
+    # YTD 圖表（2026 起全部資料），X 軸只顯示每月 1 號
     year_prefix  = today_date[:4]
-    ytd_html     = _chartjs_panels('ytd', df[df['date'] >= year_prefix], today_date)
+    ytd_xticks   = ",callback:function(v,i,t){var l=t[i].label;return l.endsWith('/1')?l:''}"
+    ytd_html     = _chartjs_panels('ytd', df[df['date'] >= year_prefix], today_date, ytd_xticks)
 
     split_obs  = f"今日 {ac_val} 架次　{sh_val} 艘艦艇" + (f"　{special}" if special else "")
     df_mo      = df[df['date'].str.startswith(today_date[:7])]
