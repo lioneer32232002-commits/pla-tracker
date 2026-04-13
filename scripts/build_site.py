@@ -319,7 +319,7 @@ def build_index(df):
     year_prefix = today_date[:4]
     ytd_html    = _build_panels('ytd', df[df['date'] >= year_prefix], today_date, _CHART_JS_YTD)
 
-    split_obs  = f"今日 {ac_val} 架次　{sh_val} 艘艦艇" + (f"　{special}" if special else "")
+    split_obs  = f"今日 {ac_val} 架次　{sh_val} 艘艦艇"
     df_mo      = df[df['date'].str.startswith(today_date[:7])]
     mo_max     = int(df_mo['aircraft_total'].max()) if len(df_mo) else 0
     mo_max_d   = fmt_date(df_mo.loc[df_mo['aircraft_total'].idxmax(), 'date']) if mo_max > 0 else ''
