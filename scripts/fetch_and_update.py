@@ -142,13 +142,23 @@ def get_mnd_latest_image_url():
             return False
 
     img_url = None
-    for img in soup2.find_all('img', src=True):
-        src = img['src']
-        if is_image_src(src):
-            if ('plaact' in src.lower() or 'military' in src.lower()
-                    or '/upload' in src.lower() or re.search(r'/[Ff]ile/\d+', src)):
-                img_url = abs_url(src)
-                break
+
+    # 優先：找 <a href="File/N"> 下載連結（MND 新版頁面格式）
+    for a in soup2.find_all('a', href=True):
+        href = a['href']
+        if re.search(r'[Ff]ile/\d+', href):
+            img_url = abs_url(href)
+            break
+
+    # 次選：<img src> 含 /File/ 或 /upload/ 等路徑
+    if not img_url:
+        for img in soup2.find_all('img', src=True):
+            src = img['src']
+            if is_image_src(src):
+                if ('plaact' in src.lower() or 'military' in src.lower()
+                        or '/upload' in src.lower() or re.search(r'/[Ff]ile/\d+', src)):
+                    img_url = abs_url(src)
+                    break
 
     # 備用：找最大的圖片（排除 icon/logo/無障礙標章等小圖）
     EXCLUDE_PATTERNS = ['logo', 'icon', 'banner', 'header', 'AA2', 'AA1', 'wcag', 'accessib']
