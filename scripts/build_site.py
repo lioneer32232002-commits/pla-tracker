@@ -82,7 +82,7 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 
 /* ── SITREP ── */
 .sitrep{margin-bottom:2.5rem}
-.sitrep-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.16em;
+.sitrep-label{font-size:1rem;text-transform:uppercase;letter-spacing:.16em;
   color:var(--sub);margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
 .sitrep-label::after{content:'';flex:1;min-width:30px;height:1px;background:var(--bdr)}
 
@@ -96,9 +96,9 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   letter-spacing:-.04em;font-variant-numeric:tabular-nums}
 .y{color:var(--y)}
 .r{color:var(--r)}
-.stat-l{font-size:.58rem;text-transform:uppercase;letter-spacing:.11em;
-  color:var(--sub);margin-top:.45rem}
-.stat-detail{font-size:.75rem;color:var(--sub);margin-top:.2rem}
+.stat-l{font-size:.98rem;text-transform:uppercase;letter-spacing:.11em;
+  color:var(--sub);margin-top:.45rem;white-space:nowrap}
+.stat-detail{font-size:1.1rem;color:var(--sub);margin-top:.2rem;white-space:nowrap}
 .delta-up{display:block;font-size:.7rem;color:var(--r);margin-top:.28rem;font-weight:700}
 .delta-dn{display:block;font-size:.7rem;color:var(--grn);margin-top:.28rem;font-weight:700}
 
