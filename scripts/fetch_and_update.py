@@ -124,20 +124,30 @@ def get_mnd_latest_image_url():
                 img_url = abs_url(src)
                 break
 
-    # 備用：找最大的圖片
+    # 備用：找最大的圖片（排除 icon/logo/無障礙標章等小圖）
+    EXCLUDE_PATTERNS = ['logo', 'icon', 'banner', 'header', 'AA2', 'AA1', 'wcag', 'accessib']
     if not img_url:
         for img in soup2.find_all('img', src=True):
             src = img['src']
             if any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.png']):
-                if not any(x in src.lower() for x in ['logo', 'icon', 'banner', 'header']):
-                    img_url = abs_url(src)
-                    break
+                if not any(x in src for x in EXCLUDE_PATTERNS):
+                    candidate_url = abs_url(src)
+                    # 確認圖片夠大（軍事公告圖通常 > 50KB）
+                    try:
+                        head = requests.head(candidate_url, headers=headers, timeout=10)
+                        content_length = int(head.headers.get('content-length', 0))
+                        if content_length > 50_000:
+                            img_url = candidate_url
+                            break
+                    except Exception:
+                        pass
 
     if not img_url:
-        raise RuntimeError('找不到公告圖片')
+        log('找不到符合條件的公告圖片，今日公告可能尚未發布')
+        return None
 
     log(f'圖片 URL：{img_url}')
-    return img_url
+    return img_url  # 可能為 None（公告尚未發布）
 
 
 def download_image(url):
@@ -237,6 +247,9 @@ def main():
 
     # 1. 抓最新圖片
     img_url = get_mnd_latest_image_url()
+    if img_url is None:
+        log('=== 今日公告尚未發布，結束 ===')
+        return
     img_bytes, _ = download_image(img_url)
 
     # 2. 用 Claude 解讀
