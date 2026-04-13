@@ -160,13 +160,12 @@ footer a:hover{color:var(--tx)}
 
 # ── Chart.js 圖表產生 ─────────────────────────────────────────────────────────
 
-# JS 模板：用 __PLACEHOLDER__ 取代資料，避免 Python f-string 跳脫問題
-# __XTICKS_EXTRA__ 可插入額外 ticks 設定（如 YTD 的 callback 過濾）
-_CHART_JS = """\
+# ── 10日觀察：飛機面積圖 + 艦艇散點 ─────────────────────────────────────────
+_CHART_JS_RECENT = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
 var xs=L.map(function(_,i){return i});
-var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0__XTICKS_EXTRA__},border:{color:'#2a3336'}};
+var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0},border:{color:'#2a3336'}};
 var yA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxTicksLimit:4},border:{color:'#2a3336'},beginAtZero:true};
 var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
@@ -178,11 +177,25 @@ new Chart(document.getElementById('__UID__-sh'),{type:'scatter',data:{datasets:[
 ]},options:Object.assign({},baseOpts,{scales:{x:Object.assign({},xA,{type:'linear',min:0,max:L.length-1,ticks:Object.assign({},xA.ticks,{stepSize:1,callback:function(v){return Number.isInteger(v)?L[v]:''}})}),y:yA}})});
 })();"""
 
+# ── 2026至今：飛機＋艦艇長條，X軸只顯示每月1號 ───────────────────────────────
+_CHART_JS_YTD = """\
+(function(){
+var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
+var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{color:'#2a3336'}};
+var yA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxTicksLimit:4},border:{color:'#2a3336'},beginAtZero:true};
+var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
+new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
+  {type:'bar',data:AC,backgroundColor:ACbg,borderRadius:2,order:2},
+  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:2,tension:0,fill:false,order:1}
+]},options:baseOpts});
+new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
+  {type:'bar',data:SH,backgroundColor:SHbg,borderRadius:2}
+]},options:baseOpts});
+})();"""
 
-def _chartjs_panels(uid, df_slice, today_date, xticks_extra=''):
-    """兩格 Chart.js 面板：上架次、下艦艇。回傳 HTML 字串。
-    xticks_extra: 插入 ticks 物件的額外屬性（含前置逗號），如 YTD 的 callback。
-    """
+
+def _build_panels(uid, df_slice, today_date, template):
+    """共用：準備資料並套用 JS 模板，回傳 HTML 字串。"""
     data = df_slice.reset_index(drop=True)
     today_idx = next(
         (i for i, (_, r) in enumerate(data.iterrows()) if r['date'] == today_date),
@@ -198,15 +211,14 @@ def _chartjs_panels(uid, df_slice, today_date, xticks_extra=''):
     ac_bg = ['#f5c842' if i == today_idx else '#8a7020' for i in range(n)]
     sh_bg = ['#e05555' if i == today_idx else '#7a2a2a' for i in range(n)]
 
-    js = (_CHART_JS
-          .replace('__L__',           json.dumps(labels))
-          .replace('__AC__',          json.dumps(aircraft))
-          .replace('__CR__',          json.dumps(crosses))
-          .replace('__SH__',          json.dumps(ships))
-          .replace('__ACbg__',        json.dumps(ac_bg))
-          .replace('__SHbg__',        json.dumps(sh_bg))
-          .replace('__UID__',         uid)
-          .replace('__XTICKS_EXTRA__', xticks_extra))
+    js = (template
+          .replace('__L__',    json.dumps(labels))
+          .replace('__AC__',   json.dumps(aircraft))
+          .replace('__CR__',   json.dumps(crosses))
+          .replace('__SH__',   json.dumps(ships))
+          .replace('__ACbg__', json.dumps(ac_bg))
+          .replace('__SHbg__', json.dumps(sh_bg))
+          .replace('__UID__',  uid))
 
     return (f'<div class="split-panels">'
             f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
@@ -301,13 +313,11 @@ def build_index(df):
     type_label = {'zero': '零架次', 'manned': '有人機', 'uav': 'UAV',
                   'mixed': '混合', 'helicopter': '直升機'}.get(type_lower, atype)
 
-    # 近10日圖表
-    recent_html  = _chartjs_panels('rc',  df.tail(10),   today_date)
-    # YTD 圖表（2026 起全部資料），X 軸只顯示每月 1 號
-    # scatter 的 x 是 linear（數值索引），callback 用 v（索引）查 L[v]，只回傳 /1 的
-    year_prefix  = today_date[:4]
-    ytd_xticks   = ",callback:function(v){var l=L[v];return(l&&l.endsWith('/1'))?l:''}"
-    ytd_html     = _chartjs_panels('ytd', df[df['date'] >= year_prefix], today_date, ytd_xticks)
+    # 近10日：飛機面積圖＋艦艇散點
+    recent_html = _build_panels('rc',  df.tail(10), today_date, _CHART_JS_RECENT)
+    # 2026至今：飛機＋艦艇長條，X軸只顯示每月1號
+    year_prefix = today_date[:4]
+    ytd_html    = _build_panels('ytd', df[df['date'] >= year_prefix], today_date, _CHART_JS_YTD)
 
     split_obs  = f"今日 {ac_val} 架次　{sh_val} 艘艦艇" + (f"　{special}" if special else "")
     df_mo      = df[df['date'].str.startswith(today_date[:7])]
