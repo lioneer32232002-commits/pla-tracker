@@ -165,15 +165,17 @@ footer a:hover{color:var(--tx)}
 _CHART_JS = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
+var xs=L.map(function(_,i){return i});
 var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0__XTICKS_EXTRA__},border:{color:'#2a3336'}};
 var yA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxTicksLimit:4},border:{color:'#2a3336'},beginAtZero:true};
+var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
-  {type:'bar',data:AC,backgroundColor:ACbg,borderRadius:2,order:2},
+  {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:'rgba(245,200,66,0.18)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:ACbg,pointBorderColor:ACbg,order:2},
   {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:3,tension:0,fill:false,order:1}
-]},options:{animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}}});
-new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
-  {type:'bar',data:SH,backgroundColor:SHbg,borderRadius:2}
-]},options:{animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:xA,y:yA}}});
+]},options:baseOpts});
+new Chart(document.getElementById('__UID__-sh'),{type:'scatter',data:{datasets:[
+  {data:xs.map(function(i){return{x:i,y:SH[i]};}),backgroundColor:SHbg,pointRadius:5,pointHoverRadius:7}
+]},options:Object.assign({},baseOpts,{scales:{x:Object.assign({},xA,{type:'linear',min:0,max:L.length-1,ticks:Object.assign({},xA.ticks,{stepSize:1,callback:function(v){return Number.isInteger(v)?L[v]:''}})}),y:yA}})});
 })();"""
 
 
@@ -302,8 +304,9 @@ def build_index(df):
     # 近10日圖表
     recent_html  = _chartjs_panels('rc',  df.tail(10),   today_date)
     # YTD 圖表（2026 起全部資料），X 軸只顯示每月 1 號
+    # scatter 的 x 是 linear（數值索引），callback 用 v（索引）查 L[v]，只回傳 /1 的
     year_prefix  = today_date[:4]
-    ytd_xticks   = ",callback:function(v,i,t){var l=t[i].label;return l.endsWith('/1')?l:''}"
+    ytd_xticks   = ",callback:function(v){var l=L[v];return(l&&l.endsWith('/1'))?l:''}"
     ytd_html     = _chartjs_panels('ytd', df[df['date'] >= year_prefix], today_date, ytd_xticks)
 
     split_obs  = f"今日 {ac_val} 架次　{sh_val} 艘艦艇" + (f"　{special}" if special else "")
