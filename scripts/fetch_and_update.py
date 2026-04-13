@@ -291,19 +291,14 @@ def main():
     is_new = append_to_csv(data)
 
     if not is_new:
-        if os.environ.get('FORCE_REBUILD', 'false').lower() == 'true':
-            log('FORCE_REBUILD=true，強制重新產圖')
-        else:
-            log('今日數據已是最新，無需重新產圖')
-            # 仍重建網站（以防手動改過 CSS 等）
+        if os.environ.get('FORCE_REBUILD', 'false').lower() != 'true':
+            log('今日數據已是最新，無需重建')
             run_script('build_site.py')
             log('=== 完成（無新數據）===')
             return
+        log('FORCE_REBUILD=true，強制重建網站')
 
-    # 4. 產圖表 PNG
-    run_script('chart_daily.py')
-
-    # 5. 重建網站
+    # 4. 重建網站（Chart.js，不需產 PNG）
     run_script('build_site.py')
 
     log(f'=== 完成：{data["date"]} 數據已更新 ===')

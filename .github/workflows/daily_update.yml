@@ -9,7 +9,7 @@ on:
   workflow_dispatch:  # 允許手動觸發
     inputs:
       force_rebuild:
-        description: '強制重新產圖（即使今日數據已存在）'
+        description: '強制重建網站（即使今日數據已存在）'
         required: false
         default: 'false'
 
@@ -17,7 +17,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 允許 push 回 repo
+      contents: write
 
     steps:
       - name: Checkout repo
@@ -31,12 +31,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Install CJK fonts (for matplotlib)
-        run: |
-          sudo apt-get install -y fonts-noto-cjk
-          fc-cache -fv
-          python -c "import shutil, matplotlib; shutil.rmtree(matplotlib.get_cachedir(), ignore_errors=True)"
-
       - name: Run fetch and update
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -47,8 +41,7 @@ jobs:
         run: |
           git config user.name "pla-tracker-bot"
           git config user.email "bot@pla-tracker"
-          git add data/records.csv charts/ index.html records.html style.css
-          # 若沒有變更就靜默退出
+          git add data/records.csv index.html records.html style.css
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "auto: daily update $(date -u +%Y-%m-%d)"
           git push
