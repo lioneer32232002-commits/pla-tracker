@@ -73,7 +73,7 @@ def get_font():
 
 FONT = get_font()
 plt.rcParams['font.family'] = FONT
-plt.rcParams['font.weight'] = 'bold'
+plt.rcParams['font.weight'] = 'normal'
 plt.rcParams['axes.unicode_minus'] = False
 
 
@@ -150,9 +150,7 @@ def make_obs_text(row):
 
 
 def bold_stroke(obj, lw=2.0):
-    """Simulate bold via path stroke — works on any single-weight CJK font."""
-    c = obj.get_color() if hasattr(obj, 'get_color') else obj.get_facecolor()
-    obj.set_path_effects([pe.Stroke(linewidth=lw, foreground=c), pe.Normal()])
+    pass  # 移除描邊模擬粗體，使用字型原生筆劃
 
 
 def setup_ax(ax):
