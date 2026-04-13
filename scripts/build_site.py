@@ -181,7 +181,7 @@ new Chart(document.getElementById('__UID__-sh'),{type:'scatter',data:{datasets:[
 _CHART_JS_YTD = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
-var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{color:'#2a3336'}};
+var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{color:'#2a3336'}};
 var yA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxTicksLimit:4},border:{color:'#2a3336'},beginAtZero:true};
 var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
@@ -304,7 +304,9 @@ def build_index(df):
     cr_str  = (f"{float(latest['cross_rate']):.0f}%"
                if str(latest['cross_rate']) not in ('', 'nan') else '—')
     atype   = latest['aircraft_type'] if pd.notna(latest['aircraft_type']) else '—'
-    special = latest['special_event'] if str(latest['special_event']) not in ('', 'nan') else ''
+    _BOILERPLATE = ['航跡圖', '故無提供', '未偵獲共機']
+    _raw_special = latest['special_event'] if str(latest['special_event']) not in ('', 'nan') else ''
+    special = '' if any(kw in _raw_special for kw in _BOILERPLATE) else _raw_special
 
     ac_delta = delta_span(latest['aircraft_total'], prev['aircraft_total'])
     sh_delta = delta_span(latest['ships_total'],    prev['ships_total'])
