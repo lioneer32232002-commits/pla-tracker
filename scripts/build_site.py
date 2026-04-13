@@ -121,8 +121,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 
 /* ── Chart.js split panels ── */
 .split-panels{background:#1e2224;border-radius:var(--rad);padding:12px 12px 8px}
-.panel-ac{display:block;width:100%;height:200px}
-.panel-sh{display:block;width:100%;height:130px;margin-top:8px}
+.panel-wrap-ac{position:relative;height:200px}
+.panel-wrap-sh{position:relative;height:130px;margin-top:8px}
 
 /* ── Records table ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -203,8 +203,8 @@ def _chartjs_panels(uid, df_slice, today_date):
           .replace('__UID__',  uid))
 
     return (f'<div class="split-panels">'
-            f'<canvas id="{uid}-ac" class="panel-ac"></canvas>'
-            f'<canvas id="{uid}-sh" class="panel-sh"></canvas>'
+            f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
+            f'<div class="panel-wrap-sh"><canvas id="{uid}-sh"></canvas></div>'
             f'</div>'
             f'<script>{js}</script>')
 
