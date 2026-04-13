@@ -284,7 +284,7 @@ def monthly_stats_html(df, today_date):
             f'<div class="sitrep-label">{mo_label}至今 &nbsp;·&nbsp; {days} 天</div>'
             f'<div class="stats-row">'
             f'<div class="stat"><div class="stat-n y">{mo_ac}</div><div class="stat-l">中共軍機架次</div></div>'
-            f'<div class="stat"><div class="stat-n y">{mo_cr}</div><div class="stat-l">越中線</div><div class="stat-detail">{cr_rate}</div></div>'
+            f'<div class="stat"><div class="stat-n y">{mo_cr}</div><div class="stat-l">越中線&nbsp;<span class="stat-detail">{cr_rate}</span></div></div>'
             f'<div class="stat"><div class="stat-n r">{mo_sh_avg:.1f}</div><div class="stat-l">艦艇日均（艘）</div></div>'
             f'</div></div>')
 
@@ -362,8 +362,7 @@ def build_index(df):
       </div>
       <div class="stat">
         <div class="stat-n y">{ml_val}</div>
-        <div class="stat-l">逾越中線</div>
-        <div class="stat-detail">{cr_str}</div>
+        <div class="stat-l">逾越中線&nbsp;<span class="stat-detail">{cr_str}</span></div>
       </div>
       <div class="stat">
         <div class="stat-n r">{sh_val}</div>
