@@ -10,6 +10,7 @@ fetch_and_update.py — PLA Tracker 每日自動更新
 """
 
 import os
+import re
 import sys
 import json
 import base64
@@ -116,11 +117,36 @@ def get_mnd_latest_image_url():
     resp2.raise_for_status()
     soup2 = BeautifulSoup(resp2.text, 'html.parser')
 
+    def is_image_src(src):
+        """判斷 src 是否可能是圖片（有副檔名或是 /File/ 路徑）"""
+        has_ext = any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp'])
+        is_file_path = re.search(r'/[Ff]ile/\d+', src)
+        return has_ext or bool(is_file_path)
+
+    def check_image_size(url, min_bytes=50_000):
+        """確認圖片大小 > min_bytes，支援 HEAD 405 時改用 GET Range"""
+        try:
+            r = requests.head(url, headers=headers, timeout=10)
+            if r.status_code == 405:
+                # 伺服器不支援 HEAD，改用 GET 只取前幾 bytes
+                r = requests.get(url, headers={**headers, 'Range': 'bytes=0-1023'}, timeout=10)
+                cl = r.headers.get('content-range', '')
+                # Content-Range: bytes 0-1023/TOTAL
+                m = re.search(r'/(\d+)$', cl)
+                if m:
+                    return int(m.group(1)) > min_bytes
+                # 無法確認大小，假設夠大（/File/ 路徑通常是正式圖片）
+                return True
+            return int(r.headers.get('content-length', 0)) > min_bytes
+        except Exception:
+            return False
+
     img_url = None
     for img in soup2.find_all('img', src=True):
         src = img['src']
-        if any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.png', '.gif']):
-            if 'plaact' in src.lower() or 'military' in src.lower() or '/upload' in src.lower():
+        if is_image_src(src):
+            if ('plaact' in src.lower() or 'military' in src.lower()
+                    or '/upload' in src.lower() or re.search(r'/[Ff]ile/\d+', src)):
                 img_url = abs_url(src)
                 break
 
@@ -129,18 +155,12 @@ def get_mnd_latest_image_url():
     if not img_url:
         for img in soup2.find_all('img', src=True):
             src = img['src']
-            if any(ext in src.lower() for ext in ['.jpg', '.jpeg', '.png']):
+            if is_image_src(src):
                 if not any(x in src for x in EXCLUDE_PATTERNS):
                     candidate_url = abs_url(src)
-                    # 確認圖片夠大（軍事公告圖通常 > 50KB）
-                    try:
-                        head = requests.head(candidate_url, headers=headers, timeout=10)
-                        content_length = int(head.headers.get('content-length', 0))
-                        if content_length > 50_000:
-                            img_url = candidate_url
-                            break
-                    except Exception:
-                        pass
+                    if check_image_size(candidate_url):
+                        img_url = candidate_url
+                        break
 
     if not img_url:
         log('找不到符合條件的公告圖片，今日公告可能尚未發布')
