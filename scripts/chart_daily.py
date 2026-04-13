@@ -35,46 +35,72 @@ TXTFADE   = '#3e5258'
 CROSS_COL = '#ff9933'
 
 # ── 字型 ──────────────────────────────────────────────────────────────────────
+AVOID_WEIGHTS = ['Bold', 'Medium', 'Black', 'Heavy', 'Semibold', 'ExtraBold']
+
 def get_font():
+    """傳回 (family_name, font_path_or_None)。優先選 Regular/DemiLight 字重。"""
     import glob, os
+
+    def is_regular(path):
+        base = os.path.basename(path)
+        return not any(w in base for w in AVOID_WEIGHTS)
+
+    # Ubuntu / CI：搜尋字型檔案，只取 Regular 變體
+    search_dirs = [
+        '/usr/share/fonts', '/usr/local/share/fonts',
+        os.path.expanduser('~/.local/share/fonts'),
+        os.path.expanduser('~/.fonts'),
+    ]
+    # 優先搜尋明確 Regular 檔名
+    patterns = [
+        '*NotoSansCJKtc-Regular*', '*NotoSansCJK-Regular*',
+        '*NotoSansCJK*TC*', '*Noto*CJK*TC*', '*Noto*CJK*',
+    ]
+    for d in search_dirs:
+        if not os.path.isdir(d):
+            continue
+        for pat in patterns:
+            for path in sorted(glob.glob(os.path.join(d, '**', pat), recursive=True)):
+                if not path.endswith(('.otf', '.ttf', '.ttc')):
+                    continue
+                if not is_regular(path):
+                    continue
+                try:
+                    fm.fontManager.addfont(path)
+                    name = fm.FontProperties(fname=path).get_name()
+                    if name:
+                        print(f'[font] loaded: {path}', flush=True)
+                        return name, path
+                except Exception:
+                    pass
+
+    # 系統已登錄字族（Windows / macOS）
     candidates = [
         'Noto Sans CJK TC', 'Noto Sans TC',
-        'Noto Sans CJK SC', 'Noto Sans SC',
         'Microsoft JhengHei', 'PingFang TC',
         'STHeiti', 'Arial Unicode MS',
     ]
     available = {f.name for f in fm.fontManager.ttflist}
     for c in candidates:
         if c in available:
-            return c
+            return c, None
 
-    # Ubuntu / CI：直接搜尋字型檔案並手動載入
-    search_dirs = [
-        '/usr/share/fonts', '/usr/local/share/fonts',
-        os.path.expanduser('~/.local/share/fonts'),
-        os.path.expanduser('~/.fonts'),
-    ]
-    patterns = ['*Noto*CJK*TC*', '*NotoSansCJKtc*', '*NotoSansCJK*TC*',
-                '*NotoSansCJK-Regular*', '*Noto*CJK*']
-    for d in search_dirs:
-        if not os.path.isdir(d):
-            continue
-        for pat in patterns:
-            for path in glob.glob(os.path.join(d, '**', pat), recursive=True):
-                if path.endswith(('.otf', '.ttf', '.ttc')):
-                    try:
-                        fm.fontManager.addfont(path)
-                        name = fm.FontProperties(fname=path).get_name()
-                        if name:
-                            return name
-                    except Exception:
-                        pass
-    return 'DejaVu Sans'
+    return 'DejaVu Sans', None
 
-FONT = get_font()
+_font_result = get_font()
+FONT      = _font_result[0]
+FONT_PATH = _font_result[1]
+
 plt.rcParams['font.family'] = FONT
 plt.rcParams['font.weight'] = 'normal'
 plt.rcParams['axes.unicode_minus'] = False
+
+
+def make_fp(size):
+    """建立 FontProperties，有檔案路徑時用 fname= 直接指定，避免 matplotlib 選錯字重。"""
+    if FONT_PATH:
+        return FontProperties(fname=FONT_PATH, size=size)
+    return FontProperties(family=FONT, size=size, weight='normal')
 
 
 # ── 工具函式 ──────────────────────────────────────────────────────────────────
@@ -222,7 +248,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(ticks_ac)
     ax_ac.set_yticklabels([str(t) for t in ticks_ac])
-    _fp_ac = FontProperties(family=FONT, size=34)
+    _fp_ac = make_fp(34)
     for lbl in ax_ac.get_yticklabels():
         lbl.set_fontproperties(_fp_ac); lbl.set_color(AC_BRIGHT); bold_stroke(lbl)
     ax_ac.tick_params(axis='y', length=0)
@@ -246,7 +272,7 @@ def make_split_panel_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_sh.set_ylim(-0.5, ylim_sh_top)   # -0.5 讓 y=0 的菱形不貼軸
     ax_sh.set_yticks(ticks_sh)
     ax_sh.set_yticklabels([str(t) for t in ticks_sh])
-    _fp_sh = FontProperties(family=FONT, size=34)
+    _fp_sh = make_fp(34)
     for lbl in ax_sh.get_yticklabels():
         lbl.set_fontproperties(_fp_sh); lbl.set_color(SH_BRIGHT); bold_stroke(lbl)
     ax_sh.tick_params(axis='y', length=0)
@@ -393,7 +419,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_ac.set_ylim(0, ylim_ac)
     ax_ac.set_yticks(sticks_ac)
     ax_ac.set_yticklabels([str(t) for t in sticks_ac])
-    _sfp_ac = FontProperties(family=FONT, size=34)
+    _sfp_ac = make_fp(34)
     for lbl in ax_ac.get_yticklabels():
         lbl.set_fontproperties(_sfp_ac); lbl.set_color(AC_BRIGHT); bold_stroke(lbl)
     ax_ac.tick_params(axis='y', length=0)
@@ -432,7 +458,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     ax_sh.set_ylim(0, ylim_sh2)
     ax_sh.set_yticks(sticks_sh2)
     ax_sh.set_yticklabels([str(t) for t in sticks_sh2])
-    _sfp_sh = FontProperties(family=FONT, size=34)
+    _sfp_sh = make_fp(34)
     for lbl in ax_sh.get_yticklabels():
         lbl.set_fontproperties(_sfp_sh); lbl.set_color(SH_BRIGHT); bold_stroke(lbl)
     ax_sh.tick_params(axis='y', length=0)
@@ -471,7 +497,7 @@ def make_streak_chart(df, today_date=None, obs_text=None, out_path=None):
     show_ticks = [i for i in range(n) if _xaxis_show(i, n, dates, today_date)]
     ax_sh.set_xticks(show_ticks)
     ax_sh.set_xticklabels([date_labels[i] for i in show_ticks])
-    _xfp = FontProperties(family=FONT, size=34)
+    _xfp = make_fp(34)
     for tick in ax_sh.get_xticklabels():
         tick.set_fontproperties(_xfp)
         tick.set_color(TXTSUB)
