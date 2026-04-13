@@ -183,7 +183,9 @@ def get_mnd_latest_image_url():
 def download_image(url):
     """下載圖片，回傳 (bytes, cache_path)，若已快取則直接讀快取"""
     url_hash = hashlib.md5(url.encode()).hexdigest()[:12]
-    ext = url.split('?')[0].rsplit('.', 1)[-1].lower() or 'jpg'
+    raw_ext = url.split('?')[0].rsplit('.', 1)[-1].lower()
+    # 確保 ext 是合法副檔名（不含斜線、長度合理），否則預設 jpg
+    ext = raw_ext if raw_ext and '/' not in raw_ext and len(raw_ext) <= 5 else 'jpg'
     cache_path = CACHE_DIR / f'{url_hash}.{ext}'
 
     if cache_path.exists():
