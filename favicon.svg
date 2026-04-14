@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 115">
+  <!-- Shield outer -->
+  <path d="M50 4 L94 20 L94 58 C94 82 74 100 50 111 C26 100 6 82 6 58 L6 20 Z" fill="#1a2830" stroke="#e05555" stroke-width="3.5"/>
+  <!-- Shield inner fill -->
+  <path d="M50 18 L82 30 L82 58 C82 74 67 88 50 97 C33 88 18 74 18 58 L18 30 Z" fill="#e05555" opacity="0.25"/>
+  <!-- Star / center mark -->
+  <circle cx="50" cy="57" r="12" fill="none" stroke="#f5c842" stroke-width="3"/>
+  <line x1="50" y1="38" x2="50" y2="76" stroke="#f5c842" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="31" y1="57" x2="69" y2="57" stroke="#f5c842" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
