@@ -81,9 +81,9 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   font-size:.83rem;font-weight:700;margin-bottom:2rem;letter-spacing:.02em}
 
 /* ── SITREP ── */
-.sitrep{margin-bottom:2.5rem}
+.sitrep{margin-bottom:1.2rem}
 .sitrep-label{font-size:1rem;text-transform:uppercase;letter-spacing:.16em;
-  color:var(--sub);margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+  color:var(--sub);margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
 .sitrep-label::after{content:'';flex:1;min-width:30px;height:1px;background:var(--bdr)}
 
 /* ── Stats ── */
@@ -227,11 +227,12 @@ def _build_panels(uid, df_slice, today_date, template):
             f'<script>{js}</script>')
 
 
-def chart_section_html(title, chart_html, obs=''):
-    obs_tag = f'<span class="chart-obs">{obs}</span>' if obs else ''
+def chart_section_html(title, chart_html, obs_ac='', obs_sh=''):
+    ac_tag = f'<span class="chart-obs">{obs_ac}</span>' if obs_ac else ''
+    sh_tag = f'<span class="chart-obs" style="color:var(--r)">{obs_sh}</span>' if obs_sh else ''
     return (f'<section class="chart-section">'
             f'<div class="chart-header">'
-            f'<span class="chart-title">{title}</span>{obs_tag}'
+            f'<span class="chart-title">{title}</span>{ac_tag}{sh_tag}'
             f'</div>'
             f'{chart_html}'
             f'</section>')
@@ -321,14 +322,16 @@ def build_index(df):
     year_prefix = today_date[:4]
     ytd_html    = _build_panels('ytd', df[df['date'] >= year_prefix], today_date, _CHART_JS_YTD)
 
-    split_obs  = f"今日 {ac_val} 架次　{sh_val} 艘艦艇"
-    df_mo      = df[df['date'].str.startswith(today_date[:7])]
-    mo_max     = int(df_mo['aircraft_total'].max()) if len(df_mo) else 0
-    mo_max_d   = fmt_date(df_mo.loc[df_mo['aircraft_total'].idxmax(), 'date']) if mo_max > 0 else ''
-    sh_lo      = int(df['ships_total'].min())
-    sh_hi      = int(df['ships_total'].max())
-    streak_obs = (f"本月峰值 {mo_max} 架次（{mo_max_d}）　艦艇 {sh_lo}–{sh_hi} 艘"
-                  if mo_max > 0 else f"艦艇 {sh_lo}–{sh_hi} 艘")
+    df_mo    = df[df['date'].str.startswith(today_date[:7])]
+    mo_max   = int(df_mo['aircraft_total'].max()) if len(df_mo) else 0
+    mo_max_d = fmt_date(df_mo.loc[df_mo['aircraft_total'].idxmax(), 'date']) if mo_max > 0 else ''
+    sh_lo    = int(df['ships_total'].min())
+    sh_hi    = int(df['ships_total'].max())
+
+    split_ac  = f"今日 {ac_val} 架次"
+    split_sh  = f"{sh_val} 艘艦艇"
+    streak_ac = f"本月峰值 {mo_max} 架次（{mo_max_d}）" if mo_max > 0 else ''
+    streak_sh = f"艦艇 {sh_lo}–{sh_hi} 艘"
 
     alert_html   = f'<div class="alert">⚡ {special}</div>' if special else ''
     monthly_html = monthly_stats_html(df, today_date)
@@ -374,8 +377,8 @@ def build_index(df):
 
   {monthly_html}
 
-  {chart_section_html("10日觀察", recent_html, split_obs)}
-  {chart_section_html("2026 至今", ytd_html, streak_obs)}
+  {chart_section_html("10日觀察", recent_html, split_ac, split_sh)}
+  {chart_section_html("2026 至今", ytd_html, streak_ac, streak_sh)}
 
 </main>
 
