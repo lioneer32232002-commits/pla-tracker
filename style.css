@@ -3,7 +3,7 @@
 :root{
   --bg:#090d0f; --sur:#0e1618; --bdr:#1a2830;
   --y:#f5c842;  --r:#e05555;
-  --tx:#c4d4dc; --sub:#4a6070; --grn:#4dba6a;
+  --tx:#c4d4dc; --sub:#8a9faa; --grn:#4dba6a;
   --rad:6px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
