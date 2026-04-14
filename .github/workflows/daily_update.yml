@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "pla-tracker-bot"
           git config user.email "bot@pla-tracker"
-          git add data/records.csv index.html records.html style.css
+          git add data/records.csv index.html records.html style.css favicon.svg
           git diff --cached --quiet && echo "No changes to commit" && exit 0
           git commit -m "auto: daily update $(date -u +%Y-%m-%d)"
           git push

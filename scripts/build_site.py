@@ -46,7 +46,7 @@ def build_css():
 :root{
   --bg:#090d0f; --sur:#0e1618; --bdr:#1a2830;
   --y:#f5c842;  --r:#e05555;
-  --tx:#c4d4dc; --sub:#4a6070; --grn:#4dba6a;
+  --tx:#c4d4dc; --sub:#8a9faa; --grn:#4dba6a;
   --rad:6px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -160,29 +160,28 @@ footer a:hover{color:var(--tx)}
 
 # ── Chart.js 圖表產生 ─────────────────────────────────────────────────────────
 
-# ── 10日觀察：飛機面積圖 + 艦艇散點 ─────────────────────────────────────────
+# ── 10日觀察：飛機面積圖 + 艦艇階梯折線 ──────────────────────────────────────
 _CHART_JS_RECENT = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
-var xs=L.map(function(_,i){return i});
-var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0},border:{color:'#2a3336'}};
-var yA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxTicksLimit:4},border:{color:'#2a3336'},beginAtZero:true};
+var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0},border:{display:false}};
+var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
   {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:'rgba(245,200,66,0.18)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:ACbg,pointBorderColor:ACbg,order:2},
   {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:3,tension:0,fill:false,order:1}
 ]},options:baseOpts});
-new Chart(document.getElementById('__UID__-sh'),{type:'scatter',data:{datasets:[
-  {data:xs.map(function(i){return{x:i,y:SH[i]};}),backgroundColor:SHbg,pointRadius:5,pointHoverRadius:7}
-]},options:Object.assign({},baseOpts,{scales:{x:Object.assign({},xA,{type:'linear',min:0,max:L.length-1,ticks:Object.assign({},xA.ticks,{stepSize:1,callback:function(v){return Number.isInteger(v)?L[v]:''}})}),y:yA}})});
+new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
+  {type:'line',data:SH,borderColor:'#e05555',backgroundColor:'rgba(224,85,85,0.12)',fill:true,stepped:true,pointRadius:3,pointBackgroundColor:SHbg,pointBorderColor:SHbg}
+]},options:baseOpts});
 })();"""
 
 # ── 2026至今：飛機＋艦艇長條，X軸只顯示每月1號 ───────────────────────────────
 _CHART_JS_YTD = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
-var xA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{color:'#2a3336'}};
-var yA={grid:{color:'#2a3336',drawBorder:false},ticks:{color:'#7a9298',font:{size:10},maxTicksLimit:4},border:{color:'#2a3336'},beginAtZero:true};
+var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{display:false}};
+var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
   {type:'bar',data:AC,backgroundColor:ACbg,borderRadius:2,order:2},
@@ -247,6 +246,7 @@ HEAD = """\
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>中國擾台趨勢數據分析</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 </head>"""
