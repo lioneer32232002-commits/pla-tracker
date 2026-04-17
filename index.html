@@ -104,12 +104,14 @@ function gradZone(coords,fp){
   }
 }
 function gradZone12(coords,fp){
-  var sc=[1.0,0.75,0.52,0.32,0.15];
-  var fo=[0.07,0.11,0.16,0.22,0.30];
-  for(var i=sc.length-1;i>=0;i--){
-    var s=sc[i];
-    var pts=coords.map(function(p){return[fp[0]+s*(p[0]-fp[0]),fp[1]+s*(p[1]-fp[1])];});
-    L.polygon(pts,{fillColor:'#4dba6a',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
+  // Donut-ring approach: each band is a polygon WITH a hole so fill stays only in the sea zone.
+  // Scale 0.82 ≈ coastline (12nm offset is ~18% of centroid distance); scale 1.0 = 12nm boundary.
+  var sc=[0.82,0.87,0.92,0.97,1.0];
+  var fo=[0.26,0.17,0.10,0.05]; // inner→outer (darkest near coast)
+  for(var i=0;i<sc.length-1;i++){
+    var outer=coords.map(function(p){return[fp[0]+sc[i+1]*(p[0]-fp[0]),fp[1]+sc[i+1]*(p[1]-fp[1])];});
+    var inner=coords.map(function(p){return[fp[0]+sc[i]*(p[0]-fp[0]),fp[1]+sc[i]*(p[1]-fp[1])];});
+    L.polygon([outer,inner],{fillColor:'#4dba6a',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
   }
 }
 // 北部空域 — focus toward Taiwan's north coast
