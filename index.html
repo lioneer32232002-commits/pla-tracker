@@ -147,13 +147,17 @@ gradZone12([
 ],[23.5,121.0]); // Taiwan main island centroid
 gradZone12([
   [24.05,119.10],[24.05,120.18],[22.90,120.18],[22.90,119.10]
-],[23.5,119.6]); // Penghu centroid
-gradZone12([
-  [22.87,121.25],[22.87,121.69],[22.47,121.69],[22.47,121.25]
-],[22.67,121.47]); // Green Island 綠島
-gradZone12([
-  [22.25,121.33],[22.25,121.77],[21.85,121.77],[21.85,121.33]
-],[22.05,121.55]); // Orchid Island 蘭嶼
+],[23.5,119.6]); // Penghu archipelago
+// Small islands: concentric circle halos (12nm=22224m radius)
+// Draws rings from coast outward — innermost brightest, outermost faintest
+function gradCircle(ll,r){
+  var sc=[1.0,0.72,0.47,0.25],fo=[0.06,0.11,0.17,0.25];
+  for(var i=sc.length-1;i>=0;i--){
+    L.circle(ll,{radius:r*sc[i],fillColor:'#4dba6a',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
+  }
+}
+gradCircle([22.67,121.47],22224); // Green Island 綠島
+gradCircle([22.05,121.55],22224); // Orchid Island 蘭嶼
 
 // Island labels via DivIcon
 function lbl(ll,txt,sm){
