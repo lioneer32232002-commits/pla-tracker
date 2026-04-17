@@ -54,11 +54,11 @@
 var ML=0,AC=3,SH=9,ZONES={"n": false, "sw": false, "e": false, "ne": false, "s": false};
 
 var map=L.map('activity-map',{
-  center:[23.8,120.3],zoom:6,
+  center:[23.8,120.5],zoom:6,
   scrollWheelZoom:false,
   zoomControl:true,
   attributionControl:true,
-  maxBounds:[[18,113],[30,128]],
+  maxBounds:[[18,113],[30,129]],
   maxBoundsViscosity:0.85
 });
 
@@ -67,47 +67,72 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
   subdomains:'abcd',maxZoom:10,minZoom:5
 }).addTo(map);
 
-// Taiwan main island (simplified outline)
+// Taiwan main island — accurate outline
 L.polygon([
-  [25.30,121.50],[25.03,121.98],[24.81,121.96],[24.35,121.82],
-  [23.70,121.62],[22.93,121.25],[22.38,121.08],[21.90,120.85],
-  [22.00,120.55],[22.35,120.23],[22.78,120.15],[23.40,119.90],
-  [23.82,120.00],[24.20,120.22],[24.60,120.65],[25.00,121.00],
-  [25.30,121.50]
-],{color:'#1e3040',fillColor:'#0c1820',fillOpacity:0.92,weight:1.5,smoothFactor:1.2}).addTo(map);
+  [25.30,121.53],[25.16,121.80],[24.98,121.99],[24.82,121.98],
+  [24.53,121.88],[24.35,121.81],[23.98,121.62],[23.50,121.50],
+  [23.12,121.32],[22.75,121.15],[22.45,121.00],[22.18,120.93],
+  [21.92,120.87],[21.95,120.70],[22.10,120.55],[22.42,120.27],
+  [22.65,120.17],[23.05,120.15],[23.38,120.00],[23.65,120.05],
+  [23.85,120.12],[24.15,120.30],[24.55,120.57],[24.80,120.82],
+  [25.07,121.02],[25.22,121.28],[25.30,121.53]
+],{color:'#2e5070',fillColor:'#1d3a52',fillOpacity:0.82,weight:1.5,smoothFactor:0.8}).addTo(map);
 
-// Penghu
-L.circleMarker([23.57,119.62],{radius:3,color:'#1e3040',fillColor:'#0c1820',fillOpacity:0.9,weight:1}).addTo(map);
+// Penghu Islands
+L.circleMarker([23.57,119.62],{radius:4,color:'#2e5070',fillColor:'#1d3a52',fillOpacity:0.85,weight:1.2}).addTo(map);
 
 // ROC ADIZ boundary (approximate)
 L.polygon([
   [27.8,120.5],[27.2,122.2],[25.8,123.8],[23.2,124.2],
   [20.5,122.8],[19.5,120.5],[20.5,118.0],[23.0,117.2],
   [25.5,117.8],[27.0,119.2],[27.8,120.5]
-],{color:'#243545',fillOpacity:0,weight:1,dashArray:'5,5',smoothFactor:1}).addTo(map);
+],{color:'#2a3d50',fillOpacity:0,weight:1,dashArray:'5,5',smoothFactor:1}).addTo(map);
 
 // Taiwan Strait Median Line
 var mlColor=ML>0?'#e05555':'#2a4a60';
 var mlDash=ML>0?'7,4':'6,5';
-var mlW=ML>0?1.8:1;
+var mlW=ML>0?2:1.2;
 L.polyline([
   [26.5,120.0],[26.0,120.1],[25.5,120.2],[25.0,120.35],
   [24.5,120.5],[24.0,120.55],[23.5,120.5],[23.0,120.4],[22.5,120.3]
-],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.75}).addTo(map);
+],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.8}).addTo(map);
 
-// Activity zone overlays (from special_event parsing)
-var zS={fillColor:'#f5c842',fillOpacity:0.10,color:'#f5c842',weight:1,opacity:0.35,dashArray:'3,4'};
-if(ZONES.n)  L.polygon([[25.0,121.5],[26.2,121.5],[26.2,123.2],[25.0,123.2]],zS).addTo(map);
-if(ZONES.sw) L.polygon([[21.0,118.0],[22.5,118.0],[22.5,120.2],[21.0,120.2]],zS).addTo(map);
-if(ZONES.e)  L.polygon([[22.0,121.8],[24.2,121.8],[24.2,123.5],[22.0,123.5]],zS).addTo(map);
-if(ZONES.ne) L.polygon([[24.5,121.8],[25.8,121.8],[25.8,123.2],[24.5,123.2]],zS).addTo(map);
-if(ZONES.s)  L.polygon([[21.0,119.8],[22.0,119.8],[22.0,121.8],[21.0,121.8]],zS).addTo(map);
+// Activity zone overlays — styled to match MND bulletin areas
+var zS={fillColor:'#f5c842',fillOpacity:0.13,color:'#f5c842',weight:1.2,opacity:0.55,dashArray:'4,3'};
+function zoneLabel(ll,txt){
+  L.marker(ll,{icon:L.divIcon({className:'',html:'<div style="color:#f5c842;font-size:.58rem;font-weight:700;font-family:Noto Sans TC,sans-serif;text-shadow:0 1px 4px #000,0 0 8px #000;white-space:nowrap;pointer-events:none">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false}).addTo(map);
+}
+// 北部空域 — north of Taiwan, spans both strait and Pacific flanks
+if(ZONES.n){
+  L.polygon([[24.8,120.8],[26.5,120.5],[26.5,122.8],[24.8,122.8]],zS).addTo(map);
+  zoneLabel([25.8,121.2],'北部空域');
+}
+// 西南部空域 — SW quadrant, towards Dongsha
+if(ZONES.sw){
+  L.polygon([[20.5,117.5],[22.5,117.5],[22.5,120.5],[20.5,120.5]],zS).addTo(map);
+  zoneLabel([21.2,118.2],'西南部空域');
+}
+// 東部空域 — east of Taiwan, Pacific side
+if(ZONES.e){
+  L.polygon([[22.0,121.8],[24.5,121.8],[24.5,123.8],[22.0,123.8]],zS).addTo(map);
+  zoneLabel([22.8,122.3],'東部空域');
+}
+// 東北部空域 — NE Taiwan, near Miyako Strait
+if(ZONES.ne){
+  L.polygon([[24.5,122.0],[26.2,122.0],[26.2,124.0],[24.5,124.0]],zS).addTo(map);
+  zoneLabel([25.2,122.5],'東北部空域');
+}
+// 南部空域
+if(ZONES.s){
+  L.polygon([[21.0,120.2],[22.2,120.2],[22.2,122.0],[21.0,122.0]],zS).addTo(map);
+  zoneLabel([21.3,120.8],'南部空域');
+}
 
 // Island labels via DivIcon
 function lbl(ll,txt,sm){
   return L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="'+(sm?'map-lbl-sm':'map-lbl')+'">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false});
 }
-lbl([25.38,121.45],'台灣').addTo(map);
+lbl([24.58,121.0],'台灣').addTo(map);
 lbl([24.47,118.44],'金門',true).addTo(map);
 lbl([26.20,119.98],'馬祖',true).addTo(map);
 lbl([20.68,116.68],'東沙',true).addTo(map);
@@ -123,22 +148,24 @@ info.onAdd=function(){
   d.innerHTML=
     '<div class="map-info-row"><span style="color:#f5c842">&#9992;&thinsp;'+AC+'</span>&thinsp;架次</div>'+
     '<div class="map-info-row"><span style="color:#e05555">&#9875;&thinsp;'+SH+'</span>&thinsp;艘艦艇</div>'+
-    mlRow+
-    '<div class="map-ml-label">中線</div>';
+    mlRow;
   return d;
 };
 info.addTo(map);
 
-// Legend (top-left corner)
+// Legend (top-left)
 var leg=L.control({position:'topleft'});
 leg.onAdd=function(){
   var d=L.DomUtil.create('div','map-info');
-  d.style.cssText='padding:.35rem .5rem;font-size:.55rem;min-width:0';
+  d.style.cssText='padding:.35rem .55rem;font-size:.56rem;min-width:0';
+  var hasZone=ZONES.n||ZONES.sw||ZONES.e||ZONES.ne||ZONES.s;
   d.innerHTML=
-    '<div style="display:flex;align-items:center;gap:5px;color:#2a4a60;line-height:1.8">'+
-    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="1.5" stroke-dasharray="6,3"/></svg>中線</div>'+
-    '<div style="display:flex;align-items:center;gap:5px;color:#243545;line-height:1.8">'+
-    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#243545" stroke-width="1" stroke-dasharray="5,4"/></svg>ADIZ</div>';
+    '<div style="display:flex;align-items:center;gap:5px;color:'+mlColor+';line-height:1.9">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="'+(ML>0?2:1.5)+'" stroke-dasharray="'+(ML>0?'7,3':'6,4')+'"/></svg>中線</div>'+
+    '<div style="display:flex;align-items:center;gap:5px;color:#2a3d50;line-height:1.9">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#2a3d50" stroke-width="1" stroke-dasharray="5,4"/></svg>ADIZ</div>'+
+    (hasZone?'<div style="display:flex;align-items:center;gap:5px;color:#f5c842;line-height:1.9">'+
+    '<svg width="10" height="10"><rect x="1" y="1" width="8" height="8" fill="#f5c842" fill-opacity="0.25" stroke="#f5c842" stroke-width="1"/></svg>活動區域</div>':'');
   return d;
 };
 leg.addTo(map);
