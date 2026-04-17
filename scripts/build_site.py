@@ -366,23 +366,22 @@ if(ZONES.ne){
 // Key coast points + offset outward (NM=22.2km ≈ 0.2°lat / ~0.22°lon at 24°N)
 // 12nm territorial zones — gradient from coast (dark) outward to 12nm boundary (faint)
 // Focus point = coastline centroid so inner rings converge toward the actual coast
-gradZone12([
-  [25.50,121.54],[25.00,122.20],[23.95,121.82],
-  [22.60,121.35],[21.70,120.85],[22.35,120.05],
-  [22.93,119.80],[24.10,120.16],[24.87,120.65],
-  [25.32,121.53]
-],[23.5,121.0]); // Taiwan main island centroid
-gradZone12([
-  [24.05,119.10],[24.05,120.18],[22.90,120.18],[22.90,119.10]
-],[23.5,119.6]); // Penghu archipelago
-// Small islands: concentric circle halos (12nm=22224m radius)
-// Draws rings from coast outward — innermost brightest, outermost faintest
+// Concentric circle halos — innermost ring brightest (near coast), outermost faintest (12nm boundary)
 function gradCircle(ll,r){
   var sc=[1.0,0.72,0.47,0.25],fo=[0.06,0.11,0.17,0.25];
   for(var i=sc.length-1;i>=0;i--){
     L.circle(ll,{radius:r*sc[i],fillColor:'#4dba6a',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
   }
 }
+// Taiwan main island — polygon donut rings (irregular coastline)
+gradZone12([
+  [25.50,121.54],[25.00,122.20],[23.95,121.82],
+  [22.60,121.35],[21.70,120.85],[22.35,120.05],
+  [22.93,119.80],[24.10,120.16],[24.87,120.65],
+  [25.32,121.53]
+],[23.5,121.0]);
+// Offshore islands — circle halos
+gradCircle([23.57,119.62],38000); // Penghu 澎湖 (~17km extent + 12nm)
 gradCircle([22.67,121.47],22224); // Green Island 綠島
 gradCircle([22.05,121.55],22224); // Orchid Island 蘭嶼
 
