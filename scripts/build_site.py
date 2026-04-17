@@ -301,12 +301,14 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
 var mlColor=ML>0?'#e05555':'#3a6070';
 var mlDash=ML>0?'7,4':'6,5';
 var mlW=ML>0?2:1.5;
-// Median line: ~120°E, per MND maps and consensus estimates.
-// Strait midpoint at each latitude: 26°N≈120.5°E, 24°N≈120.0°E, 22°N≈119.8°E
+// Median line coordinates derived from strait midpoints per MND image grid:
+// Fujian coast / Taiwan W coast midpoints by latitude —
+// 26°N: 119.6/121.5→120.5, 25°N: 119.0/120.7→119.85, 24°N: 118.1/120.4→119.25,
+// 23°N: 117.9/120.2→119.05, 22.5°N: 117.8/120.0→118.9
 L.polyline([
-  [26.5,120.5],[26.0,120.4],[25.5,120.3],
-  [25.0,120.2],[24.5,120.1],[24.0,120.0],
-  [23.5,119.9],[23.0,119.9],[22.5,119.8]
+  [26.5,120.5],[26.0,120.3],[25.5,120.0],
+  [25.0,119.8],[24.5,119.5],[24.0,119.2],
+  [23.5,119.1],[23.0,119.0],[22.5,118.9]
 ],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.85}).addTo(map);
 
 // Activity zone overlays — styled to match MND bulletin areas
@@ -356,15 +358,15 @@ lbl([24.97,119.42],'烏坵',true).addTo(map);
 var info=L.control({position:'bottomright'});
 info.onAdd=function(){
   var d=L.DomUtil.create('div','map-info');
-  var td1='style="text-align:right;padding-right:6px;white-space:nowrap"';
+  var td1='style="text-align:right;padding-right:3px;white-space:nowrap"';
   var td2='style="color:var(--sub);white-space:nowrap"';
   var mlRow=ML>0
-    ?'<tr><td '+td1+' style="text-align:right;padding-right:6px;color:#e05555">\\u2715 \\u9032 '+ML+'</td><td '+td2+'>逾中線</td></tr>'
+    ?'<tr><td '+td1+' style="text-align:right;padding-right:3px;color:#e05555">\\u2715 \\u9032 '+ML+'</td><td '+td2+'>逾中線</td></tr>'
     :'<tr><td colspan="2" style="color:#2a4a60;white-space:nowrap">\\u2500 未逾中線</td></tr>';
   d.innerHTML=
     '<table style="border-spacing:0;font-size:.7rem"><tbody>'+
-    '<tr><td '+td1+' style="text-align:right;padding-right:6px;color:#f5c842">&#9992; '+AC+'</td><td '+td2+'>架次</td></tr>'+
-    '<tr><td '+td1+' style="text-align:right;padding-right:6px;color:#e05555">&#9875; '+SH+'</td><td '+td2+'>艘艦艇</td></tr>'+
+    '<tr><td '+td1+' style="text-align:right;padding-right:3px;color:#f5c842">&#9992; '+AC+'</td><td '+td2+'>架次</td></tr>'+
+    '<tr><td '+td1+' style="text-align:right;padding-right:3px;color:#e05555">&#9875; '+SH+'</td><td '+td2+'>艘艦艇</td></tr>'+
     mlRow+
     '</tbody></table>';
   return d;
@@ -392,17 +394,16 @@ leg.addTo(map);
 def map_section_html(ac_val, ml_val, sh_val, special):
     """Generate tactical map section HTML with Leaflet."""
     special_str = special or ''
+    # '北部' appears as a substring of '東北部', so check it doesn't come as part of '東北部'
+    has_n  = ('北部' in special_str and '東北部' not in special_str) or '北方' in special_str
+    has_ne = '東北' in special_str
     zones = {
-        'n':  ('北部' in special_str or '北方' in special_str) and '東北' not in special_str,
+        'n':  has_n,
         'sw': '西南' in special_str,
-        'e':  '東部' in special_str and '東北' not in special_str,
-        'ne': '東北' in special_str,
+        'e':  '東部' in special_str and not has_ne,
+        'ne': has_ne,
         's':  '南部' in special_str,
     }
-    # 若同時提到北部與東北部，兩者都顯示
-    if '東北' in special_str and '北部' in special_str:
-        zones['n'] = True
-        zones['ne'] = True
     js = (_MAP_JS
           .replace('__ML__',    str(ml_val))
           .replace('__AC__',    str(ac_val))
