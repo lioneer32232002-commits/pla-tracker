@@ -534,6 +534,46 @@ def monthly_stats_html(df, today_date):
             f'</div></div>')
 
 
+# ── Aircraft type badge helper ────────────────────────────────────────────────
+
+def type_info(atype_raw, special_str):
+    """Return (css_class, display_label) by parsing special_event for specific aircraft keywords.
+
+    Priority: keywords found in special_event text → fallback to aircraft_type field.
+    When multiple types appear (e.g. UAV + manned support), css_class='mixed'.
+    """
+    s = special_str or ''
+    # (keyword_in_text, display_label, css_class)
+    KW = [
+        ('無人機',   '無人機',   'uav'),
+        ('直升機',   '直升機',   'helicopter'),
+        ('輔戰機',   '輔戰機',   'manned'),
+        ('殲擊機',   '殲擊機',   'manned'),
+        ('轟炸機',   '轟炸機',   'manned'),
+        ('反潛機',   '反潛機',   'manned'),
+        ('電子戰機', '電子戰機', 'manned'),
+        ('預警機',   '預警機',   'manned'),
+        ('運輸機',   '運輸機',   'manned'),
+        ('偵察機',   '偵察機',   'manned'),
+    ]
+    found_labels, found_classes = [], set()
+    for kw, label, cls in KW:
+        if kw in s:
+            found_labels.append(label)
+            found_classes.add(cls)
+
+    if found_labels:
+        css = 'mixed' if len(found_classes) > 1 else found_classes.pop()
+        return css, '、'.join(found_labels)
+
+    # Fallback to aircraft_type field
+    tl = (atype_raw or '').lower()
+    FALLBACK = {'manned': '有人機', 'uav': '無人機', 'mixed': '混合',
+                'helicopter': '直升機', 'zero': '零架次'}
+    css = tl if tl in FALLBACK else 'zero'
+    return css, FALLBACK.get(tl, atype_raw or '—')
+
+
 # ── index.html ────────────────────────────────────────────────────────────────
 
 def build_index(df):
@@ -556,9 +596,7 @@ def build_index(df):
     ac_delta = delta_span(latest['aircraft_total'], prev['aircraft_total'])
     sh_delta = delta_span(latest['ships_total'],    prev['ships_total'])
 
-    type_lower = atype.lower() if atype != '—' else 'zero'
-    type_label = {'zero': '零架次', 'manned': '有人機', 'uav': 'UAV',
-                  'mixed': '混合', 'helicopter': '直升機'}.get(type_lower, atype)
+    type_lower, type_label = type_info(atype, special)
 
     # 近10日：飛機面積圖＋艦艇散點
     recent_html = _build_panels('rc',  df.tail(10), today_date, _CHART_JS_RECENT)
@@ -649,9 +687,7 @@ def build_records(df):
         sh    = int(row['ships_total'])       if pd.notna(row['ships_total'])       else 0
         ml    = int(row['median_line_cross']) if pd.notna(row['median_line_cross']) else 0
         label = fmt_date(row['date'])
-        tl    = atype.lower() if atype != '—' else 'zero'
-        type_zh = {'zero': '零', 'manned': '有人機', 'uav': 'UAV',
-                   'mixed': '混合', 'helicopter': '直升機'}.get(tl, atype)
+        tl, type_zh = type_info(atype, spec)
         rows += (f'<tr>'
                  f'<td>{label}</td>'
                  f'<td class="num yellow">{ac}</td>'
