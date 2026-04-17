@@ -67,25 +67,20 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
   subdomains:'abcd',maxZoom:10,minZoom:5
 }).addTo(map);
 
-// Taiwan main island — corrected outline (western coast stays east of 120.1°E)
-L.polygon([
-  [25.30,121.53],[25.16,121.80],[24.98,121.99],[24.82,121.98],
-  [24.53,121.88],[24.35,121.81],[23.98,121.62],[23.50,121.50],
-  [23.12,121.32],[22.75,121.15],[22.45,121.00],[22.18,120.93],
-  [21.92,120.87],[21.95,120.70],[22.10,120.55],[22.42,120.27],
-  [22.65,120.18],[23.05,120.18],[23.38,120.13],[23.65,120.13],
-  [23.85,120.20],[24.15,120.32],[24.55,120.58],[24.80,120.82],
-  [25.07,121.02],[25.22,121.28],[25.30,121.53]
-],{color:'#2e5070',fillColor:'#1d3a52',fillOpacity:0.82,weight:1.5,smoothFactor:0.8}).addTo(map);
+// No custom Taiwan polygon — CartoDB tiles already render Taiwan accurately.
+// Only add annotation layers on top.
 
-// Taiwan Strait Median Line (中線 — primary engagement threshold)
-var mlColor=ML>0?'#e05555':'#2a4a60';
+// Taiwan Strait Median Line 中線
+// True position: midpoint between Fujian coast (~118-119.5°E) and Taiwan W coast (~120°E)
+// Runs approx 119.0-120.1°E depending on latitude
+var mlColor=ML>0?'#e05555':'#3a6070';
 var mlDash=ML>0?'7,4':'6,5';
-var mlW=ML>0?2:1.2;
+var mlW=ML>0?2:1.5;
 L.polyline([
-  [26.5,120.0],[26.0,120.1],[25.5,120.2],[25.0,120.35],
-  [24.5,120.5],[24.0,120.55],[23.5,120.5],[23.0,120.4],[22.5,120.3]
-],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.8}).addTo(map);
+  [26.5,120.1],[26.0,120.0],[25.5,119.9],
+  [25.0,119.7],[24.5,119.5],[24.0,119.3],
+  [23.5,119.1],[23.0,119.0],[22.5,119.0]
+],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.85}).addTo(map);
 
 // Activity zone overlays — styled to match MND bulletin areas
 var zS={fillColor:'#f5c842',fillOpacity:0.13,color:'#f5c842',weight:1.2,opacity:0.55,dashArray:'4,3'};
