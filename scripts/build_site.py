@@ -177,6 +177,15 @@ footer a:hover{color:var(--tx)}
   font-size:.75rem;color:var(--sub);line-height:1.7;border-radius:0 var(--rad) var(--rad) 0}
 .map-note strong{color:var(--tx)}
 
+/* ── Entrance animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.sitrep{animation:fadeUp .5s ease both}
+.stats-row .stat:nth-child(1){animation:fadeUp .5s .08s ease both}
+.stats-row .stat:nth-child(2){animation:fadeUp .5s .16s ease both}
+.stats-row .stat:nth-child(3){animation:fadeUp .5s .24s ease both}
+.chart-section{animation:fadeUp .55s ease both}
+.map-wrap,.map-note{animation:fadeUp .6s .3s ease both}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
@@ -203,7 +212,8 @@ _CHART_JS_RECENT = """\
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
 var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0},border:{display:false}};
 var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
-var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
+var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
+var baseOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
   {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:'rgba(245,200,66,0.18)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:ACbg,pointBorderColor:ACbg,order:2},
   {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:3,tension:0,fill:false,order:1}
@@ -219,7 +229,8 @@ _CHART_JS_YTD = """\
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
 var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{display:false}};
 var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
-var baseOpts={animation:false,responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
+var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*15+c.datasetIndex*60:0;};
+var baseOpts={animation:{delay:animDelay,duration:600,easing:'easeOutExpo'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
   {type:'bar',data:AC,backgroundColor:ACbg,borderRadius:2,order:2},
   {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:2,tension:0,fill:false,order:1}
@@ -296,6 +307,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
 
 // No custom Taiwan polygon — CartoDB tiles already render Taiwan accurately.
 // Only add annotation layers on top.
+var _aL=[];
 
 // Taiwan Strait Median Line 中線
 // Midpoint between Fujian coast and Taiwan W coast by latitude:
@@ -327,18 +339,18 @@ function gradZone(coords,fp){
   for(var i=sc.length-1;i>=0;i--){
     var s=sc[i];
     var pts=coords.map(function(p){return[fp[0]+s*(p[0]-fp[0]),fp[1]+s*(p[1]-fp[1])];});
-    L.polygon(pts,{fillColor:'#f5c842',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
+    var _l=L.polygon(pts,{fillColor:'#f5c842',fillOpacity:0,color:'none',weight:0}).addTo(map);
+    _aL.push([_l,fo[i]]);
   }
 }
 function gradZone12(coords,fp){
-  // Donut-ring approach: each band is a polygon WITH a hole so fill stays only in the sea zone.
-  // Scale 0.82 ≈ coastline (12nm offset is ~18% of centroid distance); scale 1.0 = 12nm boundary.
   var sc=[0.82,0.87,0.92,0.97,1.0];
-  var fo=[0.26,0.17,0.10,0.05]; // inner→outer (darkest near coast)
+  var fo=[0.26,0.17,0.10,0.05];
   for(var i=0;i<sc.length-1;i++){
     var outer=coords.map(function(p){return[fp[0]+sc[i+1]*(p[0]-fp[0]),fp[1]+sc[i+1]*(p[1]-fp[1])];});
     var inner=coords.map(function(p){return[fp[0]+sc[i]*(p[0]-fp[0]),fp[1]+sc[i]*(p[1]-fp[1])];});
-    L.polygon([outer,inner],{fillColor:'#4dba6a',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
+    var _l=L.polygon([outer,inner],{fillColor:'#4dba6a',fillOpacity:0,color:'none',weight:0}).addTo(map);
+    _aL.push([_l,fo[i]]);
   }
 }
 // 北部空域 — focus toward Taiwan's north coast
@@ -370,7 +382,8 @@ if(ZONES.ne){
 function gradCircle(ll,r){
   var sc=[1.0,0.72,0.47,0.25],fo=[0.06,0.11,0.17,0.25];
   for(var i=sc.length-1;i>=0;i--){
-    L.circle(ll,{radius:r*sc[i],fillColor:'#4dba6a',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
+    var _l=L.circle(ll,{radius:r*sc[i],fillColor:'#4dba6a',fillOpacity:0,color:'none',weight:0}).addTo(map);
+    _aL.push([_l,fo[i]]);
   }
 }
 // Taiwan main island — polygon donut rings (irregular coastline)
@@ -437,6 +450,18 @@ leg.onAdd=function(){
   return d;
 };
 leg.addTo(map);
+
+// Fade-in all gradient layers after map tiles are ready
+map.whenReady(function(){
+  setTimeout(function(){
+    _aL.forEach(function(item,i){
+      var el=item[0].getElement();
+      if(!el)return;
+      el.style.transition='fill-opacity '+(0.7+i*0.012)+'s cubic-bezier(0.4,0,0.2,1) '+(150+i*22)+'ms';
+      el.style.fillOpacity=item[1];
+    });
+  },250);
+});
 
 })();"""
 
@@ -528,8 +553,8 @@ def monthly_stats_html(df, today_date):
     return (f'<div class="sitrep" style="margin-top:2.5rem">'
             f'<div class="sitrep-label">{mo_label}至今 &nbsp;·&nbsp; {days} 天</div>'
             f'<div class="stats-row">'
-            f'<div class="stat"><div class="stat-n y">{mo_ac}</div><div class="stat-l">中共軍機架次</div></div>'
-            f'<div class="stat"><div class="stat-n y">{mo_cr}</div><div class="stat-l">越中線&nbsp;<span class="stat-detail">{cr_rate}</span></div></div>'
+            f'<div class="stat"><div class="stat-n y" data-count="{mo_ac}">0</div><div class="stat-l">中共軍機架次</div></div>'
+            f'<div class="stat"><div class="stat-n y" data-count="{mo_cr}">0</div><div class="stat-l">越中線&nbsp;<span class="stat-detail">{cr_rate}</span></div></div>'
             f'<div class="stat"><div class="stat-n r">{mo_sh_avg:.1f}</div><div class="stat-l">艦艇日均（艘）</div></div>'
             f'</div></div>')
 
@@ -642,16 +667,16 @@ def build_index(df):
     <div class="sitrep-label">SITREP &nbsp;·&nbsp; {today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
     <div class="stats-row">
       <div class="stat">
-        <div class="stat-n y">{ac_val}</div>
+        <div class="stat-n y" data-count="{ac_val}">0</div>
         <div class="stat-l">中共軍機架次</div>
         {ac_delta}
       </div>
       <div class="stat">
-        <div class="stat-n y">{ml_val}</div>
+        <div class="stat-n y" data-count="{ml_val}">0</div>
         <div class="stat-l">逾越中線&nbsp;<span class="stat-detail">{cr_str}</span></div>
       </div>
       <div class="stat">
-        <div class="stat-n r">{sh_val}</div>
+        <div class="stat-n r" data-count="{sh_val}">0</div>
         <div class="stat-l">中共艦艇</div>
         {sh_delta}
       </div>
@@ -667,6 +692,19 @@ def build_index(df):
 
 </main>
 
+<script>(function(){{
+function animCount(el,t,d){{
+if(!t){{return;}}
+var s=performance.now();
+function step(n){{
+var p=Math.min((n-s)/d,1);
+var e=1-Math.pow(1-p,4);
+el.textContent=Math.round(e*t);
+if(p<1)requestAnimationFrame(step);}}
+requestAnimationFrame(step);}}
+document.querySelectorAll('[data-count]').forEach(function(el){{
+animCount(el,+el.dataset.count,900);}});
+}})();</script>
 {footer_html(today_label)}
 </body></html>"""
 
