@@ -358,15 +358,15 @@ lbl([24.97,119.42],'烏坵',true).addTo(map);
 var info=L.control({position:'bottomright'});
 info.onAdd=function(){
   var d=L.DomUtil.create('div','map-info');
-  var td1='style="text-align:right;padding-right:3px;white-space:nowrap"';
-  var td2='style="color:var(--sub);white-space:nowrap"';
+  var nS='text-align:right;padding-right:2px;white-space:nowrap';
+  var lS='color:var(--sub);white-space:nowrap;padding-left:0';
   var mlRow=ML>0
-    ?'<tr><td '+td1+' style="text-align:right;padding-right:3px;color:#e05555">\\u2715 \\u9032 '+ML+'</td><td '+td2+'>逾中線</td></tr>'
+    ?'<tr><td style="'+nS+';color:#e05555">\\u2715 \\u9032 '+ML+'</td><td style="'+lS+'">逾中線</td></tr>'
     :'<tr><td colspan="2" style="color:#2a4a60;white-space:nowrap">\\u2500 未逾中線</td></tr>';
   d.innerHTML=
     '<table style="border-spacing:0;font-size:.7rem"><tbody>'+
-    '<tr><td '+td1+' style="text-align:right;padding-right:3px;color:#f5c842">&#9992; '+AC+'</td><td '+td2+'>架次</td></tr>'+
-    '<tr><td '+td1+' style="text-align:right;padding-right:3px;color:#e05555">&#9875; '+SH+'</td><td '+td2+'>艘艦艇</td></tr>'+
+    '<tr><td style="'+nS+';color:#f5c842">&#9992; '+AC+'</td><td style="'+lS+'">架次</td></tr>'+
+    '<tr><td style="'+nS+';color:#e05555">&#9875; '+SH+'</td><td style="'+lS+'">艘艦艇</td></tr>'+
     mlRow+
     '</tbody></table>';
   return d;
