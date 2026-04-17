@@ -51,7 +51,7 @@
   <div class="sitrep" style="margin-top:2.5rem"><div class="sitrep-label">4月至今 &nbsp;·&nbsp; 17 天</div><div class="stats-row"><div class="stat"><div class="stat-n y">91</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y">50</div><div class="stat-l">越中線&nbsp;<span class="stat-detail">55%</span></div></div><div class="stat"><div class="stat-n r">8.8</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
 
   <section class="chart-section"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><div class="map-note"><strong>12海里領海界線（綠色虛線）</strong>為實質法律邊界。解放軍機艦越過中線不觸發自衛權；一旦進入此界線內的領海或領空，依國際法及《國防法》，台灣方面可採取防衛行動。</div><script>(function(){
-var ML=0,AC=5,SH=6,ZONES={"n": false, "sw": true, "e": false, "ne": true, "s": true};
+var ML=0,AC=5,SH=6,ZONES={"n": false, "sw": true, "e": false, "ne": true, "s": false};
 
 var map=L.map('activity-map',{
   center:[23.8,120.5],zoom:6,
@@ -133,11 +133,6 @@ if(ZONES.e){
 if(ZONES.ne){
   gradZone([[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],[25.5,121.2]);
   zoneLabel([25.9,121.1],'東北部空域');
-}
-// 南部空域 — focus toward Taiwan's south tip
-if(ZONES.s){
-  gradZone([[21.5,121.0],[22.5,121.0],[22.5,123.0],[21.5,123.0]],[21.9,121.3]);
-  zoneLabel([21.7,121.5],'南部空域');
 }
 
 // 12 nautical mile territorial limit — approximate ~0.2° offset from Taiwan's coast

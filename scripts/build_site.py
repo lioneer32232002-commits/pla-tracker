@@ -361,11 +361,6 @@ if(ZONES.ne){
   gradZone([[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],[25.5,121.2]);
   zoneLabel([25.9,121.1],'東北部空域');
 }
-// 南部空域 — focus toward Taiwan's south tip
-if(ZONES.s){
-  gradZone([[21.5,121.0],[22.5,121.0],[22.5,123.0],[21.5,123.0]],[21.9,121.3]);
-  zoneLabel([21.7,121.5],'南部空域');
-}
 
 // 12 nautical mile territorial limit — approximate ~0.2° offset from Taiwan's coast
 // Key coast points + offset outward (NM=22.2km ≈ 0.2°lat / ~0.22°lon at 24°N)
@@ -454,7 +449,7 @@ def map_section_html(ac_val, ml_val, sh_val, special):
         'sw': '西南' in special_str,
         'e':  '東部' in special_str and not has_ne,
         'ne': has_ne,
-        's':  '南部' in special_str,
+        's':  '南部' in special_str and '西南部' not in special_str,
     }
     js = (_MAP_JS
           .replace('__ML__',    str(ml_val))
