@@ -125,11 +125,24 @@ if(ZONES.s){
 // 12 nautical mile territorial limit — approximate ~0.2° offset from Taiwan's coast
 // Key coast points + offset outward (NM=22.2km ≈ 0.2°lat / ~0.22°lon at 24°N)
 var tw12={color:'#4dba6a',weight:1.3,dashArray:'3,3',opacity:0.75,fill:false};
+// Taiwan main island (~0.2° offset from coast)
 L.polygon([
   [25.50,121.54],[25.00,122.20],[23.95,121.82],
   [22.60,121.35],[21.70,120.85],[22.35,120.05],
   [22.93,119.80],[24.10,120.16],[24.87,120.65],
   [25.32,121.53]
+],tw12).addTo(map);
+// Penghu archipelago — islands span ~23.1-23.85°N, 119.3-119.97°E; +0.2° buffer
+L.polygon([
+  [24.05,119.10],[24.05,120.18],[22.90,120.18],[22.90,119.10]
+],tw12).addTo(map);
+// Green Island 綠島 (22.67°N, 121.47°E) — +0.2° buffer
+L.polygon([
+  [22.87,121.25],[22.87,121.69],[22.47,121.69],[22.47,121.25]
+],tw12).addTo(map);
+// Orchid Island 蘭嶼 (22.05°N, 121.55°E) — +0.2° buffer
+L.polygon([
+  [22.25,121.33],[22.25,121.77],[21.85,121.77],[21.85,121.33]
 ],tw12).addTo(map);
 
 // Island labels via DivIcon
