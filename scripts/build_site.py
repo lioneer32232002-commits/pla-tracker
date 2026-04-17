@@ -327,12 +327,16 @@ function gradZone(coords,fp){
   for(var i=sc.length-1;i>=0;i--){
     var s=sc[i];
     var pts=coords.map(function(p){return[fp[0]+s*(p[0]-fp[0]),fp[1]+s*(p[1]-fp[1])];});
-    L.polygon(pts,{
-      fillColor:'#f5c842',fillOpacity:fo[i],
-      color:i===0?'#f5c842':'none',
-      weight:i===0?1.2:0,opacity:i===0?0.5:0,
-      dashArray:i===0?'4,3':null
-    }).addTo(map);
+    L.polygon(pts,{fillColor:'#f5c842',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
+  }
+}
+function gradZone12(coords,fp){
+  var sc=[1.0,0.75,0.52,0.32,0.15];
+  var fo=[0.07,0.11,0.16,0.22,0.30];
+  for(var i=sc.length-1;i>=0;i--){
+    var s=sc[i];
+    var pts=coords.map(function(p){return[fp[0]+s*(p[0]-fp[0]),fp[1]+s*(p[1]-fp[1])];});
+    L.polygon(pts,{fillColor:'#4dba6a',fillOpacity:fo[i],color:'none',weight:0}).addTo(map);
   }
 }
 // 北部空域 — focus toward Taiwan's north coast
@@ -363,26 +367,23 @@ if(ZONES.s){
 
 // 12 nautical mile territorial limit — approximate ~0.2° offset from Taiwan's coast
 // Key coast points + offset outward (NM=22.2km ≈ 0.2°lat / ~0.22°lon at 24°N)
-var tw12={color:'#4dba6a',weight:1.3,dashArray:'3,3',opacity:0.75,fill:false};
-// Taiwan main island (~0.2° offset from coast)
-L.polygon([
+// 12nm territorial zones — gradient from coast (dark) outward to 12nm boundary (faint)
+// Focus point = coastline centroid so inner rings converge toward the actual coast
+gradZone12([
   [25.50,121.54],[25.00,122.20],[23.95,121.82],
   [22.60,121.35],[21.70,120.85],[22.35,120.05],
   [22.93,119.80],[24.10,120.16],[24.87,120.65],
   [25.32,121.53]
-],tw12).addTo(map);
-// Penghu archipelago — islands span ~23.1-23.85°N, 119.3-119.97°E; +0.2° buffer
-L.polygon([
+],[23.5,121.0]); // Taiwan main island centroid
+gradZone12([
   [24.05,119.10],[24.05,120.18],[22.90,120.18],[22.90,119.10]
-],tw12).addTo(map);
-// Green Island 綠島 (22.67°N, 121.47°E) — +0.2° buffer
-L.polygon([
+],[23.5,119.6]); // Penghu centroid
+gradZone12([
   [22.87,121.25],[22.87,121.69],[22.47,121.69],[22.47,121.25]
-],tw12).addTo(map);
-// Orchid Island 蘭嶼 (22.05°N, 121.55°E) — +0.2° buffer
-L.polygon([
+],[22.67,121.47]); // Green Island 綠島
+gradZone12([
   [22.25,121.33],[22.25,121.77],[21.85,121.77],[21.85,121.33]
-],tw12).addTo(map);
+],[22.05,121.55]); // Orchid Island 蘭嶼
 
 // Island labels via DivIcon
 function lbl(ll,txt,sm){
@@ -426,7 +427,7 @@ leg.onAdd=function(){
     '<div style="display:flex;align-items:center;gap:5px;color:'+mlColor+';line-height:1.9">'+
     '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="'+(ML>0?2:1.5)+'" stroke-dasharray="'+(ML>0?'7,3':'6,4')+'"/></svg>中線</div>'+
     '<div style="display:flex;align-items:center;gap:5px;color:#4dba6a;line-height:1.9">'+
-    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#4dba6a" stroke-width="1.3" stroke-dasharray="3,3"/></svg>12海里領海</div>'+
+    '<svg width="14" height="8"><defs><linearGradient id="lg" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#4dba6a" stop-opacity="0.08"/><stop offset="100%" stop-color="#4dba6a" stop-opacity="0.35"/></linearGradient></defs><rect x="0" y="0" width="14" height="8" fill="url(#lg)" rx="1"/></svg>12海里領海</div>'+
     (hasZone?'<div style="display:flex;align-items:center;gap:5px;color:#f5c842;line-height:1.9">'+
     '<svg width="10" height="10"><rect x="1" y="1" width="8" height="8" fill="#f5c842" fill-opacity="0.25" stroke="#f5c842" stroke-width="1"/></svg>活動區域</div>':'');
   return d;
