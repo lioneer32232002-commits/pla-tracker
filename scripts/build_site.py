@@ -177,14 +177,10 @@ footer a:hover{color:var(--tx)}
   font-size:.75rem;color:var(--sub);line-height:1.7;border-radius:0 var(--rad) var(--rad) 0}
 .map-note strong{color:var(--tx)}
 
-/* ── Entrance animations ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.sitrep{animation:fadeUp .5s ease both}
-.stats-row .stat:nth-child(1){animation:fadeUp .5s .08s ease both}
-.stats-row .stat:nth-child(2){animation:fadeUp .5s .16s ease both}
-.stats-row .stat:nth-child(3){animation:fadeUp .5s .24s ease both}
-.chart-section{animation:fadeUp .55s ease both}
-.map-wrap,.map-note{animation:fadeUp .6s .3s ease both}
+/* ── Scroll-triggered entrance animations ── */
+.anim-ready{opacity:0;transform:translateY(14px);
+  transition:opacity .5s ease,transform .5s ease}
+.anim-ready.visible{opacity:1;transform:none}
 
 /* ── Mobile ── */
 @media(max-width:640px){
@@ -277,7 +273,7 @@ def _build_panels(uid, df_slice, today_date, template):
 def chart_section_html(title, chart_html, obs_ac='', obs_sh=''):
     ac_tag = f'<span class="chart-obs">{obs_ac}</span>' if obs_ac else ''
     sh_tag = f'<span class="chart-obs" style="color:var(--r)">{obs_sh}</span>' if obs_sh else ''
-    return (f'<section class="chart-section">'
+    return (f'<section class="chart-section anim-ready">'
             f'<div class="chart-header">'
             f'<span class="chart-title">{title}</span>{ac_tag}{sh_tag}'
             f'</div>'
@@ -485,7 +481,7 @@ def map_section_html(ac_val, ml_val, sh_val, special):
           .replace('__SH__',    str(sh_val))
           .replace('__ZONES__', json.dumps(zones)))
     return (
-        '<section class="chart-section">'
+        '<section class="chart-section anim-ready">'
         '<div class="chart-header">'
         '<span class="chart-title">活動區域示意</span>'
         '<span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span>'
@@ -550,7 +546,7 @@ def monthly_stats_html(df, today_date):
     mo_label  = f"{pd.to_datetime(today_date).month}月"
     cr_rate   = f"{mo_cr/mo_ac*100:.0f}%" if mo_ac > 0 else '—'
 
-    return (f'<div class="sitrep" style="margin-top:2.5rem">'
+    return (f'<div class="sitrep anim-ready" style="margin-top:2.5rem">'
             f'<div class="sitrep-label">{mo_label}至今 &nbsp;·&nbsp; {days} 天</div>'
             f'<div class="stats-row">'
             f'<div class="stat"><div class="stat-n y" data-count="{mo_ac}">0</div><div class="stat-l">中共軍機架次</div></div>'
@@ -663,7 +659,7 @@ def build_index(df):
 <main>
   {alert_html}
 
-  <div class="sitrep">
+  <div class="sitrep anim-ready">
     <div class="sitrep-label">SITREP &nbsp;·&nbsp; {today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
     <div class="stats-row">
       <div class="stat">
@@ -694,7 +690,6 @@ def build_index(df):
 
 <script>(function(){{
 function animCount(el,t,d){{
-if(!t){{return;}}
 var s=performance.now();
 function step(n){{
 var p=Math.min((n-s)/d,1);
@@ -702,8 +697,20 @@ var e=1-Math.pow(1-p,4);
 el.textContent=Math.round(e*t);
 if(p<1)requestAnimationFrame(step);}}
 requestAnimationFrame(step);}}
-document.querySelectorAll('[data-count]').forEach(function(el){{
-animCount(el,+el.dataset.count,900);}});
+var io=new IntersectionObserver(function(entries){{
+entries.forEach(function(e){{
+if(!e.isIntersecting)return;
+var el=e.target;
+el.classList.add('visible');
+io.unobserve(el);
+el.querySelectorAll('canvas').forEach(function(c){{
+var ch=typeof Chart!=='undefined'&&Chart.getChart(c);
+if(ch){{ch.reset();ch.update();}}}});
+el.querySelectorAll('[data-count]').forEach(function(s,i){{
+var t=+s.dataset.count;
+if(!t)return;
+setTimeout(function(){{animCount(s,t,900);}},i*100);}});}});}},{{threshold:0.15}});
+document.querySelectorAll('.anim-ready').forEach(function(el){{io.observe(el);}});
 }})();</script>
 {footer_html(today_label)}
 </body></html>"""

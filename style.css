@@ -134,14 +134,10 @@ footer a:hover{color:var(--tx)}
   font-size:.75rem;color:var(--sub);line-height:1.7;border-radius:0 var(--rad) var(--rad) 0}
 .map-note strong{color:var(--tx)}
 
-/* ── Entrance animations ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.sitrep{animation:fadeUp .5s ease both}
-.stats-row .stat:nth-child(1){animation:fadeUp .5s .08s ease both}
-.stats-row .stat:nth-child(2){animation:fadeUp .5s .16s ease both}
-.stats-row .stat:nth-child(3){animation:fadeUp .5s .24s ease both}
-.chart-section{animation:fadeUp .55s ease both}
-.map-wrap,.map-note{animation:fadeUp .6s .3s ease both}
+/* ── Scroll-triggered entrance animations ── */
+.anim-ready{opacity:0;transform:translateY(14px);
+  transition:opacity .5s ease,transform .5s ease}
+.anim-ready.visible{opacity:1;transform:none}
 
 /* ── Mobile ── */
 @media(max-width:640px){
