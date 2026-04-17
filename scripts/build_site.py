@@ -316,35 +316,48 @@ L.polyline([
   [23.5,119.1],[23.0,119.0],[22.5,118.9]
 ],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.85}).addTo(map);
 
-// Activity zone overlays — styled to match MND bulletin areas
-var zS={fillColor:'#f5c842',fillOpacity:0.13,color:'#f5c842',weight:1.2,opacity:0.55,dashArray:'4,3'};
+// Gradient zone: 5 concentric rings shrinking toward focusPt (Taiwan-side edge)
+// Outer ring = dashed border + faint fill; inner rings = no border + denser fill
 function zoneLabel(ll,txt){
   L.marker(ll,{icon:L.divIcon({className:'',html:'<div style="color:#f5c842;font-size:.58rem;font-weight:700;font-family:Noto Sans TC,sans-serif;text-shadow:0 1px 4px #000,0 0 8px #000;white-space:nowrap;pointer-events:none">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false}).addTo(map);
 }
-// Zone polygons traced from MND bulletin grid (1° lat/lon lines)
-// 北部空域 — northern strait, above Taiwan's north tip
-if(ZONES.n){
-  L.polygon([[25.5,120.3],[26.5,120.3],[26.5,122.5],[25.5,122.0]],zS).addTo(map);
-  zoneLabel([26.0,120.8],'北部空域');
+function gradZone(coords,fp){
+  var sc=[1.0,0.78,0.58,0.40,0.24];
+  var fo=[0.04,0.07,0.10,0.14,0.19];
+  for(var i=sc.length-1;i>=0;i--){
+    var s=sc[i];
+    var pts=coords.map(function(p){return[fp[0]+s*(p[0]-fp[0]),fp[1]+s*(p[1]-fp[1])];});
+    L.polygon(pts,{
+      fillColor:'#f5c842',fillOpacity:fo[i],
+      color:i===0?'#f5c842':'none',
+      weight:i===0?1.2:0,opacity:i===0?0.5:0,
+      dashArray:i===0?'4,3':null
+    }).addTo(map);
+  }
 }
-// 西南部空域 — per MND zone ②: left=117°E, top=23°N/119.8°E, diagonal to 21°N/121°E
+// 北部空域 — focus toward Taiwan's north coast
+if(ZONES.n){
+  gradZone([[25.5,120.3],[26.5,120.3],[26.5,122.5],[25.5,122.0]],[25.6,121.2]);
+  zoneLabel([26.1,120.8],'北部空域');
+}
+// 西南部空域 — MND ②: diagonal east edge; focus toward Taiwan's SW coast
 if(ZONES.sw){
-  L.polygon([[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],zS).addTo(map);
+  gradZone([[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5]);
   zoneLabel([21.8,117.5],'西南部空域');
 }
-// 東部空域 — east of Taiwan, Pacific side
+// 東部空域 — focus toward Taiwan's east coast
 if(ZONES.e){
-  L.polygon([[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],zS).addTo(map);
+  gradZone([[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1]);
   zoneLabel([22.8,122.5],'東部空域');
 }
-// 東北部空域 — per MND zone ①: tilted parallelogram NW~(26.5,120.7) to SE~(25.4,121.8)
+// 東北部空域 — MND ①: tilted parallelogram; focus toward Taiwan's north tip
 if(ZONES.ne){
-  L.polygon([[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],zS).addTo(map);
-  zoneLabel([25.8,121.2],'東北部空域');
+  gradZone([[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],[25.5,121.2]);
+  zoneLabel([25.9,121.1],'東北部空域');
 }
-// 南部空域 — south of Taiwan's southern tip
+// 南部空域 — focus toward Taiwan's south tip
 if(ZONES.s){
-  L.polygon([[21.5,121.0],[22.5,121.0],[22.5,123.0],[21.5,123.0]],zS).addTo(map);
+  gradZone([[21.5,121.0],[22.5,121.0],[22.5,123.0],[21.5,123.0]],[21.9,121.3]);
   zoneLabel([21.7,121.5],'南部空域');
 }
 
@@ -387,16 +400,16 @@ var info=L.control({position:'bottomright'});
 info.onAdd=function(){
   var d=L.DomUtil.create('div','map-info');
   var y='color:#f5c842',r='color:#e05555';
-  var ic='width:1.5em;text-align:center;line-height:2';
-  var nm='width:2em;text-align:right;padding-right:3px;line-height:2';
-  var lb='white-space:nowrap;line-height:2';
+  var ic='<span style="display:inline-block;width:1.2em;text-align:center">';
+  var nc='text-align:right;padding-right:4px;white-space:nowrap;line-height:1.95';
+  var lc='white-space:nowrap;line-height:1.95';
   var mlRow=ML>0
-    ?'<tr><td style="'+ic+';'+r+'">\\u2715</td><td style="'+nm+';'+r+'">'+ML+'</td><td style="'+lb+';'+r+'">逾中線</td></tr>'
-    :'<tr><td colspan="3" style="'+lb+';color:#2a4a60;padding-top:1px">\\u2500 未逾中線</td></tr>';
+    ?'<tr><td style="'+nc+';'+r+'">'+ic+'&#x2715;</span> '+ML+'</td><td style="'+lc+';'+r+'">逾中線</td></tr>'
+    :'<tr><td colspan="2" style="'+lc+';color:#2a4a60">&#x2500; 未逾中線</td></tr>';
   d.innerHTML=
     '<table style="border-spacing:0;font-size:.7rem"><tbody>'+
-    '<tr><td style="'+ic+';'+y+'">&#9992;</td><td style="'+nm+';'+y+'">'+AC+'</td><td style="'+lb+';'+y+'">架次</td></tr>'+
-    '<tr><td style="'+ic+';'+r+'">&#9875;</td><td style="'+nm+';'+r+'">'+SH+'</td><td style="'+lb+';'+r+'">艘艦艇</td></tr>'+
+    '<tr><td style="'+nc+';'+y+'">'+ic+'&#9992;</span> '+AC+'</td><td style="'+lc+';'+y+'">架次</td></tr>'+
+    '<tr><td style="'+nc+';'+r+'">'+ic+'&#9875;</span> '+SH+'</td><td style="'+lc+';'+r+'">艘艦艇</td></tr>'+
     mlRow+
     '</tbody></table>';
   return d;
