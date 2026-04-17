@@ -6,7 +6,9 @@
 <title>中國擾台趨勢數據分析</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <div class="top-bar">
@@ -47,6 +49,101 @@
   </div>
 
   <div class="sitrep" style="margin-top:2.5rem"><div class="sitrep-label">4月至今 &nbsp;·&nbsp; 16 天</div><div class="stats-row"><div class="stat"><div class="stat-n y">86</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y">50</div><div class="stat-l">越中線&nbsp;<span class="stat-detail">58%</span></div></div><div class="stat"><div class="stat-n r">8.9</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
+
+  <section class="chart-section"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><script>(function(){
+var ML=0,AC=3,SH=9,ZONES={"n": false, "sw": false, "e": false, "ne": false, "s": false};
+
+var map=L.map('activity-map',{
+  center:[23.8,120.3],zoom:6,
+  scrollWheelZoom:false,
+  zoomControl:true,
+  attributionControl:true,
+  maxBounds:[[18,113],[30,128]],
+  maxBoundsViscosity:0.85
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'\u00a9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> \u00a9 <a href="https://carto.com/">CARTO</a>',
+  subdomains:'abcd',maxZoom:10,minZoom:5
+}).addTo(map);
+
+// Taiwan main island (simplified outline)
+L.polygon([
+  [25.30,121.50],[25.03,121.98],[24.81,121.96],[24.35,121.82],
+  [23.70,121.62],[22.93,121.25],[22.38,121.08],[21.90,120.85],
+  [22.00,120.55],[22.35,120.23],[22.78,120.15],[23.40,119.90],
+  [23.82,120.00],[24.20,120.22],[24.60,120.65],[25.00,121.00],
+  [25.30,121.50]
+],{color:'#1e3040',fillColor:'#0c1820',fillOpacity:0.92,weight:1.5,smoothFactor:1.2}).addTo(map);
+
+// Penghu
+L.circleMarker([23.57,119.62],{radius:3,color:'#1e3040',fillColor:'#0c1820',fillOpacity:0.9,weight:1}).addTo(map);
+
+// ROC ADIZ boundary (approximate)
+L.polygon([
+  [27.8,120.5],[27.2,122.2],[25.8,123.8],[23.2,124.2],
+  [20.5,122.8],[19.5,120.5],[20.5,118.0],[23.0,117.2],
+  [25.5,117.8],[27.0,119.2],[27.8,120.5]
+],{color:'#243545',fillOpacity:0,weight:1,dashArray:'5,5',smoothFactor:1}).addTo(map);
+
+// Taiwan Strait Median Line
+var mlColor=ML>0?'#e05555':'#2a4a60';
+var mlDash=ML>0?'7,4':'6,5';
+var mlW=ML>0?1.8:1;
+L.polyline([
+  [26.5,120.0],[26.0,120.1],[25.5,120.2],[25.0,120.35],
+  [24.5,120.5],[24.0,120.55],[23.5,120.5],[23.0,120.4],[22.5,120.3]
+],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.75}).addTo(map);
+
+// Activity zone overlays (from special_event parsing)
+var zS={fillColor:'#f5c842',fillOpacity:0.10,color:'#f5c842',weight:1,opacity:0.35,dashArray:'3,4'};
+if(ZONES.n)  L.polygon([[25.0,121.5],[26.2,121.5],[26.2,123.2],[25.0,123.2]],zS).addTo(map);
+if(ZONES.sw) L.polygon([[21.0,118.0],[22.5,118.0],[22.5,120.2],[21.0,120.2]],zS).addTo(map);
+if(ZONES.e)  L.polygon([[22.0,121.8],[24.2,121.8],[24.2,123.5],[22.0,123.5]],zS).addTo(map);
+if(ZONES.ne) L.polygon([[24.5,121.8],[25.8,121.8],[25.8,123.2],[24.5,123.2]],zS).addTo(map);
+if(ZONES.s)  L.polygon([[21.0,119.8],[22.0,119.8],[22.0,121.8],[21.0,121.8]],zS).addTo(map);
+
+// Island labels via DivIcon
+function lbl(ll,txt,sm){
+  return L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="'+(sm?'map-lbl-sm':'map-lbl')+'">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false});
+}
+lbl([25.38,121.45],'台灣').addTo(map);
+lbl([24.47,118.44],'金門',true).addTo(map);
+lbl([26.20,119.98],'馬祖',true).addTo(map);
+lbl([20.68,116.68],'東沙',true).addTo(map);
+lbl([24.97,119.42],'烏坵',true).addTo(map);
+
+// Info panel (bottom-right)
+var info=L.control({position:'bottomright'});
+info.onAdd=function(){
+  var d=L.DomUtil.create('div','map-info');
+  var mlRow=ML>0
+    ?'<div class="map-info-row"><span style="color:#e05555">\u2715 \u9032 '+ML+'</span>&thinsp;逾中線</div>'
+    :'<div class="map-info-row"><span style="color:#2a4a60">\u2500 未逾中線</span></div>';
+  d.innerHTML=
+    '<div class="map-info-row"><span style="color:#f5c842">&#9992;&thinsp;'+AC+'</span>&thinsp;架次</div>'+
+    '<div class="map-info-row"><span style="color:#e05555">&#9875;&thinsp;'+SH+'</span>&thinsp;艘艦艇</div>'+
+    mlRow+
+    '<div class="map-ml-label">中線</div>';
+  return d;
+};
+info.addTo(map);
+
+// Legend (top-left corner)
+var leg=L.control({position:'topleft'});
+leg.onAdd=function(){
+  var d=L.DomUtil.create('div','map-info');
+  d.style.cssText='padding:.35rem .5rem;font-size:.55rem;min-width:0';
+  d.innerHTML=
+    '<div style="display:flex;align-items:center;gap:5px;color:#2a4a60;line-height:1.8">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="1.5" stroke-dasharray="6,3"/></svg>中線</div>'+
+    '<div style="display:flex;align-items:center;gap:5px;color:#243545;line-height:1.8">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#243545" stroke-width="1" stroke-dasharray="5,4"/></svg>ADIZ</div>';
+  return d;
+};
+leg.addTo(map);
+
+})();</script></section>
 
   <section class="chart-section"><div class="chart-header"><span class="chart-title">10日觀察</span><span class="chart-obs">今日 3 架次</span><span class="chart-obs" style="color:var(--r)">9 艘艦艇</span></div><div class="split-panels"><div class="panel-wrap-ac"><canvas id="rc-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="rc-sh"></canvas></div></div><script>(function(){
 var L=["4/7", "4/8", "4/9", "4/10", "4/11", "4/12", "4/13", "4/14", "4/15", "4/16"],AC=[1, 2, 6, 7, 17, 2, 0, 9, 5, 3],CR=[0, 2, 5, 7, 15, 0, 0, 0, 0, 0],SH=[9, 10, 8, 8, 8, 12, 10, 9, 9, 9],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];

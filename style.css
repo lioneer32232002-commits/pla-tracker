@@ -98,6 +98,36 @@ footer{border-top:1px solid var(--bdr);padding:1rem 1.5rem;margin-top:1rem;
 footer a{color:var(--sub);text-decoration:none}
 footer a:hover{color:var(--tx)}
 
+/* ── Activity Map ── */
+.map-wrap{background:#070b0d;border-radius:var(--rad);overflow:hidden;border:1px solid var(--bdr)}
+#activity-map{height:380px}
+.leaflet-container{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif}
+.leaflet-control-attribution{
+  background:rgba(7,11,13,0.82)!important;color:#3a5060!important;
+  font-size:.52rem!important;border-top:1px solid #1a2830!important;padding:2px 6px!important}
+.leaflet-control-attribution a{color:#3a5060!important}
+.leaflet-control-zoom a{
+  background:#0e1618!important;color:var(--sub)!important;
+  border:1px solid var(--bdr)!important;font-size:14px!important;line-height:24px!important}
+.leaflet-control-zoom a:hover{background:#152028!important;color:var(--tx)!important}
+.leaflet-bar{border:1px solid var(--bdr)!important;box-shadow:none!important}
+.map-lbl{color:#c4d4dc;font-size:.75rem;font-weight:700;
+  font-family:'Noto Sans TC',sans-serif;
+  text-shadow:0 1px 4px #000,0 0 8px rgba(0,0,0,.9);
+  white-space:nowrap;pointer-events:none;line-height:1}
+.map-lbl-sm{color:#4a6070;font-size:.58rem;font-weight:600;
+  font-family:'Noto Sans TC',sans-serif;
+  text-shadow:0 1px 3px #000,0 0 6px #000;
+  white-space:nowrap;pointer-events:none;line-height:1}
+.map-info{
+  background:rgba(7,11,13,0.9);border:1px solid var(--bdr);border-radius:4px;
+  padding:.5rem .7rem;font-size:.7rem;font-family:'Noto Sans TC',sans-serif;
+  pointer-events:none;min-width:100px}
+.map-info-row{display:flex;align-items:center;gap:.4rem;line-height:1.85;color:var(--sub)}
+.map-ml-label{
+  font-size:.58rem;font-weight:700;letter-spacing:.08em;
+  color:#2a4050;text-transform:uppercase;margin-top:.3rem;line-height:1.4}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
@@ -108,5 +138,6 @@ footer a:hover{color:var(--tx)}
   .stat:first-child{border-left:none;padding-left:0}
   .stat-n{font-size:2.3rem}
   footer{padding:.75rem 1rem}
+  #activity-map{height:260px}
 }
 @media(max-width:380px){.stat-n{font-size:1.9rem}}

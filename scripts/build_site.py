@@ -141,6 +141,36 @@ footer{border-top:1px solid var(--bdr);padding:1rem 1.5rem;margin-top:1rem;
 footer a{color:var(--sub);text-decoration:none}
 footer a:hover{color:var(--tx)}
 
+/* ── Activity Map ── */
+.map-wrap{background:#070b0d;border-radius:var(--rad);overflow:hidden;border:1px solid var(--bdr)}
+#activity-map{height:380px}
+.leaflet-container{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif}
+.leaflet-control-attribution{
+  background:rgba(7,11,13,0.82)!important;color:#3a5060!important;
+  font-size:.52rem!important;border-top:1px solid #1a2830!important;padding:2px 6px!important}
+.leaflet-control-attribution a{color:#3a5060!important}
+.leaflet-control-zoom a{
+  background:#0e1618!important;color:var(--sub)!important;
+  border:1px solid var(--bdr)!important;font-size:14px!important;line-height:24px!important}
+.leaflet-control-zoom a:hover{background:#152028!important;color:var(--tx)!important}
+.leaflet-bar{border:1px solid var(--bdr)!important;box-shadow:none!important}
+.map-lbl{color:#c4d4dc;font-size:.75rem;font-weight:700;
+  font-family:'Noto Sans TC',sans-serif;
+  text-shadow:0 1px 4px #000,0 0 8px rgba(0,0,0,.9);
+  white-space:nowrap;pointer-events:none;line-height:1}
+.map-lbl-sm{color:#4a6070;font-size:.58rem;font-weight:600;
+  font-family:'Noto Sans TC',sans-serif;
+  text-shadow:0 1px 3px #000,0 0 6px #000;
+  white-space:nowrap;pointer-events:none;line-height:1}
+.map-info{
+  background:rgba(7,11,13,0.9);border:1px solid var(--bdr);border-radius:4px;
+  padding:.5rem .7rem;font-size:.7rem;font-family:'Noto Sans TC',sans-serif;
+  pointer-events:none;min-width:100px}
+.map-info-row{display:flex;align-items:center;gap:.4rem;line-height:1.85;color:var(--sub)}
+.map-ml-label{
+  font-size:.58rem;font-weight:700;letter-spacing:.08em;
+  color:#2a4050;text-transform:uppercase;margin-top:.3rem;line-height:1.4}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
@@ -151,6 +181,7 @@ footer a:hover{color:var(--tx)}
   .stat:first-child{border-left:none;padding-left:0}
   .stat-n{font-size:2.3rem}
   footer{padding:.75rem 1rem}
+  #activity-map{height:260px}
 }
 @media(max-width:380px){.stat-n{font-size:1.9rem}}
 """
@@ -237,6 +268,134 @@ def chart_section_html(title, chart_html, obs_ac='', obs_sh=''):
             f'</section>')
 
 
+# ── 活動區域地圖 ──────────────────────────────────────────────────────────────
+
+_MAP_JS = """\
+(function(){
+var ML=__ML__,AC=__AC__,SH=__SH__,ZONES=__ZONES__;
+
+var map=L.map('activity-map',{
+  center:[23.8,120.3],zoom:6,
+  scrollWheelZoom:false,
+  zoomControl:true,
+  attributionControl:true,
+  maxBounds:[[18,113],[30,128]],
+  maxBoundsViscosity:0.85
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'\\u00a9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> \\u00a9 <a href="https://carto.com/">CARTO</a>',
+  subdomains:'abcd',maxZoom:10,minZoom:5
+}).addTo(map);
+
+// Taiwan main island (simplified outline)
+L.polygon([
+  [25.30,121.50],[25.03,121.98],[24.81,121.96],[24.35,121.82],
+  [23.70,121.62],[22.93,121.25],[22.38,121.08],[21.90,120.85],
+  [22.00,120.55],[22.35,120.23],[22.78,120.15],[23.40,119.90],
+  [23.82,120.00],[24.20,120.22],[24.60,120.65],[25.00,121.00],
+  [25.30,121.50]
+],{color:'#1e3040',fillColor:'#0c1820',fillOpacity:0.92,weight:1.5,smoothFactor:1.2}).addTo(map);
+
+// Penghu
+L.circleMarker([23.57,119.62],{radius:3,color:'#1e3040',fillColor:'#0c1820',fillOpacity:0.9,weight:1}).addTo(map);
+
+// ROC ADIZ boundary (approximate)
+L.polygon([
+  [27.8,120.5],[27.2,122.2],[25.8,123.8],[23.2,124.2],
+  [20.5,122.8],[19.5,120.5],[20.5,118.0],[23.0,117.2],
+  [25.5,117.8],[27.0,119.2],[27.8,120.5]
+],{color:'#243545',fillOpacity:0,weight:1,dashArray:'5,5',smoothFactor:1}).addTo(map);
+
+// Taiwan Strait Median Line
+var mlColor=ML>0?'#e05555':'#2a4a60';
+var mlDash=ML>0?'7,4':'6,5';
+var mlW=ML>0?1.8:1;
+L.polyline([
+  [26.5,120.0],[26.0,120.1],[25.5,120.2],[25.0,120.35],
+  [24.5,120.5],[24.0,120.55],[23.5,120.5],[23.0,120.4],[22.5,120.3]
+],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.75}).addTo(map);
+
+// Activity zone overlays (from special_event parsing)
+var zS={fillColor:'#f5c842',fillOpacity:0.10,color:'#f5c842',weight:1,opacity:0.35,dashArray:'3,4'};
+if(ZONES.n)  L.polygon([[25.0,121.5],[26.2,121.5],[26.2,123.2],[25.0,123.2]],zS).addTo(map);
+if(ZONES.sw) L.polygon([[21.0,118.0],[22.5,118.0],[22.5,120.2],[21.0,120.2]],zS).addTo(map);
+if(ZONES.e)  L.polygon([[22.0,121.8],[24.2,121.8],[24.2,123.5],[22.0,123.5]],zS).addTo(map);
+if(ZONES.ne) L.polygon([[24.5,121.8],[25.8,121.8],[25.8,123.2],[24.5,123.2]],zS).addTo(map);
+if(ZONES.s)  L.polygon([[21.0,119.8],[22.0,119.8],[22.0,121.8],[21.0,121.8]],zS).addTo(map);
+
+// Island labels via DivIcon
+function lbl(ll,txt,sm){
+  return L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="'+(sm?'map-lbl-sm':'map-lbl')+'">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false});
+}
+lbl([25.38,121.45],'台灣').addTo(map);
+lbl([24.47,118.44],'金門',true).addTo(map);
+lbl([26.20,119.98],'馬祖',true).addTo(map);
+lbl([20.68,116.68],'東沙',true).addTo(map);
+lbl([24.97,119.42],'烏坵',true).addTo(map);
+
+// Info panel (bottom-right)
+var info=L.control({position:'bottomright'});
+info.onAdd=function(){
+  var d=L.DomUtil.create('div','map-info');
+  var mlRow=ML>0
+    ?'<div class="map-info-row"><span style="color:#e05555">\\u2715 \\u9032 '+ML+'</span>&thinsp;逾中線</div>'
+    :'<div class="map-info-row"><span style="color:#2a4a60">\\u2500 未逾中線</span></div>';
+  d.innerHTML=
+    '<div class="map-info-row"><span style="color:#f5c842">&#9992;&thinsp;'+AC+'</span>&thinsp;架次</div>'+
+    '<div class="map-info-row"><span style="color:#e05555">&#9875;&thinsp;'+SH+'</span>&thinsp;艘艦艇</div>'+
+    mlRow+
+    '<div class="map-ml-label">中線</div>';
+  return d;
+};
+info.addTo(map);
+
+// Legend (top-left corner)
+var leg=L.control({position:'topleft'});
+leg.onAdd=function(){
+  var d=L.DomUtil.create('div','map-info');
+  d.style.cssText='padding:.35rem .5rem;font-size:.55rem;min-width:0';
+  d.innerHTML=
+    '<div style="display:flex;align-items:center;gap:5px;color:#2a4a60;line-height:1.8">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="1.5" stroke-dasharray="6,3"/></svg>中線</div>'+
+    '<div style="display:flex;align-items:center;gap:5px;color:#243545;line-height:1.8">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#243545" stroke-width="1" stroke-dasharray="5,4"/></svg>ADIZ</div>';
+  return d;
+};
+leg.addTo(map);
+
+})();"""
+
+
+def map_section_html(ac_val, ml_val, sh_val, special):
+    """Generate tactical map section HTML with Leaflet."""
+    special_str = special or ''
+    zones = {
+        'n':  any(kw in special_str for kw in ['北部', '北方', '東北']),
+        'sw': '西南' in special_str,
+        'e':  '東部' in special_str,
+        'ne': '東北' in special_str,
+        's':  '南部' in special_str,
+    }
+    js = (_MAP_JS
+          .replace('__ML__',    str(ml_val))
+          .replace('__AC__',    str(ac_val))
+          .replace('__SH__',    str(sh_val))
+          .replace('__ZONES__', json.dumps(zones)))
+    return (
+        '<section class="chart-section">'
+        '<div class="chart-header">'
+        '<span class="chart-title">活動區域示意</span>'
+        '<span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span>'
+        '</div>'
+        '<div class="map-wrap">'
+        '<div id="activity-map"></div>'
+        '</div>'
+        f'<script>{js}</script>'
+        '</section>'
+    )
+
+
 # ── HTML 共用片段 ─────────────────────────────────────────────────────────────
 
 HEAD = """\
@@ -248,7 +407,9 @@ HEAD = """\
 <title>中國擾台趨勢數據分析</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>"""
 
 
@@ -335,6 +496,7 @@ def build_index(df):
 
     alert_html   = f'<div class="alert">⚡ {special}</div>' if special else ''
     monthly_html = monthly_stats_html(df, today_date)
+    map_html     = map_section_html(ac_val, ml_val, sh_val, _raw_special)
 
     html = f"""{HEAD}
 <body>
@@ -376,6 +538,8 @@ def build_index(df):
   </div>
 
   {monthly_html}
+
+  {map_html}
 
   {chart_section_html("10日觀察", recent_html, split_ac, split_sh)}
   {chart_section_html("2026 至今", ytd_html, streak_ac, streak_sh)}
