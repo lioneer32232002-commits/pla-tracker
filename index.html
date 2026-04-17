@@ -95,30 +95,31 @@ function zoneLabel(ll,txt){
   L.marker(ll,{icon:L.divIcon({className:'',html:'<div style="color:#f5c842;font-size:.58rem;font-weight:700;font-family:Noto Sans TC,sans-serif;text-shadow:0 1px 4px #000,0 0 8px #000;white-space:nowrap;pointer-events:none">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false}).addTo(map);
 }
 // Zone polygons approximate MND bulletin areas
-// 北部空域 — northern strait + NW Pacific, north of Keelung
+// Zone polygons match MND bulletin grid — all kept outside Taiwan's 12nm line
+// 北部空域 — northern strait + NW Pacific, above Taiwan's north tip
 if(ZONES.n){
-  L.polygon([[25.0,120.0],[26.5,120.5],[26.5,122.5],[25.0,122.0]],zS).addTo(map);
-  zoneLabel([25.8,121.0],'北部空域');
+  L.polygon([[25.5,120.5],[26.5,120.5],[26.5,122.5],[25.5,122.0]],zS).addTo(map);
+  zoneLabel([26.1,121.2],'北部空域');
 }
-// 西南部空域 — SW quadrant per MND zone ②: 21-23°N, 117-121°E
+// 西南部空域 — per MND zone ②: SW quadrant, east edge ~120°E at 23°N, widens south
 if(ZONES.sw){
-  L.polygon([[21.0,117.0],[23.0,117.0],[23.0,121.0],[21.0,121.0]],zS).addTo(map);
-  zoneLabel([21.5,118.0],'西南部空域');
+  L.polygon([[21.0,117.0],[23.0,117.0],[23.0,119.8],[21.0,120.8]],zS).addTo(map);
+  zoneLabel([21.6,117.8],'西南部空域');
 }
 // 東部空域 — east of Taiwan, Pacific side
 if(ZONES.e){
-  L.polygon([[22.0,121.8],[24.5,121.8],[24.5,123.5],[22.0,123.5]],zS).addTo(map);
-  zoneLabel([22.8,122.3],'東部空域');
+  L.polygon([[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],zS).addTo(map);
+  zoneLabel([22.8,122.5],'東部空域');
 }
-// 東北部空域 — per MND zone ①: northern strait + NE, 25.3-26.5°N, 120.5-122.5°E
+// 東北部空域 — per MND zone ①: north/NE of Taiwan, 25.5-26.5°N, 121-122.5°E
 if(ZONES.ne){
-  L.polygon([[25.3,120.5],[26.5,121.0],[26.5,122.5],[25.0,122.0]],zS).addTo(map);
-  zoneLabel([25.8,121.2],'東北部空域');
+  L.polygon([[25.5,121.0],[26.5,121.0],[26.5,122.5],[25.5,122.0]],zS).addTo(map);
+  zoneLabel([26.0,121.5],'東北部空域');
 }
-// 南部空域
+// 南部空域 — south of Taiwan's southern tip, Pacific + Bashi Channel side
 if(ZONES.s){
-  L.polygon([[21.0,120.2],[22.2,120.2],[22.2,122.0],[21.0,122.0]],zS).addTo(map);
-  zoneLabel([21.3,120.8],'南部空域');
+  L.polygon([[21.5,121.0],[22.5,121.0],[22.5,123.0],[21.5,123.0]],zS).addTo(map);
+  zoneLabel([21.7,121.5],'南部空域');
 }
 
 // 12 nautical mile territorial limit — approximate ~0.2° offset from Taiwan's coast
