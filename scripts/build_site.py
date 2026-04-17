@@ -145,7 +145,7 @@ footer a:hover{color:var(--tx)}
 .map-wrap{background:#070b0d;border-radius:var(--rad);overflow:hidden;border:1px solid var(--bdr)}
 #activity-map{height:380px}
 .leaflet-container{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif}
-.leaflet-tile-pane{filter:brightness(1.18) contrast(1.08)}
+.leaflet-tile-pane{filter:brightness(1.55) contrast(1.12)}
 .leaflet-control-attribution{
   background:rgba(7,11,13,0.82)!important;color:#3a5060!important;
   font-size:.52rem!important;border-top:1px solid #1a2830!important;padding:2px 6px!important}
@@ -171,6 +171,11 @@ footer a:hover{color:var(--tx)}
 .map-ml-label{
   font-size:.58rem;font-weight:700;letter-spacing:.08em;
   color:#2a4050;text-transform:uppercase;margin-top:.3rem;line-height:1.4}
+.map-note{
+  margin-top:.75rem;padding:.55rem .9rem;
+  border-left:2px solid #4dba6a;background:#050e09;
+  font-size:.75rem;color:var(--sub);line-height:1.7;border-radius:0 var(--rad) var(--rad) 0}
+.map-note strong{color:var(--tx)}
 
 /* ── Mobile ── */
 @media(max-width:640px){
@@ -343,6 +348,16 @@ if(ZONES.s){
   zoneLabel([21.3,120.8],'南部空域');
 }
 
+// 12 nautical mile territorial limit — approximate ~0.2° offset from Taiwan's coast
+// Key coast points + offset outward (NM=22.2km ≈ 0.2°lat / ~0.22°lon at 24°N)
+var tw12={color:'#4dba6a',weight:1.3,dashArray:'3,3',opacity:0.75,fill:false};
+L.polygon([
+  [25.50,121.54],[25.00,122.20],[23.95,121.82],
+  [22.60,121.35],[21.70,120.85],[22.35,120.05],
+  [22.93,119.80],[24.10,120.16],[24.87,120.65],
+  [25.32,121.53]
+],tw12).addTo(map);
+
 // Island labels via DivIcon
 function lbl(ll,txt,sm){
   return L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="'+(sm?'map-lbl-sm':'map-lbl')+'">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false});
@@ -382,6 +397,8 @@ leg.onAdd=function(){
   d.innerHTML=
     '<div style="display:flex;align-items:center;gap:5px;color:'+mlColor+';line-height:1.9">'+
     '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="'+(ML>0?2:1.5)+'" stroke-dasharray="'+(ML>0?'7,3':'6,4')+'"/></svg>中線</div>'+
+    '<div style="display:flex;align-items:center;gap:5px;color:#4dba6a;line-height:1.9">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#4dba6a" stroke-width="1.3" stroke-dasharray="3,3"/></svg>12海里領海</div>'+
     (hasZone?'<div style="display:flex;align-items:center;gap:5px;color:#f5c842;line-height:1.9">'+
     '<svg width="10" height="10"><rect x="1" y="1" width="8" height="8" fill="#f5c842" fill-opacity="0.25" stroke="#f5c842" stroke-width="1"/></svg>活動區域</div>':'');
   return d;
@@ -417,6 +434,12 @@ def map_section_html(ac_val, ml_val, sh_val, special):
         '</div>'
         '<div class="map-wrap">'
         '<div id="activity-map"></div>'
+        '</div>'
+        '<div class="map-note">'
+        '<strong>12海里領海界線（綠色虛線）</strong>為實質法律邊界。'
+        '解放軍機艦越過中線不觸發自衛權；'
+        '一旦進入此界線內的領海或領空，'
+        '依國際法及《國防法》，台灣方面可採取防衛行動。'
         '</div>'
         f'<script>{js}</script>'
         '</section>'

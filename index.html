@@ -50,7 +50,7 @@
 
   <div class="sitrep" style="margin-top:2.5rem"><div class="sitrep-label">4月至今 &nbsp;·&nbsp; 17 天</div><div class="stats-row"><div class="stat"><div class="stat-n y">91</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y">50</div><div class="stat-l">越中線&nbsp;<span class="stat-detail">55%</span></div></div><div class="stat"><div class="stat-n r">8.8</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
 
-  <section class="chart-section"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><script>(function(){
+  <section class="chart-section"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><div class="map-note"><strong>12海里領海界線（綠色虛線）</strong>為實質法律邊界。解放軍機艦越過中線不觸發自衛權；一旦進入此界線內的領海或領空，依國際法及《國防法》，台灣方面可採取防衛行動。</div><script>(function(){
 var ML=0,AC=5,SH=6,ZONES={"n": false, "sw": true, "e": false, "ne": true, "s": true};
 
 var map=L.map('activity-map',{
@@ -121,6 +121,16 @@ if(ZONES.s){
   zoneLabel([21.3,120.8],'南部空域');
 }
 
+// 12 nautical mile territorial limit — approximate ~0.2° offset from Taiwan's coast
+// Key coast points + offset outward (NM=22.2km ≈ 0.2°lat / ~0.22°lon at 24°N)
+var tw12={color:'#4dba6a',weight:1.3,dashArray:'3,3',opacity:0.75,fill:false};
+L.polygon([
+  [25.50,121.54],[25.00,122.20],[23.95,121.82],
+  [22.60,121.35],[21.70,120.85],[22.35,120.05],
+  [22.93,119.80],[24.10,120.16],[24.87,120.65],
+  [25.32,121.53]
+],tw12).addTo(map);
+
 // Island labels via DivIcon
 function lbl(ll,txt,sm){
   return L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="'+(sm?'map-lbl-sm':'map-lbl')+'">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false});
@@ -160,6 +170,8 @@ leg.onAdd=function(){
   d.innerHTML=
     '<div style="display:flex;align-items:center;gap:5px;color:'+mlColor+';line-height:1.9">'+
     '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="'+(ML>0?2:1.5)+'" stroke-dasharray="'+(ML>0?'7,3':'6,4')+'"/></svg>中線</div>'+
+    '<div style="display:flex;align-items:center;gap:5px;color:#4dba6a;line-height:1.9">'+
+    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#4dba6a" stroke-width="1.3" stroke-dasharray="3,3"/></svg>12海里領海</div>'+
     (hasZone?'<div style="display:flex;align-items:center;gap:5px;color:#f5c842;line-height:1.9">'+
     '<svg width="10" height="10"><rect x="1" y="1" width="8" height="8" fill="#f5c842" fill-opacity="0.25" stroke="#f5c842" stroke-width="1"/></svg>活動區域</div>':'');
   return d;
