@@ -26,7 +26,7 @@
 </header>
 
 <main>
-  
+  <div class="alert">⚡ 東北部空域(①無人機2架) 西南部空域(②輔戰機3架次)</div>
 
   <div class="sitrep">
     <div class="sitrep-label">SITREP &nbsp;·&nbsp; 4/17 &nbsp;·&nbsp; <span class="badge manned">有人機</span></div>
@@ -51,7 +51,7 @@
   <div class="sitrep" style="margin-top:2.5rem"><div class="sitrep-label">4月至今 &nbsp;·&nbsp; 17 天</div><div class="stats-row"><div class="stat"><div class="stat-n y">91</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y">50</div><div class="stat-l">越中線&nbsp;<span class="stat-detail">55%</span></div></div><div class="stat"><div class="stat-n r">8.8</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
 
   <section class="chart-section"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><script>(function(){
-var ML=0,AC=5,SH=6,ZONES={"n": false, "sw": false, "e": false, "ne": false, "s": false};
+var ML=0,AC=5,SH=6,ZONES={"n": true, "sw": true, "e": false, "ne": true, "s": true};
 
 var map=L.map('activity-map',{
   center:[23.8,120.5],zoom:6,
@@ -79,10 +79,12 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
 var mlColor=ML>0?'#e05555':'#3a6070';
 var mlDash=ML>0?'7,4':'6,5';
 var mlW=ML>0?2:1.5;
+// Median line: ~120°E, per MND maps and consensus estimates.
+// Strait midpoint at each latitude: 26°N≈120.5°E, 24°N≈120.0°E, 22°N≈119.8°E
 L.polyline([
-  [26.5,120.5],[26.0,120.3],[25.5,120.1],
-  [25.0,119.9],[24.5,119.6],[24.0,119.3],
-  [23.5,119.1],[23.0,119.0],[22.5,119.0]
+  [26.5,120.5],[26.0,120.4],[25.5,120.3],
+  [25.0,120.2],[24.5,120.1],[24.0,120.0],
+  [23.5,119.9],[23.0,119.9],[22.5,119.8]
 ],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.85}).addTo(map);
 
 // Activity zone overlays — styled to match MND bulletin areas
@@ -90,25 +92,26 @@ var zS={fillColor:'#f5c842',fillOpacity:0.13,color:'#f5c842',weight:1.2,opacity:
 function zoneLabel(ll,txt){
   L.marker(ll,{icon:L.divIcon({className:'',html:'<div style="color:#f5c842;font-size:.58rem;font-weight:700;font-family:Noto Sans TC,sans-serif;text-shadow:0 1px 4px #000,0 0 8px #000;white-space:nowrap;pointer-events:none">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false}).addTo(map);
 }
-// 北部空域 — north of Taiwan, spans both strait and Pacific flanks
+// Zone polygons approximate MND bulletin areas
+// 北部空域 — northern strait + NW Pacific, north of Keelung
 if(ZONES.n){
-  L.polygon([[24.8,120.8],[26.5,120.5],[26.5,122.8],[24.8,122.8]],zS).addTo(map);
-  zoneLabel([25.8,121.2],'北部空域');
+  L.polygon([[25.0,120.0],[26.5,120.5],[26.5,122.5],[25.0,122.0]],zS).addTo(map);
+  zoneLabel([25.8,121.0],'北部空域');
 }
-// 西南部空域 — SW quadrant, towards Dongsha
+// 西南部空域 — SW quadrant per MND zone ②: 21-23°N, 117-121°E
 if(ZONES.sw){
-  L.polygon([[20.5,117.5],[22.5,117.5],[22.5,120.5],[20.5,120.5]],zS).addTo(map);
-  zoneLabel([21.2,118.2],'西南部空域');
+  L.polygon([[21.0,117.0],[23.0,117.0],[23.0,121.0],[21.0,121.0]],zS).addTo(map);
+  zoneLabel([21.5,118.0],'西南部空域');
 }
 // 東部空域 — east of Taiwan, Pacific side
 if(ZONES.e){
-  L.polygon([[22.0,121.8],[24.5,121.8],[24.5,123.8],[22.0,123.8]],zS).addTo(map);
+  L.polygon([[22.0,121.8],[24.5,121.8],[24.5,123.5],[22.0,123.5]],zS).addTo(map);
   zoneLabel([22.8,122.3],'東部空域');
 }
-// 東北部空域 — NE Taiwan, near Miyako Strait
+// 東北部空域 — per MND zone ①: northern strait + NE, 25.3-26.5°N, 120.5-122.5°E
 if(ZONES.ne){
-  L.polygon([[24.5,122.0],[26.2,122.0],[26.2,124.0],[24.5,124.0]],zS).addTo(map);
-  zoneLabel([25.2,122.5],'東北部空域');
+  L.polygon([[25.3,120.5],[26.5,121.0],[26.5,122.5],[25.0,122.0]],zS).addTo(map);
+  zoneLabel([25.8,121.2],'東北部空域');
 }
 // 南部空域
 if(ZONES.s){
@@ -127,17 +130,21 @@ lbl([26.20,119.98],'馬祖',true).addTo(map);
 lbl([20.68,116.68],'東沙',true).addTo(map);
 lbl([24.97,119.42],'烏坵',true).addTo(map);
 
-// Info panel (bottom-right)
+// Info panel (bottom-right) — table layout keeps numbers & labels column-aligned
 var info=L.control({position:'bottomright'});
 info.onAdd=function(){
   var d=L.DomUtil.create('div','map-info');
+  var td1='style="text-align:right;padding-right:6px;white-space:nowrap"';
+  var td2='style="color:var(--sub);white-space:nowrap"';
   var mlRow=ML>0
-    ?'<div class="map-info-row"><span style="color:#e05555">\u2715 \u9032 '+ML+'</span>&thinsp;逾中線</div>'
-    :'<div class="map-info-row"><span style="color:#2a4a60">\u2500 未逾中線</span></div>';
+    ?'<tr><td '+td1+' style="text-align:right;padding-right:6px;color:#e05555">\u2715 \u9032 '+ML+'</td><td '+td2+'>逾中線</td></tr>'
+    :'<tr><td colspan="2" style="color:#2a4a60;white-space:nowrap">\u2500 未逾中線</td></tr>';
   d.innerHTML=
-    '<div class="map-info-row"><span style="color:#f5c842">&#9992;&thinsp;'+AC+'</span>&thinsp;架次</div>'+
-    '<div class="map-info-row"><span style="color:#e05555">&#9875;&thinsp;'+SH+'</span>&thinsp;艘艦艇</div>'+
-    mlRow;
+    '<table style="border-spacing:0;font-size:.7rem"><tbody>'+
+    '<tr><td '+td1+' style="text-align:right;padding-right:6px;color:#f5c842">&#9992; '+AC+'</td><td '+td2+'>架次</td></tr>'+
+    '<tr><td '+td1+' style="text-align:right;padding-right:6px;color:#e05555">&#9875; '+SH+'</td><td '+td2+'>艘艦艇</td></tr>'+
+    mlRow+
+    '</tbody></table>';
   return d;
 };
 info.addTo(map);
