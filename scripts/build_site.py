@@ -145,6 +145,7 @@ footer a:hover{color:var(--tx)}
 .map-wrap{background:#070b0d;border-radius:var(--rad);overflow:hidden;border:1px solid var(--bdr)}
 #activity-map{height:380px}
 .leaflet-container{font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif}
+.leaflet-tile-pane{filter:brightness(1.18) contrast(1.08)}
 .leaflet-control-attribution{
   background:rgba(7,11,13,0.82)!important;color:#3a5060!important;
   font-size:.52rem!important;border-top:1px solid #1a2830!important;padding:2px 6px!important}
@@ -292,14 +293,17 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
 // Only add annotation layers on top.
 
 // Taiwan Strait Median Line 中線
-// True position: midpoint between Fujian coast (~118-119.5°E) and Taiwan W coast (~120°E)
-// Runs approx 119.0-120.1°E depending on latitude
+// Midpoint between Fujian coast and Taiwan W coast by latitude:
+// 26°N: Fujian~119.8°E / Taiwan~121°E → ~120.4°E
+// 25°N: Fujian~119.1°E / Taiwan~121°E → ~120.0°E
+// 24°N: Fujian~118.1°E / Taiwan~120.4°E → ~119.3°E
+// 23°N: Fujian~117.8°E / Taiwan~120.2°E → ~119.0°E
 var mlColor=ML>0?'#e05555':'#3a6070';
 var mlDash=ML>0?'7,4':'6,5';
 var mlW=ML>0?2:1.5;
 L.polyline([
-  [26.5,120.1],[26.0,120.0],[25.5,119.9],
-  [25.0,119.7],[24.5,119.5],[24.0,119.3],
+  [26.5,120.5],[26.0,120.3],[25.5,120.1],
+  [25.0,119.9],[24.5,119.6],[24.0,119.3],
   [23.5,119.1],[23.0,119.0],[22.5,119.0]
 ],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.85}).addTo(map);
 
@@ -339,6 +343,7 @@ function lbl(ll,txt,sm){
   return L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="'+(sm?'map-lbl-sm':'map-lbl')+'">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false});
 }
 lbl([24.58,121.0],'台灣').addTo(map);
+lbl([23.57,119.62],'澎湖',true).addTo(map);
 lbl([24.47,118.44],'金門',true).addTo(map);
 lbl([26.20,119.98],'馬祖',true).addTo(map);
 lbl([20.68,116.68],'東沙',true).addTo(map);
