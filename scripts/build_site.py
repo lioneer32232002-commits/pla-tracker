@@ -288,28 +288,18 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
   subdomains:'abcd',maxZoom:10,minZoom:5
 }).addTo(map);
 
-// Taiwan main island — accurate outline
+// Taiwan main island — corrected outline (western coast stays east of 120.1°E)
 L.polygon([
   [25.30,121.53],[25.16,121.80],[24.98,121.99],[24.82,121.98],
   [24.53,121.88],[24.35,121.81],[23.98,121.62],[23.50,121.50],
   [23.12,121.32],[22.75,121.15],[22.45,121.00],[22.18,120.93],
   [21.92,120.87],[21.95,120.70],[22.10,120.55],[22.42,120.27],
-  [22.65,120.17],[23.05,120.15],[23.38,120.00],[23.65,120.05],
-  [23.85,120.12],[24.15,120.30],[24.55,120.57],[24.80,120.82],
+  [22.65,120.18],[23.05,120.18],[23.38,120.13],[23.65,120.13],
+  [23.85,120.20],[24.15,120.32],[24.55,120.58],[24.80,120.82],
   [25.07,121.02],[25.22,121.28],[25.30,121.53]
 ],{color:'#2e5070',fillColor:'#1d3a52',fillOpacity:0.82,weight:1.5,smoothFactor:0.8}).addTo(map);
 
-// Penghu Islands
-L.circleMarker([23.57,119.62],{radius:4,color:'#2e5070',fillColor:'#1d3a52',fillOpacity:0.85,weight:1.2}).addTo(map);
-
-// ROC ADIZ boundary (approximate)
-L.polygon([
-  [27.8,120.5],[27.2,122.2],[25.8,123.8],[23.2,124.2],
-  [20.5,122.8],[19.5,120.5],[20.5,118.0],[23.0,117.2],
-  [25.5,117.8],[27.0,119.2],[27.8,120.5]
-],{color:'#2a3d50',fillOpacity:0,weight:1,dashArray:'5,5',smoothFactor:1}).addTo(map);
-
-// Taiwan Strait Median Line
+// Taiwan Strait Median Line (中線 — primary engagement threshold)
 var mlColor=ML>0?'#e05555':'#2a4a60';
 var mlDash=ML>0?'7,4':'6,5';
 var mlW=ML>0?2:1.2;
@@ -383,8 +373,6 @@ leg.onAdd=function(){
   d.innerHTML=
     '<div style="display:flex;align-items:center;gap:5px;color:'+mlColor+';line-height:1.9">'+
     '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="'+mlColor+'" stroke-width="'+(ML>0?2:1.5)+'" stroke-dasharray="'+(ML>0?'7,3':'6,4')+'"/></svg>中線</div>'+
-    '<div style="display:flex;align-items:center;gap:5px;color:#2a3d50;line-height:1.9">'+
-    '<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#2a3d50" stroke-width="1" stroke-dasharray="5,4"/></svg>ADIZ</div>'+
     (hasZone?'<div style="display:flex;align-items:center;gap:5px;color:#f5c842;line-height:1.9">'+
     '<svg width="10" height="10"><rect x="1" y="1" width="8" height="8" fill="#f5c842" fill-opacity="0.25" stroke="#f5c842" stroke-width="1"/></svg>活動區域</div>':'');
   return d;
