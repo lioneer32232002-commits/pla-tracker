@@ -38,10 +38,21 @@ jobs:
         run: python scripts/fetch_and_update.py
 
       - name: Commit and push if changed
+        id: commit
         run: |
           git config user.name "pla-tracker-bot"
           git config user.email "bot@pla-tracker"
           git add data/records.csv index.html records.html style.css favicon.svg
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git diff --cached --quiet && echo "changed=false" >> $GITHUB_OUTPUT && exit 0
           git commit -m "auto: daily update $(date -u +%Y-%m-%d)"
           git push
+          echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Send daily email report
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_FROM: ${{ secrets.GMAIL_FROM }}
+          GMAIL_TO: ${{ secrets.GMAIL_TO }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/send_daily_email.py

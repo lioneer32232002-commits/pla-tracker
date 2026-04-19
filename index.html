@@ -171,27 +171,6 @@ lbl([26.20,119.98],'馬祖',true).addTo(map);
 lbl([20.68,116.68],'東沙',true).addTo(map);
 lbl([24.97,119.42],'烏坵',true).addTo(map);
 
-// Info panel (bottom-right) — table layout keeps numbers & labels column-aligned
-var info=L.control({position:'bottomright'});
-info.onAdd=function(){
-  var d=L.DomUtil.create('div','map-info');
-  var y='color:#f5c842',r='color:#e05555';
-  var ic='<span style="display:inline-block;width:1.2em;text-align:center">';
-  var nc='text-align:right;padding-right:2px;white-space:nowrap;line-height:1.95';
-  var lc='white-space:nowrap;line-height:1.95;padding-left:1px';
-  var mlRow=ML>0
-    ?'<tr><td style="'+nc+';'+r+'">'+ic+'&#x2715;</span> '+ML+'</td><td style="'+lc+';'+r+'">逾中線</td></tr>'
-    :'<tr><td colspan="2" style="'+lc+';color:#2a4a60">&#x2500; 未逾中線</td></tr>';
-  d.innerHTML=
-    '<table style="border-spacing:0;font-size:.7rem"><tbody>'+
-    '<tr><td style="'+nc+';'+y+'">'+ic+'&#9992;</span> '+AC+'</td><td style="'+lc+';'+y+'">架次</td></tr>'+
-    '<tr><td style="'+nc+';'+r+'">'+ic+'&#9875;</span> '+SH+'</td><td style="'+lc+';'+r+'">艘艦艇</td></tr>'+
-    mlRow+
-    '</tbody></table>';
-  return d;
-};
-info.addTo(map);
-
 // Legend (top-left)
 var leg=L.control({position:'topleft'});
 leg.onAdd=function(){
