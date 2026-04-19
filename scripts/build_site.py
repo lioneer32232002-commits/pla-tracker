@@ -3,6 +3,7 @@ build_site.py — 讀取 records.csv，產出靜態網站
 圖表使用 Chart.js 瀏覽器端渲染，不需要 matplotlib 或字型安裝。
 """
 import json
+from datetime import date
 from pathlib import Path
 import pandas as pd
 
