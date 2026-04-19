@@ -481,15 +481,17 @@ def map_section_html(ac_val, ml_val, sh_val, special):
 
 # ── HTML 共用片段 ─────────────────────────────────────────────────────────────
 
-HEAD = """\
+_VER = date.today().strftime('%Y%m%d')
+HEAD = f"""\
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>中國擾台趨勢數據分析</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v={_VER}">
+<link rel="stylesheet" href="style.css?v={_VER}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
