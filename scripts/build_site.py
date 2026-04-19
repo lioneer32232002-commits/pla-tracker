@@ -100,8 +100,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .stat-l{font-size:.98rem;text-transform:uppercase;letter-spacing:.11em;
   color:var(--sub);margin-top:.45rem;white-space:nowrap}
 .stat-detail{font-size:1.1rem;color:var(--sub);margin-top:.2rem;white-space:nowrap}
-.delta-up{display:block;font-size:.7rem;color:var(--r);margin-top:.28rem;font-weight:700}
-.delta-dn{display:block;font-size:.7rem;color:var(--grn);margin-top:.28rem;font-weight:700}
+.delta-up{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
+.delta-dn{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
 
 /* ── Badge ── */
 .badge{display:inline-block;padding:.18em .6em;border-radius:3px;font-size:.78rem;font-weight:700}
@@ -600,6 +600,10 @@ def build_index(df):
     sh_delta = delta_span(latest['ships_total'],    prev['ships_total'])
 
     type_lower, type_label = type_info(atype, special)
+    # 只有非泛稱才在 SITREP 顯示機種，白色純文字
+    _GENERIC = {'有人機', '混合', '零架次', '—'}
+    sitrep_badge = (f'&nbsp;·&nbsp; {type_label}'
+                    if type_label not in _GENERIC else '')
 
     # 近10日：飛機面積圖＋艦艇散點
     recent_html = _build_panels('rc',  df.tail(10), today_date, _CHART_JS_RECENT)
@@ -642,7 +646,7 @@ def build_index(df):
   {alert_html}
 
   <div class="sitrep anim-ready">
-    <div class="sitrep-label">SITREP &nbsp;·&nbsp; {today_label} &nbsp;·&nbsp; <span class="badge {type_lower}">{type_label}</span></div>
+    <div class="sitrep-label">SITREP &nbsp;·&nbsp; {today_label}{sitrep_badge}</div>
     <div class="stats-row">
       <div class="stat">
         <div class="stat-n y" data-count="{ac_val}">0</div>

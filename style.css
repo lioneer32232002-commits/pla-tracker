@@ -56,8 +56,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .stat-l{font-size:.98rem;text-transform:uppercase;letter-spacing:.11em;
   color:var(--sub);margin-top:.45rem;white-space:nowrap}
 .stat-detail{font-size:1.1rem;color:var(--sub);margin-top:.2rem;white-space:nowrap}
-.delta-up{display:block;font-size:.7rem;color:var(--r);margin-top:.28rem;font-weight:700}
-.delta-dn{display:block;font-size:.7rem;color:var(--grn);margin-top:.28rem;font-weight:700}
+.delta-up{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
+.delta-dn{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
 
 /* ── Badge ── */
 .badge{display:inline-block;padding:.18em .6em;border-radius:3px;font-size:.78rem;font-weight:700}
