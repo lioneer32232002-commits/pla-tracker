@@ -488,13 +488,13 @@ HEAD = f"""\
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <title>中國擾台趨勢數據分析</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v={_VER}">
 <link rel="stylesheet" href="style.css?v={_VER}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>fetch('version.txt?t='+Date.now(),{{cache:'no-store'}}).then(r=>r.text()).then(v=>{{if(v.trim()!=='{_VER}')location.reload(true);}});</script>
 </head>"""
 
 
@@ -763,4 +763,6 @@ if __name__ == '__main__':
     build_css()
     build_index(df)
     build_records(df)
+    (SITE_DIR / 'version.txt').write_text(_VER, encoding='utf-8')
+    print('[OK] version.txt')
     print('[DONE] Site built →', SITE_DIR)
