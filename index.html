@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>中國擾台趨勢數據分析</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260424">
-<link rel="stylesheet" href="style.css?v=20260424">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260425">
+<link rel="stylesheet" href="style.css?v=20260425">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='20260424')location.reload(true);});</script>
+<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='20260425')location.reload(true);});</script>
 </head>
 <body>
 <div class="top-bar">
   <span>UNCLASSIFIED // OPEN SOURCE</span>
-  <span>ROC MND · 4/24</span>
+  <span>ROC MND · 4/25</span>
 </div>
 <header class="site-header">
   <div class="header-inner">
@@ -30,12 +30,12 @@
   
 
   <div class="sitrep anim-ready">
-    <div class="sitrep-label">SITREP &nbsp;·&nbsp; 4/24</div>
+    <div class="sitrep-label">SITREP &nbsp;·&nbsp; 4/25</div>
     <div class="stats-row">
       <div class="stat">
-        <div class="stat-n y" data-count="2">0</div>
+        <div class="stat-n y" data-count="8">0</div>
         <div class="stat-l">中共軍機架次</div>
-        <span class="delta-dn">▼13</span>
+        <span class="delta-up">▲6</span>
       </div>
       <div class="stat">
         <div class="stat-n y" data-count="0">0</div>
@@ -44,15 +44,15 @@
       <div class="stat">
         <div class="stat-n r" data-count="7">0</div>
         <div class="stat-l">中共艦艇</div>
-        <span class="delta-up">▲1</span>
+        
       </div>
     </div>
   </div>
 
-  <div class="sitrep anim-ready" style="margin-top:2.5rem"><div class="sitrep-label">4月至今 &nbsp;·&nbsp; 24 天</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="150">0</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y" data-count="61">0</div><div class="stat-l">逾越中線&nbsp;<span class="stat-detail">41%</span></div></div><div class="stat"><div class="stat-n r">8.4</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
+  <div class="sitrep anim-ready" style="margin-top:2.5rem"><div class="sitrep-label">4月至今 &nbsp;·&nbsp; 25 天</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="158">0</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y" data-count="61">0</div><div class="stat-l">逾越中線&nbsp;<span class="stat-detail">39%</span></div></div><div class="stat"><div class="stat-n r">8.4</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
 
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><div class="map-note"><strong>12海里領海界線（綠色虛線）</strong>為實質法律邊界。解放軍機艦越過中線不觸發自衛權；一旦進入此界線內的領海或領空，依國際法及《國防法》，台灣方面可採取防衛行動。</div><script>(function(){
-var ML=0,AC=2,SH=7,ZONES={"n": false, "sw": false, "e": false, "ne": false, "s": false};
+var ML=0,AC=8,SH=7,ZONES={"n": false, "sw": false, "e": false, "ne": false, "s": false};
 
 var map=L.map('activity-map',{
   center:[23.8,120.5],zoom:6,
@@ -207,8 +207,8 @@ map.whenReady(function(){
 
 })();</script></section>
 
-  <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">10日觀察</span><span class="chart-obs">今日 2 架次</span><span class="chart-obs" style="color:var(--r)">7 艘艦艇</span></div><div class="split-panels"><div class="panel-wrap-ac"><canvas id="rc-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="rc-sh"></canvas></div></div><script>(function(){
-var L=["4/15", "4/16", "4/17", "4/18", "4/19", "4/20", "4/21", "4/22", "4/23", "4/24"],AC=[5, 3, 5, 5, 2, 5, 24, 6, 15, 2],CR=[0, 0, 0, 0, 0, 0, 11, 0, 0, 0],SH=[9, 9, 6, 7, 7, 12, 8, 6, 6, 7],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
+  <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">10日觀察</span><span class="chart-obs">今日 8 架次</span><span class="chart-obs" style="color:var(--r)">7 艘艦艇</span></div><div class="split-panels"><div class="panel-wrap-ac"><canvas id="rc-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="rc-sh"></canvas></div></div><script>(function(){
+var L=["4/16", "4/17", "4/18", "4/19", "4/20", "4/21", "4/22", "4/23", "4/24", "4/25"],AC=[3, 5, 5, 2, 5, 24, 6, 15, 2, 8],CR=[0, 0, 0, 0, 0, 11, 0, 0, 0, 0],SH=[9, 6, 7, 7, 12, 8, 6, 6, 7, 7],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
 var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0},border:{display:false}};
 var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
@@ -222,7 +222,7 @@ new Chart(document.getElementById('rc-sh'),{data:{labels:L,datasets:[
 ]},options:baseOpts});
 })();</script></section>
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">2026 至今</span><span class="chart-obs">本月峰值 25 架次（4/1）</span><span class="chart-obs" style="color:var(--r)">艦艇 5–17 艘</span></div><div class="split-panels"><div class="panel-wrap-ac"><canvas id="ytd-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="ytd-sh"></canvas></div></div><script>(function(){
-var L=["1/1", "1/2", "1/3", "1/4", "1/5", "1/6", "1/7", "1/8", "1/9", "1/10", "1/11", "1/12", "1/13", "1/14", "1/15", "1/16", "1/17", "1/18", "1/19", "1/20", "1/21", "1/22", "1/23", "1/24", "1/25", "1/26", "1/27", "1/28", "1/29", "1/30", "1/31", "2/1", "2/2", "2/3", "2/4", "2/5", "2/6", "2/7", "2/8", "2/9", "2/10", "2/11", "2/12", "2/13", "2/14", "2/15", "2/16", "2/17", "2/18", "2/19", "2/20", "2/21", "2/22", "2/23", "2/24", "2/25", "2/26", "2/27", "2/28", "3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31", "4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7", "4/8", "4/9", "4/10", "4/11", "4/12", "4/13", "4/14", "4/15", "4/16", "4/17", "4/18", "4/19", "4/20", "4/21", "4/22", "4/23", "4/24"],AC=[3, 0, 4, 0, 3, 8, 11, 9, 23, 3, 4, 0, 10, 20, 9, 34, 26, 9, 2, 2, 4, 2, 11, 26, 4, 5, 2, 4, 5, 26, 3, 0, 0, 2, 13, 12, 8, 6, 0, 0, 4, 9, 17, 42, 1, 11, 3, 0, 0, 0, 14, 8, 2, 0, 0, 0, 30, 8, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 3, 3, 26, 2, 2, 36, 12, 6, 6, 2, 0, 0, 3, 16, 4, 6, 13, 19, 1, 11, 25, 2, 2, 2, 0, 3, 1, 2, 6, 7, 17, 2, 0, 9, 5, 3, 5, 5, 2, 5, 24, 6, 15, 2],CR=[0, 0, 1, 0, 3, 0, 9, 9, 19, 0, 1, 0, 3, 17, 9, 18, 7, 3, 2, 1, 0, 0, 9, 18, 2, 0, 0, 0, 0, 19, 0, 0, 0, 2, 11, 11, 6, 0, 0, 0, 0, 6, 14, 32, 0, 9, 0, 0, 0, 0, 10, 8, 1, 0, 0, 0, 22, 6, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 1, 3, 16, 0, 2, 24, 5, 4, 4, 1, 0, 0, 3, 13, 4, 4, 9, 13, 1, 11, 16, 2, 0, 0, 0, 3, 0, 2, 5, 7, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0],SH=[17, 6, 6, 5, 8, 7, 6, 5, 6, 6, 6, 5, 5, 9, 11, 11, 8, 9, 8, 6, 6, 5, 5, 6, 7, 8, 5, 5, 5, 6, 8, 6, 6, 6, 6, 7, 6, 7, 7, 7, 8, 8, 6, 11, 8, 8, 6, 5, 5, 6, 6, 7, 6, 5, 5, 5, 6, 6, 7, 7, 5, 5, 6, 7, 7, 8, 8, 6, 6, 6, 5, 5, 7, 7, 8, 8, 9, 8, 8, 8, 7, 10, 10, 12, 12, 12, 9, 11, 10, 8, 11, 9, 8, 8, 7, 8, 9, 10, 8, 8, 8, 12, 10, 9, 9, 9, 6, 7, 7, 12, 8, 6, 6, 7],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
+var L=["1/1", "1/2", "1/3", "1/4", "1/5", "1/6", "1/7", "1/8", "1/9", "1/10", "1/11", "1/12", "1/13", "1/14", "1/15", "1/16", "1/17", "1/18", "1/19", "1/20", "1/21", "1/22", "1/23", "1/24", "1/25", "1/26", "1/27", "1/28", "1/29", "1/30", "1/31", "2/1", "2/2", "2/3", "2/4", "2/5", "2/6", "2/7", "2/8", "2/9", "2/10", "2/11", "2/12", "2/13", "2/14", "2/15", "2/16", "2/17", "2/18", "2/19", "2/20", "2/21", "2/22", "2/23", "2/24", "2/25", "2/26", "2/27", "2/28", "3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31", "4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7", "4/8", "4/9", "4/10", "4/11", "4/12", "4/13", "4/14", "4/15", "4/16", "4/17", "4/18", "4/19", "4/20", "4/21", "4/22", "4/23", "4/24", "4/25"],AC=[3, 0, 4, 0, 3, 8, 11, 9, 23, 3, 4, 0, 10, 20, 9, 34, 26, 9, 2, 2, 4, 2, 11, 26, 4, 5, 2, 4, 5, 26, 3, 0, 0, 2, 13, 12, 8, 6, 0, 0, 4, 9, 17, 42, 1, 11, 3, 0, 0, 0, 14, 8, 2, 0, 0, 0, 30, 8, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 3, 3, 26, 2, 2, 36, 12, 6, 6, 2, 0, 0, 3, 16, 4, 6, 13, 19, 1, 11, 25, 2, 2, 2, 0, 3, 1, 2, 6, 7, 17, 2, 0, 9, 5, 3, 5, 5, 2, 5, 24, 6, 15, 2, 8],CR=[0, 0, 1, 0, 3, 0, 9, 9, 19, 0, 1, 0, 3, 17, 9, 18, 7, 3, 2, 1, 0, 0, 9, 18, 2, 0, 0, 0, 0, 19, 0, 0, 0, 2, 11, 11, 6, 0, 0, 0, 0, 6, 14, 32, 0, 9, 0, 0, 0, 0, 10, 8, 1, 0, 0, 0, 22, 6, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 1, 3, 16, 0, 2, 24, 5, 4, 4, 1, 0, 0, 3, 13, 4, 4, 9, 13, 1, 11, 16, 2, 0, 0, 0, 3, 0, 2, 5, 7, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0],SH=[17, 6, 6, 5, 8, 7, 6, 5, 6, 6, 6, 5, 5, 9, 11, 11, 8, 9, 8, 6, 6, 5, 5, 6, 7, 8, 5, 5, 5, 6, 8, 6, 6, 6, 6, 7, 6, 7, 7, 7, 8, 8, 6, 11, 8, 8, 6, 5, 5, 6, 6, 7, 6, 5, 5, 5, 6, 6, 7, 7, 5, 5, 6, 7, 7, 8, 8, 6, 6, 6, 5, 5, 7, 7, 8, 8, 9, 8, 8, 8, 7, 10, 10, 12, 12, 12, 9, 11, 10, 8, 11, 9, 8, 8, 7, 8, 9, 10, 8, 8, 8, 12, 10, 9, 9, 9, 6, 7, 7, 12, 8, 6, 6, 7, 7],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
 var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{display:false}};
 var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*15+c.datasetIndex*60:0;};
@@ -262,5 +262,5 @@ if(!t)return;
 setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0.15});
 document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
 })();</script>
-<footer><span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank">中華民國國防部</a></span><span>製作：Adam Pan</span><span>更新：4/24</span></footer>
+<footer><span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank">中華民國國防部</a></span><span>製作：Adam Pan</span><span>更新：4/25</span></footer>
 </body></html>
