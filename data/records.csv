@@ -132,4 +132,5 @@ date,aircraft_total,median_line_cross,cross_rate,aircraft_type,ships_total,activ
 2026-04-22,6,0,0.0,Manned,6,,,西南部空域(4架次) 東部空域(4架次)
 2026-04-23,15,0,0.0,Manned,6,,,西南部空域(14架次)
 2026-04-24,2,0,0.0,Manned,7,,,
-2026-04-25,8,0,0,Manned,7,,,
+2026-04-25,8,0,0.0,Manned,7,,,
+2026-04-26,28,18,64.29,Manned,8,,,北部、中部及西南空域(逾越中線18架次)
