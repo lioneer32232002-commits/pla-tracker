@@ -97,14 +97,13 @@ def _google_rss(query: str, days: int, hl='en-US', gl='US', ceid='US:en') -> lis
                          if source and raw_title.endswith(f' - {source}')
                          else raw_title)
             try:
-                pub_dt    = parsedate_to_datetime(pub_str)
-                if pub_dt < cutoff:
-                    continue
-                pub_label = pub_dt.strftime('%Y/%m/%d')
+                pub_dt = parsedate_to_datetime(pub_str)
             except Exception:
-                pub_label = ''
+                continue  # 日期解析失敗，跳過
+            if pub_dt < cutoff:
+                continue
             results.append({'title': title, 'source': source,
-                             'pub': pub_label, 'link': link})
+                             'pub': pub_dt.strftime('%Y/%m/%d'), 'link': link})
     except Exception as e:
         print(f'[email] Google RSS 失敗 ({query[:40]}…): {e}')
     return results
@@ -130,7 +129,7 @@ def _scrape_cna(days: int) -> list[dict]:
                 continue
             date_span = li.find('span', class_='date')
             pub_dt    = _western_date(date_span.get_text() if date_span else '')
-            if pub_dt and pub_dt < cutoff:
+            if not pub_dt or pub_dt < cutoff:
                 continue
             href = a['href']
             link = f"https://www.cna.com.tw{href}" if href.startswith('/') else href
@@ -161,7 +160,7 @@ def _scrape_mnd(days: int) -> list[dict]:
                 continue
             parent_text = a.parent.get_text(' ') if a.parent else ''
             pub_dt = _roc_to_datetime(parent_text)
-            if pub_dt and pub_dt < cutoff:
+            if not pub_dt or pub_dt < cutoff:
                 continue
             href = a['href']
             link = f"https://www.mnd.gov.tw{href}" if href.startswith('/') else href
@@ -196,7 +195,7 @@ def _scrape_mofa(days: int) -> list[dict]:
                          or (container.parent.find('span', class_='date')
                              if container.parent else None))
             pub_dt = _western_date(date_span.get_text() if date_span else '')
-            if pub_dt and pub_dt < cutoff:
+            if not pub_dt or pub_dt < cutoff:
                 continue
             href = a['href']
             link = (f"https://www.mofa.gov.tw/{href.lstrip('/')}"
@@ -230,7 +229,7 @@ def _scrape_president(days: int) -> list[dict]:
             if not title:
                 continue
             pub_dt = _roc_to_datetime(a.get_text(' '))
-            if pub_dt and pub_dt < cutoff:
+            if not pub_dt or pub_dt < cutoff:
                 continue
             href = a['href']
             link = (f"https://www.president.gov.tw{href}"
