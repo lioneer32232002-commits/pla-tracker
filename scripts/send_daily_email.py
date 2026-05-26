@@ -320,7 +320,7 @@ def send_email(analysis: str, today_str: str, news: list[dict]):
     msg['Subject'] = f'PLA 擾台日報 · {today_str}'
     msg['From']    = GMAIL_FROM
     msg['To']      = GMAIL_TO
-    msg.attach(MIMEText(html, 'utf-8'))
+    msg.attach(MIMEText(html, 'html', 'utf-8'))
 
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
         server.login(GMAIL_FROM, GMAIL_PASS)
