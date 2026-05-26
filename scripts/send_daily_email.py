@@ -24,8 +24,7 @@ GMAIL_FROM = os.environ['GMAIL_FROM']
 GMAIL_TO   = os.environ['GMAIL_TO']
 GMAIL_PASS = os.environ['GMAIL_APP_PASSWORD']
 
-MND_BASE     = 'https://www.mnd.gov.tw'
-MND_NEWS_URL = f'{MND_BASE}/news/mndlist'
+HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; PLA-Tracker/1.0)'}
 
 # 新聞區塊標籤顏色
 TAG_COLORS = {
@@ -34,19 +33,46 @@ TAG_COLORS = {
     '智庫': '#b89af0',
 }
 
+# 中央社國防相關關鍵字
+CNA_KEYWORDS = [
+    '解放軍', '共機', '共艦', '台海', '軍演', '擾台', 'ADIZ',
+    '國防', '軍事', '飛彈', '航母', '東部戰區', '共軍',
+]
+
 
 # ── 工具函式 ──────────────────────────────────────────────
 
-def _roc_to_datetime(roc_str: str):
-    """民國日期 '115.05.25' → UTC datetime，解析失敗回傳 None"""
-    m = re.search(r'(\d{2,3})\.(\d{1,2})\.(\d{1,2})', roc_str)
-    if not m:
-        return None
-    try:
-        return datetime(int(m.group(1)) + 1911, int(m.group(2)), int(m.group(3)),
-                        tzinfo=timezone.utc)
-    except ValueError:
-        return None
+def _roc_to_datetime(text: str):
+    """解析民國日期，支援兩種格式：
+    '115.05.25'（國防部）、'115年05月26日'（總統府）
+    """
+    m = re.search(r'(\d{2,3})\.(\d{1,2})\.(\d{1,2})', text)
+    if m:
+        try:
+            return datetime(int(m.group(1)) + 1911, int(m.group(2)), int(m.group(3)),
+                            tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    m = re.search(r'(\d{2,3})年(\d{1,2})月(\d{1,2})日', text)
+    if m:
+        try:
+            return datetime(int(m.group(1)) + 1911, int(m.group(2)), int(m.group(3)),
+                            tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    return None
+
+
+def _western_date(text: str):
+    """解析西元日期，支援 '2026/05/26' 和 '2026/5/26'（外交部無補零格式）"""
+    m = re.search(r'(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})', text)
+    if m:
+        try:
+            return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                            tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    return None
 
 
 def _google_rss(query: str, days: int, hl='en-US', gl='US', ceid='US:en') -> list[dict]:
@@ -58,8 +84,7 @@ def _google_rss(query: str, days: int, hl='en-US', gl='US', ceid='US:en') -> lis
     )
     results = []
     try:
-        resp = requests.get(url, timeout=15,
-                            headers={'User-Agent': 'Mozilla/5.0 (compatible; PLA-Tracker/1.0)'})
+        resp = requests.get(url, timeout=15, headers=HEADERS)
         resp.raise_for_status()
         root = ET.fromstring(resp.text)
         for item in root.findall('.//item')[:12]:
@@ -85,56 +110,155 @@ def _google_rss(query: str, days: int, hl='en-US', gl='US', ceid='US:en') -> lis
     return results
 
 
-# ── 各來源抓取 ────────────────────────────────────────────
+# ── 台灣官方來源爬蟲 ──────────────────────────────────────
 
-def _fetch_tw_news(days: int) -> list[dict]:
-    """台灣新聞：Google News 中文版 + 國防部新聞稿直接爬蟲"""
+def _scrape_cna(days: int) -> list[dict]:
+    """中央社：全文搜尋後以關鍵字過濾國防相關新聞"""
     cutoff  = datetime.now(timezone.utc) - timedelta(days=days)
     results = []
-
-    # Google News 中文版（涵蓋中央社、自由時報等媒體）
-    for q in ['解放軍 台海 OR 共機 OR 共艦 OR 擾台',
-              '國防部 解放軍 OR 共機 OR 飛彈 軍演']:
-        for r in _google_rss(q, days, hl='zh-TW', gl='TW', ceid='TW:zh-Hant'):
-            r['tag'] = '台灣'
-            results.append(r)
-
-    # 國防部新聞稿直接爬蟲
     try:
-        resp = requests.get(MND_NEWS_URL, timeout=15,
-                            headers={'User-Agent': 'Mozilla/5.0 (compatible; PLA-Tracker/1.0)'})
+        resp = requests.get('https://www.cna.com.tw/list/aall.aspx',
+                            timeout=15, headers=HEADERS)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
+        for li in soup.find_all('li'):
+            a = li.find('a', href=True)
+            if not a:
+                continue
+            title = a.get_text(strip=True)
+            if not title or not any(kw in title for kw in CNA_KEYWORDS):
+                continue
+            date_span = li.find('span', class_='date')
+            pub_dt    = _western_date(date_span.get_text() if date_span else '')
+            if pub_dt and pub_dt < cutoff:
+                continue
+            href = a['href']
+            link = f"https://www.cna.com.tw{href}" if href.startswith('/') else href
+            results.append({
+                'title': title, 'source': '中央社',
+                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'link':  link, 'tag': '台灣',
+            })
+    except Exception as e:
+        print(f'[email] 中央社爬取失敗: {e}')
+    return results
 
+
+def _scrape_mnd(days: int) -> list[dict]:
+    """國防部新聞稿（民國日期 115.05.25）"""
+    cutoff  = datetime.now(timezone.utc) - timedelta(days=days)
+    results = []
+    try:
+        resp = requests.get('https://www.mnd.gov.tw/news/mndlist',
+                            timeout=15, headers=HEADERS)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
         for a in soup.find_all('a', href=True):
             if '/news/mnd/' not in a['href']:
                 continue
             title = a.get_text(strip=True)
             if not title or len(title) < 5:
                 continue
-            link = (MND_BASE + a['href']) if a['href'].startswith('/') else a['href']
-
-            # 在父元素文字中找民國日期
             parent_text = a.parent.get_text(' ') if a.parent else ''
-            pub_dt      = _roc_to_datetime(parent_text)
+            pub_dt = _roc_to_datetime(parent_text)
             if pub_dt and pub_dt < cutoff:
                 continue
-
+            href = a['href']
+            link = f"https://www.mnd.gov.tw{href}" if href.startswith('/') else href
             results.append({
-                'title':  title,
-                'source': '國防部',
-                'pub':    pub_dt.strftime('%m/%d') if pub_dt else '',
-                'link':   link,
-                'tag':    '台灣',
+                'title': title, 'source': '國防部',
+                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'link':  link, 'tag': '台灣',
             })
     except Exception as e:
         print(f'[email] 國防部新聞爬取失敗: {e}')
-
     return results
 
 
+def _scrape_mofa(days: int) -> list[dict]:
+    """外交部新聞（西元日期 2026/5/23，無補零）"""
+    cutoff  = datetime.now(timezone.utc) - timedelta(days=days)
+    results = []
+    try:
+        resp = requests.get('https://www.mofa.gov.tw/News.aspx',
+                            timeout=15, headers=HEADERS)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        for a in soup.find_all('a', href=True):
+            if 'News_Content.aspx' not in a['href']:
+                continue
+            title = a.get_text(strip=True)
+            if not title:
+                continue
+            # 在同層或父層找 span.date
+            container = a.parent or a
+            date_span = (container.find('span', class_='date')
+                         or (container.parent.find('span', class_='date')
+                             if container.parent else None))
+            pub_dt = _western_date(date_span.get_text() if date_span else '')
+            if pub_dt and pub_dt < cutoff:
+                continue
+            href = a['href']
+            link = (f"https://www.mofa.gov.tw/{href.lstrip('/')}"
+                    if not href.startswith('http') else href)
+            results.append({
+                'title': title, 'source': '外交部',
+                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'link':  link, 'tag': '台灣',
+            })
+    except Exception as e:
+        print(f'[email] 外交部新聞爬取失敗: {e}')
+    return results
+
+
+def _scrape_president(days: int) -> list[dict]:
+    """總統府新聞（民國日期 115年05月26日，標題在 <strong>）"""
+    cutoff  = datetime.now(timezone.utc) - timedelta(days=days)
+    results = []
+    try:
+        resp = requests.get('https://www.president.gov.tw/NEWS/index',
+                            timeout=15, headers=HEADERS)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        for a in soup.find_all('a', href=True):
+            if '/News/' not in a['href']:
+                continue
+            strong = a.find('strong')
+            if not strong:
+                continue
+            title = strong.get_text(strip=True)
+            if not title:
+                continue
+            pub_dt = _roc_to_datetime(a.get_text(' '))
+            if pub_dt and pub_dt < cutoff:
+                continue
+            href = a['href']
+            link = (f"https://www.president.gov.tw{href}"
+                    if href.startswith('/') else href)
+            results.append({
+                'title': title, 'source': '總統府',
+                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'link':  link, 'tag': '台灣',
+            })
+    except Exception as e:
+        print(f'[email] 總統府新聞爬取失敗: {e}')
+    return results
+
+
+def _fetch_tw_news(days: int) -> list[dict]:
+    """整合四個台灣官方來源"""
+    results = []
+    results += _scrape_cna(days)
+    results += _scrape_mnd(days)
+    results += _scrape_mofa(days)
+    results += _scrape_president(days)
+    return results
+
+
+# ── 英文來源（Google News RSS）────────────────────────────
+
 def _fetch_intl_official(days: int) -> list[dict]:
-    """美日官方 / 軍方聲明（USINDOPACOM、Pentagon、日本防衛省等）"""
+    """美日官方 / 軍方聲明"""
     results = []
     for q in ['USINDOPACOM Pentagon China Taiwan military statement',
               'Japan Ministry Defense JSDF China military threat response',
@@ -146,7 +270,7 @@ def _fetch_intl_official(days: int) -> list[dict]:
 
 
 def _fetch_think_tanks(days: int) -> list[dict]:
-    """美國智庫研究報告（CSIS、RAND、CFR、Stimson、Brookings 等）"""
+    """美國智庫研究報告"""
     results = []
     for q in ['"CSIS" OR "RAND Corporation" China Taiwan military',
               '"CFR" OR "Stimson Center" OR "Brookings" China military Taiwan threat',
@@ -158,7 +282,7 @@ def _fetch_think_tanks(days: int) -> list[dict]:
 
 
 def fetch_defense_news(days: int = 2) -> list[dict]:
-    """整合三大來源，去重後回傳（最多 20 則）"""
+    """整合所有來源，去重後回傳（最多 20 則）"""
     all_news = _fetch_tw_news(days) + _fetch_intl_official(days) + _fetch_think_tanks(days)
     seen, results = set(), []
     for n in all_news:
@@ -192,7 +316,7 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
             "aircraft": int(yesterday['aircraft_total']),
             "ships":    int(yesterday['ships_total']),
         },
-        "last7_avg_aircraft":    round(last7['aircraft_total'].mean(), 1),
+        "last7_avg_aircraft":     round(last7['aircraft_total'].mean(), 1),
         "zero_cross_streak_days": zero_cross_streak,
         "this_month": {
             "days":           len(this_mon),
@@ -210,10 +334,9 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
         },
     }
 
-    # 分組整理新聞供 Claude 參考
-    tw_news    = [n for n in news if n.get('tag') == '台灣']
-    intl_news  = [n for n in news if n.get('tag') == '美日官方']
-    tank_news  = [n for n in news if n.get('tag') == '智庫']
+    tw_news   = [n for n in news if n.get('tag') == '台灣']
+    intl_news = [n for n in news if n.get('tag') == '美日官方']
+    tank_news = [n for n in news if n.get('tag') == '智庫']
 
     def fmt(items):
         return '\n'.join(f'- {n["title"]} ({n["source"]}, {n["pub"]})' for n in items[:6])
@@ -222,7 +345,7 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
     if tw_news or intl_news or tank_news:
         news_context = '\n\n近48小時新聞（參考用）：'
         if tw_news:
-            news_context += f'\n[台灣]\n{fmt(tw_news)}'
+            news_context += f'\n[台灣官方]\n{fmt(tw_news)}'
         if intl_news:
             news_context += f'\n[美日官方/軍方]\n{fmt(intl_news)}'
         if tank_news:
@@ -263,7 +386,6 @@ def send_email(analysis: str, today_str: str, news: list[dict]):
     analysis_html = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', analysis)
     analysis_html = analysis_html.replace('\n', '<br>').replace('• ', '&bull;&nbsp;')
 
-    # 按標籤分組顯示新聞
     def news_group_html(tag: str, items: list[dict]) -> str:
         if not items:
             return ''
@@ -338,7 +460,7 @@ def main():
     print(f'[email] 生成 {today_str} 分析報告...')
 
     print('[email] 抓取國防相關新聞...')
-    news = fetch_defense_news(days=2)
+    news  = fetch_defense_news(days=2)
     tw    = sum(1 for n in news if n.get('tag') == '台灣')
     intl  = sum(1 for n in news if n.get('tag') == '美日官方')
     tanks = sum(1 for n in news if n.get('tag') == '智庫')
