@@ -337,44 +337,56 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
     intl_news = [n for n in news if n.get('tag') == '美日官方']
     tank_news = [n for n in news if n.get('tag') == '智庫']
 
-    def fmt(items):
-        return '\n'.join(f'- {n["title"]} ({n["source"]}, {n["pub"]})' for n in items[:6])
+    def fmt(items, limit=8):
+        return '\n'.join(
+            f'[{i+1}] {n["title"]} ——{n["source"]}，{n["pub"]}'
+            for i, n in enumerate(items[:limit])
+        )
 
-    news_context = ''
-    if tw_news or intl_news or tank_news:
-        news_context = '\n\n近48小時新聞（參考用）：'
-        if tw_news:
-            news_context += f'\n[台灣官方]\n{fmt(tw_news)}'
-        if intl_news:
-            news_context += f'\n[美日官方/軍方]\n{fmt(intl_news)}'
-        if tank_news:
-            news_context += f'\n[美國智庫]\n{fmt(tank_news)}'
+    news_block = ''
+    if tw_news:
+        news_block += f'\n\n【台灣官方】\n{fmt(tw_news)}'
+    if intl_news:
+        news_block += f'\n\n【美日官方/軍方】\n{fmt(intl_news)}'
+    if tank_news:
+        news_block += f'\n\n【美國智庫】\n{fmt(tank_news)}'
 
     client = anthropic.Anthropic()
     msg = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=900,
-        messages=[{"role": "user", "content": f"""你是台海軍事動態分析師。根據以下數據，用繁體中文寫出：
-1.「今日觀察」（2-3句，描述今日動態、與昨日相比的變化）
-2.「趨勢觀察」（3-4條重點，比較本月 vs 上月，近7日走勢，值得關注的模式）
-3.「國際反應」（從新聞中找出美日官方/軍方聲明、智庫報告對中國軍事威脅的評論，摘要2-3句；若無相關內容則省略此節，不可捏造）
+        max_tokens=1500,
+        messages=[{"role": "user", "content": f"""你是台海情報分析官。你的任務是把今日 PLA 數據與各方新聞整合成一份情報簡報，找出因果關係並做事實查核。
 
-語氣：客觀、精練、有洞察力。直接給重點，不要廢話。
+## 輸入資料
 
-數據：
-{summary}{news_context}
+**PLA 數據（來源：中華民國國防部每日公告，為本報告的唯一數據基礎）**
+{summary}
 
-格式：
-**今日觀察**
-（內容）
+**近48小時新聞標題（括號內為來源與日期）**{news_block}
 
-**趨勢觀察**
-• （重點）
-• （重點）
-• （重點）
+## 輸出要求
 
-**國際反應**（有相關新聞才寫）
-（內容）"""}],
+用繁體中文，依序寫出以下四節。每個陳述後面必須用「〔來源〕」標注依據（數據請寫「國防部數據」，新聞請寫「[編號] 來源名稱」）。
+
+---
+
+**情勢摘要**
+今日 PLA 動態的客觀描述（2-3句），包含架次、越線、艦艇數字，與昨日及近7日均值比較。
+
+**因果鏈**
+找出新聞與數據之間的行動—回應關係，每條格式如下：
+• [行為方] 做了什麼〔來源〕 → [回應方] 如何回應〔來源〕
+
+規則：只寫能在新聞標題中找到依據的因果；若只有時間相近但無法確認因果，改用「⚠️推論」標記。若無法找到任何因果關係，此節寫「本日無明確因果鏈可確認」。
+
+**美日智庫動向**
+美國、日本官方及智庫對當前局勢的立場與動作（2-3條），每條標注新聞來源編號。若新聞中無相關內容，此節省略。
+
+**事實查核**
+針對「因果鏈」節中每條陳述，逐一標記：
+✅ 確認：有新聞標題或數據直接支持
+⚠️ 推論：僅基於時間相關性或情境推斷，無直接聲明
+（❌ 無法確認者不得出現在分析中）"""}],
     )
     return msg.content[0].text
 
@@ -383,6 +395,10 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
 
 def send_email(analysis: str, today_str: str, news: list[dict]):
     analysis_html = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', analysis)
+    analysis_html = re.sub(r'〔(.+?)〕', r'<span style="color:#556a7a;font-size:.85em">〔\1〕</span>', analysis_html)
+    analysis_html = analysis_html.replace(' → ', ' <span style="color:#f5c842">→</span> ')
+    analysis_html = analysis_html.replace('✅', '<span style="color:#5bc8af">✅</span>')
+    analysis_html = analysis_html.replace('⚠️', '<span style="color:#f5c842">⚠️</span>')
     analysis_html = analysis_html.replace('\n', '<br>').replace('• ', '&bull;&nbsp;')
 
     def news_group_html(tag: str, items: list[dict]) -> str:
