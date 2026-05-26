@@ -100,7 +100,7 @@ def _google_rss(query: str, days: int, hl='en-US', gl='US', ceid='US:en') -> lis
                 pub_dt    = parsedate_to_datetime(pub_str)
                 if pub_dt < cutoff:
                     continue
-                pub_label = pub_dt.strftime('%m/%d %H:%M')
+                pub_label = pub_dt.strftime('%Y/%m/%d')
             except Exception:
                 pub_label = ''
             results.append({'title': title, 'source': source,
@@ -136,7 +136,7 @@ def _scrape_cna(days: int) -> list[dict]:
             link = f"https://www.cna.com.tw{href}" if href.startswith('/') else href
             results.append({
                 'title': title, 'source': '中央社',
-                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'pub':   pub_dt.strftime('%Y/%m/%d') if pub_dt else '',
                 'link':  link, 'tag': '台灣',
             })
     except Exception as e:
@@ -167,7 +167,7 @@ def _scrape_mnd(days: int) -> list[dict]:
             link = f"https://www.mnd.gov.tw{href}" if href.startswith('/') else href
             results.append({
                 'title': title, 'source': '國防部',
-                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'pub':   pub_dt.strftime('%Y/%m/%d') if pub_dt else '',
                 'link':  link, 'tag': '台灣',
             })
     except Exception as e:
@@ -203,7 +203,7 @@ def _scrape_mofa(days: int) -> list[dict]:
                     if not href.startswith('http') else href)
             results.append({
                 'title': title, 'source': '外交部',
-                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'pub':   pub_dt.strftime('%Y/%m/%d') if pub_dt else '',
                 'link':  link, 'tag': '台灣',
             })
     except Exception as e:
@@ -237,7 +237,7 @@ def _scrape_president(days: int) -> list[dict]:
                     if href.startswith('/') else href)
             results.append({
                 'title': title, 'source': '總統府',
-                'pub':   pub_dt.strftime('%m/%d') if pub_dt else '',
+                'pub':   pub_dt.strftime('%Y/%m/%d') if pub_dt else '',
                 'link':  link, 'tag': '台灣',
             })
     except Exception as e:
