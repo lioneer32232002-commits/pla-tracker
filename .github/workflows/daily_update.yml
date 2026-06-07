@@ -6,10 +6,16 @@ on:
     - cron: '0 4 * * *'
     # 台灣時間 14:00 = UTC 06:00 (備用，若12點MND尚未更新)
     - cron: '0 6 * * *'
+    # 台灣時間 20:00 = UTC 12:00 (晚間最終檢查：仍無當日資料才寄一次提醒)
+    - cron: '0 12 * * *'
   workflow_dispatch:  # 允許手動觸發
     inputs:
       force_rebuild:
         description: '強制重建網站（即使今日數據已存在）'
+        required: false
+        default: 'false'
+      final_check:
+        description: '視為晚間最終檢查（若今日仍無資料則寄提醒信）'
         required: false
         default: 'false'
 
@@ -20,6 +26,9 @@ jobs:
       contents: write
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      # 是否為「晚間最終檢查」班次：只有這一班會在今日無資料時寄提醒，
+      # 確保失敗/未發布提醒一天最多一封。
+      IS_FINAL_CHECK: ${{ github.event.schedule == '0 12 * * *' || github.event.inputs.final_check == 'true' }}
 
     steps:
       - name: Checkout repo
@@ -61,15 +70,17 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: python scripts/send_daily_email.py
 
-      # 更新失敗時寄通知信並說明原因：
-      #   - source_error：找到公告但國防部圖片伺服器下載失敗（腳本優雅結束，exit 0）
-      #   - failure()：爬蟲或解讀發生未預期例外（exit 1）
-      # 「公告尚未發布」屬正常情況，不在此通知範圍。
-      - name: Send failure notification
-        if: ${{ failure() || steps.fetch.outputs.outcome == 'source_error' }}
+      # 晚間最終檢查（台灣 20:00）：若今日仍無資料才寄「一封」提醒信，說明原因。
+      # 涵蓋兩種情況，並一天最多一封（只有 IS_FINAL_CHECK 班次會寄）：
+      #   - source_error / error / failure()：抓取或解讀失敗
+      #   - unpublished：國防部整天未發布共機動態公告
+      # 白天 12:00 / 14:00 班次失敗時保持安靜（屬重試），不寄信。
+      # 若 20:00 前資料已補上（outcome=new/exists）則不寄。
+      - name: Send end-of-day alert (data still missing)
+        if: ${{ env.IS_FINAL_CHECK == 'true' && (failure() || steps.fetch.outputs.outcome == 'source_error' || steps.fetch.outputs.outcome == 'unpublished' || steps.fetch.outputs.outcome == 'error') }}
         env:
           EMAIL_MODE: failure
-          FAILURE_REASON: ${{ steps.fetch.outputs.error_detail || '爬蟲執行發生未預期錯誤，請查看執行紀錄' }}
+          FAILURE_REASON: ${{ steps.fetch.outputs.error_detail || (steps.fetch.outputs.outcome == 'unpublished' && '國防部今日（截至晚間）尚未發布共機動態公告') || '爬蟲執行發生未預期錯誤，請查看執行紀錄' }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GMAIL_FROM: ${{ secrets.GMAIL_FROM }}
           GMAIL_TO: ${{ secrets.GMAIL_TO }}
