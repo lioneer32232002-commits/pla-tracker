@@ -87,6 +87,20 @@ def log(msg):
     print(f'[fetch] {msg}', flush=True)
 
 
+def set_output(key, value):
+    """寫入 GitHub Actions step output，供 workflow 後續步驟判斷本次結果。
+
+    本機（無 GITHUB_OUTPUT 環境變數）執行時靜默略過。同一 key 多次寫入時，
+    GitHub 以最後一筆為準。
+    """
+    out_file = os.environ.get('GITHUB_OUTPUT')
+    if not out_file:
+        return
+    safe = str(value).replace('\n', ' ').strip()
+    with open(out_file, 'a', encoding='utf-8') as f:
+        f.write(f'{key}={safe}\n')
+
+
 def http_get(url, *, retries=HTTP_RETRIES, backoff=HTTP_BACKOFF, **kwargs):
     """帶重試與退避的 GET。
 
@@ -313,16 +327,21 @@ def main():
     # 1. 抓最新圖片
     img_url = get_mnd_latest_image_url()
     if img_url is None:
+        # 公告尚未發布屬正常情況（國防部偶有延後），交由後續班次重試，不寄通知信。
         log('=== 今日公告尚未發布，結束 ===')
+        set_output('outcome', 'unpublished')
         return
 
     # 圖片下載已內建重試；若 MND 伺服器持續回 5xx（暫時性故障），
-    # 不讓整個流程崩潰退出——視為「稍後再試」，交由下一個排程班次重跑。
+    # 不讓整個流程崩潰退出——視為「稍後再試」，交由下一個排程班次重跑，
+    # 並回報 source_error 讓 workflow 寄出失敗通知信。
     try:
         img_bytes, _ = download_image(img_url)
     except requests.exceptions.RequestException as exc:
         log(f'圖片下載最終失敗（MND 伺服器暫時性錯誤）：{exc}')
         log('=== 今日圖片暫時無法取得，留待下一班次重試，結束 ===')
+        set_output('outcome', 'source_error')
+        set_output('error_detail', f'國防部圖片伺服器無法下載：{exc}')
         return
 
     # 2. 用 Claude 解讀
@@ -332,6 +351,8 @@ def main():
     is_new = append_to_csv(data)
 
     if not is_new:
+        # 當日資料已存在（典型為備援班次）→ 不再寄信，避免重複通知。
+        set_output('outcome', 'exists')
         if os.environ.get('FORCE_REBUILD', 'false').lower() != 'true':
             log('今日數據已是最新，無需重建')
             run_script('build_site.py')
@@ -342,8 +363,19 @@ def main():
     # 4. 重建網站（Chart.js，不需產 PNG）
     run_script('build_site.py')
 
+    if is_new:
+        # 唯一會觸發每日報告信的路徑：確實新增了當日資料。
+        set_output('outcome', 'new')
+        set_output('record_date', str(data.get('date', '')))
     log(f'=== 完成：{data["date"]} 數據已更新 ===')
 
 
 if __name__ == '__main__':
-    main()
+    # 任何未預期的例外都記錄成 outcome=error 並附原因，讓 workflow 寄出失敗通知，
+    # 同時以非零退出碼讓該班次標記為失敗。
+    try:
+        main()
+    except Exception as exc:
+        set_output('outcome', 'error')
+        set_output('error_detail', f'{type(exc).__name__}: {exc}')
+        raise

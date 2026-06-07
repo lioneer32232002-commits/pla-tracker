@@ -34,6 +34,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run fetch and update
+        id: fetch
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           FORCE_REBUILD: ${{ github.event.inputs.force_rebuild || 'false' }}
@@ -50,10 +51,26 @@ jobs:
           git push
           echo "changed=true" >> $GITHUB_OUTPUT
 
+      # 只有「確實新增當日資料」時才寄報告信，備援班次（資料已存在）不會重複寄送。
       - name: Send daily email report
-        if: steps.commit.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.fetch.outputs.outcome == 'new'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_FROM: ${{ secrets.GMAIL_FROM }}
+          GMAIL_TO: ${{ secrets.GMAIL_TO }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/send_daily_email.py
+
+      # 更新失敗時寄通知信並說明原因：
+      #   - source_error：找到公告但國防部圖片伺服器下載失敗（腳本優雅結束，exit 0）
+      #   - failure()：爬蟲或解讀發生未預期例外（exit 1）
+      # 「公告尚未發布」屬正常情況，不在此通知範圍。
+      - name: Send failure notification
+        if: ${{ failure() || steps.fetch.outputs.outcome == 'source_error' }}
+        env:
+          EMAIL_MODE: failure
+          FAILURE_REASON: ${{ steps.fetch.outputs.error_detail || '爬蟲執行發生未預期錯誤，請查看執行紀錄' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GMAIL_FROM: ${{ secrets.GMAIL_FROM }}
           GMAIL_TO: ${{ secrets.GMAIL_TO }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
