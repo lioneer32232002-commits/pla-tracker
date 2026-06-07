@@ -142,25 +142,22 @@ def get_mnd_latest_image_url():
             href = '/' + href
         return MND_BASE_URL + href
 
-    # 找第一筆公告連結
-    article_link = None
+    # 找最新一筆公告連結。
+    # MND 共機動態公告網址為 /news/plaact/<id>，id 隨發布時間遞增，故「id 最大者 = 最新」。
+    # 不能只取 DOM 中第一個連結——版面可能把較舊的精選/相關公告排在前面，
+    # 導致抓到舊資料（例如最新是 06-07，卻抓成 06-06）。
+    plaact_links = {}  # id -> 絕對網址
     for a in soup.find_all('a', href=True):
-        href = a['href']
-        if '/news/plaact/' in href or '/plaact/' in href.lower():
-            article_link = abs_url(href)
-            break
+        m = re.search(r'plaact/(\d+)', a['href'], re.IGNORECASE)
+        if m:
+            plaact_links[int(m.group(1))] = abs_url(a['href'])
 
-    if not article_link:
-        # 備用：找列表中任何含 plaact 的連結
-        for a in soup.find_all('a', href=True):
-            if 'plaact' in a['href'].lower():
-                article_link = abs_url(a['href'])
-                break
+    article_link = plaact_links[max(plaact_links)] if plaact_links else None
 
     if not article_link:
         raise RuntimeError('找不到共機動態公告連結')
 
-    log(f'公告頁面：{article_link}')
+    log(f'公告頁面（最新 id={max(plaact_links)}）：{article_link}')
 
     # 進入公告頁面，找圖片
     resp2 = http_get(article_link)
