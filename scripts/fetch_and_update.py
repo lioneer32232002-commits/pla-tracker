@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import json
+import time
 import base64
 import hashlib
 import subprocess
@@ -31,6 +32,12 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 MND_LIST_URL = 'https://www.mnd.gov.tw/news/plaactlist'
 MND_BASE_URL = 'https://www.mnd.gov.tw'
+
+HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; PLA-Tracker/1.0)'}
+
+# 重試設定：MND 伺服器偶有暫時性 5xx / 連線錯誤，需重試而非直接失敗
+HTTP_RETRIES = 4          # 最多嘗試次數
+HTTP_BACKOFF = 3          # 退避基數秒數（3, 6, 12, …）
 
 # 欄位順序與 records.csv 一致
 CSV_COLS = [
@@ -80,11 +87,37 @@ def log(msg):
     print(f'[fetch] {msg}', flush=True)
 
 
+def http_get(url, *, retries=HTTP_RETRIES, backoff=HTTP_BACKOFF, **kwargs):
+    """帶重試與退避的 GET。
+
+    對暫時性錯誤（連線/逾時例外、HTTP 5xx、429）重試，因為 MND 的圖片伺服器
+    偶爾會回 500。最後一次仍失敗才把例外往上拋。
+    """
+    kwargs.setdefault('headers', HEADERS)
+    kwargs.setdefault('timeout', 30)
+    last_exc = None
+    for attempt in range(1, retries + 1):
+        try:
+            resp = requests.get(url, **kwargs)
+            if resp.status_code >= 500 or resp.status_code == 429:
+                raise requests.exceptions.HTTPError(
+                    f'{resp.status_code} Server Error for url: {url}', response=resp)
+            resp.raise_for_status()
+            return resp
+        except requests.exceptions.RequestException as exc:
+            last_exc = exc
+            if attempt < retries:
+                wait = backoff * (2 ** (attempt - 1))
+                log(f'下載失敗（第 {attempt}/{retries} 次）：{exc}；{wait}s 後重試')
+                time.sleep(wait)
+            else:
+                log(f'下載失敗（已達最大重試 {retries} 次）：{exc}')
+    raise last_exc
+
+
 def get_mnd_latest_image_url():
     """從 MND 共機動態列表頁取得最新公告的圖片 URL"""
-    headers = {'User-Agent': 'Mozilla/5.0 (compatible; PLA-Tracker/1.0)'}
-    resp = requests.get(MND_LIST_URL, headers=headers, timeout=30)
-    resp.raise_for_status()
+    resp = http_get(MND_LIST_URL)
 
     soup = BeautifulSoup(resp.text, 'html.parser')
 
@@ -116,8 +149,7 @@ def get_mnd_latest_image_url():
     log(f'公告頁面：{article_link}')
 
     # 進入公告頁面，找圖片
-    resp2 = requests.get(article_link, headers=headers, timeout=30)
-    resp2.raise_for_status()
+    resp2 = http_get(article_link)
     soup2 = BeautifulSoup(resp2.text, 'html.parser')
 
     def is_image_src(src):
@@ -129,10 +161,10 @@ def get_mnd_latest_image_url():
     def check_image_size(url, min_bytes=50_000):
         """確認圖片大小 > min_bytes，支援 HEAD 405 時改用 GET Range"""
         try:
-            r = requests.head(url, headers=headers, timeout=10)
+            r = requests.head(url, headers=HEADERS, timeout=10)
             if r.status_code == 405:
                 # 伺服器不支援 HEAD，改用 GET 只取前幾 bytes
-                r = requests.get(url, headers={**headers, 'Range': 'bytes=0-1023'}, timeout=10)
+                r = requests.get(url, headers={**HEADERS, 'Range': 'bytes=0-1023'}, timeout=10)
                 cl = r.headers.get('content-range', '')
                 # Content-Range: bytes 0-1023/TOTAL
                 m = re.search(r'/(\d+)$', cl)
@@ -195,9 +227,7 @@ def download_image(url):
         log(f'使用快取：{cache_path.name}')
         return cache_path.read_bytes(), cache_path
 
-    headers = {'User-Agent': 'Mozilla/5.0 (compatible; PLA-Tracker/1.0)'}
-    resp = requests.get(url, headers=headers, timeout=30)
-    resp.raise_for_status()
+    resp = http_get(url)
     cache_path.write_bytes(resp.content)
     log(f'已下載：{cache_path.name} ({len(resp.content)//1024} KB)')
     return resp.content, cache_path
@@ -285,7 +315,15 @@ def main():
     if img_url is None:
         log('=== 今日公告尚未發布，結束 ===')
         return
-    img_bytes, _ = download_image(img_url)
+
+    # 圖片下載已內建重試；若 MND 伺服器持續回 5xx（暫時性故障），
+    # 不讓整個流程崩潰退出——視為「稍後再試」，交由下一個排程班次重跑。
+    try:
+        img_bytes, _ = download_image(img_url)
+    except requests.exceptions.RequestException as exc:
+        log(f'圖片下載最終失敗（MND 伺服器暫時性錯誤）：{exc}')
+        log('=== 今日圖片暫時無法取得，留待下一班次重試，結束 ===')
+        return
 
     # 2. 用 Claude 解讀
     data = extract_data_from_image(img_bytes, img_url)
