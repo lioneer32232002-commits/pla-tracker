@@ -465,9 +465,58 @@ def send_email(analysis: str, today_str: str, news: list[dict]):
     print(f'[email] 已寄送至 {GMAIL_TO}')
 
 
+# ── 失敗 / 異常通知信 ─────────────────────────────────────
+
+def send_failure_email(reason: str, run_url: str = ''):
+    """當日自動更新未取得數據時，寄出說明原因的通知信。"""
+    today_str = datetime.now(timezone(timedelta(hours=8))).strftime('%Y-%m-%d')
+
+    run_link = (
+        f'<div style="margin-top:14px">'
+        f'<a href="{run_url}" style="color:#7ec8e8;text-decoration:none">'
+        f'查看 GitHub Actions 執行紀錄 →</a></div>'
+        if run_url else ''
+    )
+
+    html = f"""<html><body style="background:#0a1520;color:#c8d8e8;font-family:'Microsoft JhengHei',Arial,sans-serif;padding:24px 20px;max-width:640px;margin:auto">
+  <div style="border-bottom:2px solid #e05555;padding-bottom:10px;margin-bottom:20px">
+    <span style="color:#e05555;font-size:1.15em;font-weight:bold">⚠️ PLA 日報更新未完成</span>
+    <span style="color:#8aa0b0;font-size:.85em;margin-left:12px">{today_str}</span>
+  </div>
+  <div style="background:#0d1b2a;border-left:3px solid #e05555;padding:16px 20px;border-radius:4px;line-height:1.9;font-size:.95em">
+    今日自動更新未能取得當日數據。<br><br>
+    <b style="color:#e05555">原因：</b>{reason}<br><br>
+    系統會在下一個排程班次自動重試。若連續多日收到此通知，請手動檢查國防部公告頁面或爬蟲設定。
+    {run_link}
+  </div>
+  <div style="margin-top:16px;font-size:.72em;color:#3a6070;text-align:center">
+    pla-tracker 自動通知
+  </div>
+</body></html>"""
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = f'⚠️ PLA 日報更新未完成 · {today_str}'
+    msg['From']    = GMAIL_FROM
+    msg['To']      = GMAIL_TO
+    msg.attach(MIMEText(html, 'html', 'utf-8'))
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(GMAIL_FROM, GMAIL_PASS)
+        server.sendmail(GMAIL_FROM, GMAIL_TO, msg.as_string())
+    print(f'[email] 已寄送失敗通知至 {GMAIL_TO}')
+
+
 # ── 主流程 ────────────────────────────────────────────────
 
 def main():
+    # 失敗通知模式：由 workflow 在更新失敗時以 EMAIL_MODE=failure 觸發。
+    if os.environ.get('EMAIL_MODE', 'report').lower() == 'failure':
+        reason  = os.environ.get('FAILURE_REASON', '未知錯誤，請查看執行紀錄')
+        run_url = os.environ.get('RUN_URL', '')
+        print('[email] 寄送失敗通知...')
+        send_failure_email(reason, run_url)
+        return
+
     df = pd.read_csv(DATA_FILE)
     df['date'] = pd.to_datetime(df['date'])
 
