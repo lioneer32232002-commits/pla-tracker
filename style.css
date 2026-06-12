@@ -147,6 +147,12 @@ footer a:hover{color:var(--tx)}
   transition:opacity .5s ease,transform .5s ease}
 .anim-ready.visible{opacity:1;transform:none}
 
+/* ── zh-Hant 字型視覺校正（CJK 在相同 rem 下視覺較小，補齊至英文版水準）── */
+html[lang="zh-Hant"] .site-title{font-size:1.4rem}
+html[lang="zh-Hant"] .site-sub{font-size:.72rem}
+html[lang="zh-Hant"] nav a{font-size:.82rem;letter-spacing:.06em}
+html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
