@@ -23,10 +23,12 @@ body{background:var(--bg);color:var(--tx);
   align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .site-title{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
 .site-sub{font-size:.65rem;color:var(--sub);letter-spacing:.05em;margin-top:.1rem}
-nav{display:flex;gap:1.5rem}
+nav{display:flex;gap:1.5rem;align-items:center}
 nav a{color:var(--sub);text-decoration:none;font-size:.72rem;
   font-weight:700;letter-spacing:.09em;text-transform:uppercase}
 nav a.active,nav a:hover{color:var(--tx)}
+nav a.lang-toggle{border:1px solid var(--bdr);padding:.15em .55em;
+  border-radius:3px;margin-left:.5rem;letter-spacing:.06em}
 
 /* ── Main ── */
 main{max-width:900px;margin:0 auto;padding:1.5rem}
@@ -90,6 +92,12 @@ td{padding:.5rem .8rem;border-bottom:1px solid var(--bdr);color:var(--tx);vertic
 tr:hover td{background:#0e1a20}
 .num{text-align:right;font-variant-numeric:tabular-nums}
 .special-cell{color:var(--sub);font-size:.74rem;max-width:200px;white-space:normal}
+
+/* ── Monthly stats table ── */
+.monthly-section{margin-bottom:2.5rem}
+.monthly-month-label{font-size:.72rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:.15em;color:var(--sub);padding:.6rem 0 .4rem;
+  border-bottom:1px solid var(--bdr);margin-bottom:.75rem}
 
 /* ── Footer ── */
 footer{border-top:1px solid var(--bdr);padding:1rem 1.5rem;margin-top:1rem;
