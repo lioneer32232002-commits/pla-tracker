@@ -218,12 +218,18 @@ _REGION_MAP = [
 
 
 def _map_region(zh):
-    """Map a Chinese region fragment to English (longest match first)."""
-    zh = zh.replace('空域', '').replace('部', '').strip()
+    """Map a Chinese region fragment to English (longest match first).
+    Returns original (Chinese) if unknown and prints WARN so the gap can be caught.
+    """
+    label = zh.replace('空域', '').replace('部', '').strip()
     for k, v in _REGION_MAP:
-        if k in zh:
+        if k in label:
             return v
-    return zh  # unknown – return as-is
+    # Unknown region: warn if there is actual Chinese text so future vocab gaps surface
+    if label and re.search(r'[一-鿿]', label):
+        print(f'[WARN] Unknown airspace region "{label}" — add to _REGION_MAP',
+              file=sys.stderr)
+    return label  # fallback: return cleaned string (may be Chinese)
 
 
 def _fmt_regions(regions):
@@ -299,6 +305,27 @@ def _translate_airspace_block(part):
     m = re.match(r'^([一-鿿]+?)空域[（(][^）)]*[）)]$', part.strip())
     if m:
         return f'Activity: {_map_region(m.group(1))} airspace'
+
+    # Format E: multiple "{region}空域" before one paren block
+    # e.g. "北部空域及西南空域(逾越中線進入北部及西南空域20架次)"
+    m = re.match(r'^((?:[一-鿿]+空域[、及，,]?)+)\s*[（(](.+?)[）)]$', part.strip())
+    if m:
+        regions_str = m.group(1)
+        detail = m.group(2)
+        region_parts = re.findall(r'([一-鿿]+?)空域', regions_str)
+        en_regions = [_map_region(r) for r in region_parts if r]
+        en_regions = [r for r in en_regions if r]
+        if en_regions:
+            region_str = _fmt_regions(en_regions) + ' airspace'
+            cross_m = re.search(r'逾越中線.*?(\d+)架次', detail)
+            sort_m  = re.search(r'(\d+)架次', detail)
+            if cross_m:
+                return f'Median line crossings: {region_str} ({cross_m.group(1)} sorties)'
+            elif '逾越中線' in detail:
+                return f'Median line crossings: {region_str}'
+            elif sort_m:
+                return f'Activity: {region_str} ({sort_m.group(1)} sorties)'
+            return f'Activity: {region_str}'
 
     return None
 
@@ -408,7 +435,8 @@ def translate_special_event(text):
                 continue
 
         # Pattern 5: 進入{regions}空域 (ADIZ entry without crossing)
-        if '進入' in part and '空域' in part:
+        # Guard: skip if 逾越中線 is present — that's a crossing, handled by P4/P6
+        if '進入' in part and '空域' in part and '逾越中線' not in part:
             m = re.search(r'進入([一-鿿及、，,\s]+?空域)', part)
             if m:
                 regions = _extract_crossing_regions(m.group(1))
