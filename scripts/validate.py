@@ -23,6 +23,11 @@ INDEX_HTML = ROOT / 'index.html'
 RECORDS_HTML = ROOT / 'records.html'
 VERSION_TXT = ROOT / 'version.txt'
 
+EN_DIR = ROOT / 'en'
+EN_INDEX   = EN_DIR / 'index.html'
+EN_RECORDS = EN_DIR / 'records.html'
+EN_MONTHLY = EN_DIR / 'monthly.html'
+
 VALID_TYPES = {'manned', 'uav', 'mixed', 'zero',
                'Manned', 'UAV', 'Mixed', 'Zero',
                'Helicopter', 'helicopter'}
@@ -153,6 +158,43 @@ def validate_html():
     # version.txt 存在
     if not VERSION_TXT.exists():
         errors.append('version.txt 不存在，build 可能未執行')
+
+    # ── 英文版三頁檢查 ──────────────────────────────────────────────────────────
+
+    EN_MIN_SIZES = {EN_INDEX: 10_000, EN_RECORDS: 10_000, EN_MONTHLY: 1_000}
+    for path in [EN_INDEX, EN_RECORDS, EN_MONTHLY]:
+        if not path.exists():
+            errors.append(f'en/{path.name} 不存在（build 可能未產出英文版）')
+            continue
+        size = path.stat().st_size
+        min_size = EN_MIN_SIZES[path]
+        if size < min_size:
+            errors.append(f'en/{path.name} 檔案過小（{size} bytes，預期 >{min_size}）')
+            continue
+
+        content = path.read_text(encoding='utf-8')
+
+        # lang="en" 屬性
+        if 'lang="en"' not in content:
+            errors.append(f'en/{path.name} 缺少 <html lang="en">')
+
+        # hreflang alternate 標籤
+        for rel_type in ['hreflang="zh-Hant"', 'hreflang="en"']:
+            if rel_type not in content:
+                errors.append(f'en/{path.name} 缺少 <link rel="alternate" {rel_type}>')
+
+        # en 頁面不得含中文字元（語言切換的「中文」二字除外）
+        import re as _re
+        html_no_script = _re.sub(r'<script[^>]*>.*?</script>', '',
+                                 content, flags=_re.DOTALL)
+        # 移除允許的「中文」切換標籤後再掃描
+        html_cleaned = html_no_script.replace('中文', '')
+        chinese_found = _re.findall(r'[一-鿿]+', html_cleaned)
+        if chinese_found:
+            sample = '、'.join(sorted(set(chinese_found))[:5])
+            errors.append(
+                f'en/{path.name} 含有中文字元（翻譯規則可能遺漏）：{sample}'
+            )
 
     if errors:
         print(f'[FAIL] HTML 驗證發現 {len(errors)} 個問題：')
