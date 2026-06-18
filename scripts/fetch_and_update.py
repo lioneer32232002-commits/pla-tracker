@@ -46,11 +46,12 @@ CSV_COLS = [
     'special_event'
 ]
 
-EXTRACT_PROMPT = """你是軍事數據分析員。請仔細閱讀這張中華民國國防部每日共機動態公告圖片，提取以下資訊並以 JSON 格式回答。
+# 欄位提取規格：圖片與文字兩種來源共用同一份規則，確保兩條路徑結果一致。
+_EXTRACT_SPEC = """提取以下資訊並以 JSON 格式回答。
 
 注意：
-- 「報告日期」是圖片上標示的結束日期（例如圖片標注「3月20日」，date 就是 2026-03-20）
-- aircraft_total：共機架次總數（整數）
+- 「報告日期」是公告標示的統計結束日期。日期欄常寫成「民國X年A月B日…時至民國X年C月D日…0600時止」，date 取「結束日」（例：「…至115年6月18日…0600時止」→ 2026-06-18；圖片若僅標注「3月20日」→ 2026-03-20）
+- aircraft_total：共機架次總數（整數；公告稱「未偵獲共機」則為 0）
 - median_line_cross：逾越海峽中線的架次數（整數，若無則 0）
 - cross_rate：越線率百分比（數字，不含%符號；若無共機則留空字串）
 - aircraft_type：機型分類，只能是以下之一：Manned / UAV / Mixed / Zero / Helicopter
@@ -59,9 +60,9 @@ EXTRACT_PROMPT = """你是軍事數據分析員。請仔細閱讀這張中華民
   - Mixed = 有人機＋無人機混合，或有人機＋直升機
   - Zero = 零架次
   - Helicopter = 只有直升機（無戰機）
-- ships_total：圖片中標示的解放軍軍艦（含海警公務船）總艘數（整數）。
-  請仔細查看圖片中「軍艦」「海警」「艦艇」等相關數字，將所有類型艦艇合計。
-  此欄位必填，若圖片明確有標示艦艇數字請務必填入；真的完全無法辨識才填 0。
+- ships_total：公告中標示的解放軍軍艦（含海警公務船）總艘數（整數）。
+  請仔細查看「軍艦」「共艦」「海警」「艦艇」等相關數字，將所有類型艦艇合計。
+  此欄位必填，若公告明確有標示艦艇數字請務必填入；真的完全無法辨識才填 0。
 - activity_start：共機活動最早時間（HH:MM 格式，無則空字串）
 - activity_end：共機活動最晚時間（HH:MM 格式，無則空字串）
 - special_event：活動區域與機型詳情，格式「區域名(①機型N架次) 區域名(②機型N架次)」，
@@ -81,6 +82,16 @@ EXTRACT_PROMPT = """你是軍事數據分析員。請仔細閱讀這張中華民
   "activity_end": "",
   "special_event": ""
 }"""
+
+# 圖片來源（有航跡圖的日子）
+EXTRACT_PROMPT = (
+    '你是軍事數據分析員。請仔細閱讀這張中華民國國防部每日共機動態公告圖片，' + _EXTRACT_SPEC
+)
+
+# 文字來源（零架次等無航跡圖的日子，改讀公告內文）
+EXTRACT_PROMPT_TEXT = (
+    '你是軍事數據分析員。以下提供中華民國國防部每日共機動態公告的內文文字，請仔細閱讀並' + _EXTRACT_SPEC
+)
 
 
 def log(msg):
@@ -129,18 +140,19 @@ def http_get(url, *, retries=HTTP_RETRIES, backoff=HTTP_BACKOFF, **kwargs):
     raise last_exc
 
 
-def get_mnd_latest_image_url():
-    """從 MND 共機動態列表頁取得最新公告的圖片 URL"""
+def abs_url(href):
+    """把相對連結補成絕對網址。"""
+    if href.startswith('http'):
+        return href
+    if not href.startswith('/'):
+        href = '/' + href
+    return MND_BASE_URL + href
+
+
+def get_mnd_latest_article():
+    """從 MND 共機動態列表頁取得最新一筆公告，回傳 (article_url, soup)。"""
     resp = http_get(MND_LIST_URL)
-
     soup = BeautifulSoup(resp.text, 'html.parser')
-
-    def abs_url(href):
-        if href.startswith('http'):
-            return href
-        if not href.startswith('/'):
-            href = '/' + href
-        return MND_BASE_URL + href
 
     # 找最新一筆公告連結。
     # MND 共機動態公告網址為 /news/plaact/<id>，id 隨發布時間遞增，故「id 最大者 = 最新」。
@@ -152,16 +164,20 @@ def get_mnd_latest_image_url():
         if m:
             plaact_links[int(m.group(1))] = abs_url(a['href'])
 
-    article_link = plaact_links[max(plaact_links)] if plaact_links else None
-
-    if not article_link:
+    if not plaact_links:
         raise RuntimeError('找不到共機動態公告連結')
 
-    log(f'公告頁面（最新 id={max(plaact_links)}）：{article_link}')
+    latest_id = max(plaact_links)
+    article_link = plaact_links[latest_id]
+    log(f'公告頁面（最新 id={latest_id}）：{article_link}')
 
-    # 進入公告頁面，找圖片
     resp2 = http_get(article_link)
     soup2 = BeautifulSoup(resp2.text, 'html.parser')
+    return article_link, soup2
+
+
+def find_image_url(soup2):
+    """從公告頁 soup 找航跡圖 URL。無航跡圖（如零架次日）時回傳 None。"""
 
     def is_image_src(src):
         """判斷 src 是否可能是圖片（有副檔名或是 /File/ 路徑）"""
@@ -219,11 +235,23 @@ def get_mnd_latest_image_url():
                         break
 
     if not img_url:
-        log('找不到符合條件的公告圖片，今日公告可能尚未發布')
         return None
 
     log(f'圖片 URL：{img_url}')
-    return img_url  # 可能為 None（公告尚未發布）
+    return img_url
+
+
+def extract_article_text(soup2):
+    """擷取公告內文純文字（div.maincontent）。抓不到回傳空字串。"""
+    node = soup2.select_one('div.maincontent') or soup2.select_one('main')
+    return node.get_text('\n', strip=True) if node else ''
+
+
+def looks_like_bulletin(text):
+    """判斷內文是否為一則正式的共機動態公告（用來區分「零架次無圖公告」與「尚未發布」）。"""
+    if not text:
+        return False
+    return '時止' in text and ('共機' in text or '共艦' in text)
 
 
 def download_image(url):
@@ -270,6 +298,30 @@ def extract_data_from_image(img_bytes, img_url):
         }]
     )
 
+    return _parse_claude_json(resp)
+
+
+def extract_data_from_text(article_text):
+    """用 Claude API 解讀公告內文文字，回傳 dict（零架次等無航跡圖的日子使用）"""
+    client = anthropic.Anthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
+
+    log('呼叫 Claude API 解讀公告內文…')
+    resp = client.messages.create(
+        model='claude-opus-4-6',
+        max_tokens=512,
+        messages=[{
+            'role': 'user',
+            'content': [
+                {'type': 'text',
+                 'text': f'{EXTRACT_PROMPT_TEXT}\n\n公告內文：\n{article_text}'}
+            ]
+        }]
+    )
+    return _parse_claude_json(resp)
+
+
+def _parse_claude_json(resp):
+    """從 Claude 回應取出 JSON dict（去除可能的 markdown code block 包裝）。"""
     raw = resp.content[0].text.strip()
     # 去除可能的 markdown code block
     if raw.startswith('```'):
@@ -321,28 +373,37 @@ def run_script(script_name):
 def main():
     log('=== PLA Tracker 自動更新開始 ===')
 
-    # 1. 抓最新圖片
-    img_url = get_mnd_latest_image_url()
+    # 1. 取最新公告頁，再找航跡圖
+    article_url, soup2 = get_mnd_latest_article()
+    img_url = find_image_url(soup2)
+
     if img_url is None:
-        # 公告尚未發布屬正常情況（國防部偶有延後），交由後續班次重試，不寄通知信。
-        log('=== 今日公告尚未發布，結束 ===')
-        set_output('outcome', 'unpublished')
-        return
+        # 無航跡圖。國防部在「未偵獲共機（零架次）」的日子不附航跡圖，
+        # 但內文仍載有共艦等數據——改讀內文文字，不要誤判為尚未發布。
+        article_text = extract_article_text(soup2)
+        if not looks_like_bulletin(article_text):
+            # 內文也不是有效公告 → 才視為今日尚未發布，交由後續班次重試，不寄通知信。
+            log('找不到航跡圖，且內文非有效公告，今日公告可能尚未發布')
+            log('=== 今日公告尚未發布，結束 ===')
+            set_output('outcome', 'unpublished')
+            return
+        log('公告無航跡圖（多為零架次），改用內文文字解讀')
+        data = extract_data_from_text(article_text)
+    else:
+        # 圖片下載已內建重試；若 MND 伺服器持續回 5xx（暫時性故障），
+        # 不讓整個流程崩潰退出——視為「稍後再試」，交由下一個排程班次重跑，
+        # 並回報 source_error 讓 workflow 寄出失敗通知信。
+        try:
+            img_bytes, _ = download_image(img_url)
+        except requests.exceptions.RequestException as exc:
+            log(f'圖片下載最終失敗（MND 伺服器暫時性錯誤）：{exc}')
+            log('=== 今日圖片暫時無法取得，留待下一班次重試，結束 ===')
+            set_output('outcome', 'source_error')
+            set_output('error_detail', f'國防部圖片伺服器無法下載：{exc}')
+            return
 
-    # 圖片下載已內建重試；若 MND 伺服器持續回 5xx（暫時性故障），
-    # 不讓整個流程崩潰退出——視為「稍後再試」，交由下一個排程班次重跑，
-    # 並回報 source_error 讓 workflow 寄出失敗通知信。
-    try:
-        img_bytes, _ = download_image(img_url)
-    except requests.exceptions.RequestException as exc:
-        log(f'圖片下載最終失敗（MND 伺服器暫時性錯誤）：{exc}')
-        log('=== 今日圖片暫時無法取得，留待下一班次重試，結束 ===')
-        set_output('outcome', 'source_error')
-        set_output('error_detail', f'國防部圖片伺服器無法下載：{exc}')
-        return
-
-    # 2. 用 Claude 解讀
-    data = extract_data_from_image(img_bytes, img_url)
+        # 2. 用 Claude 解讀圖片
+        data = extract_data_from_image(img_bytes, img_url)
 
     # 3. 寫入 CSV
     is_new = append_to_csv(data)
