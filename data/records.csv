@@ -186,4 +186,5 @@ date,aircraft_total,median_line_cross,cross_rate,aircraft_type,ships_total,activ
 2026-06-15,0,0,,Zero,5,,,
 2026-06-17,0,0,,Zero,6,,,
 2026-06-18,0,0,,Zero,8,,,
-2026-06-19,4,4,100,Manned,11,,,北部空域(4架次逾越中線)
+2026-06-19,4,4,100.0,Manned,11,,,北部空域(4架次逾越中線)
+2026-06-20,5,0,0,Manned,14,,,西南空域(1架)
