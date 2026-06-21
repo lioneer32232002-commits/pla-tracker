@@ -13,16 +13,20 @@
 <div class="emb-h">10日觀察</div>
 <div class="split-panels"><div class="panel-wrap-ac"><canvas id="er-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="er-sh"></canvas></div></div><script>(function(){
 var L=["6/11", "6/12", "6/13", "6/14", "6/15", "6/17", "6/18", "6/19", "6/20", "6/21"],AC=[11, 14, 6, 1, 0, 0, 0, 4, 5, 2],CR=[9, 13, 0, 0, 0, 0, 0, 4, 0, 0],SH=[9, 13, 10, 7, 5, 6, 8, 11, 14, 12],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
+// 垂直漸層填色（頂濃底透）：area chart 質感關鍵；匯出 PNG 端會保留此函式重畫。
+function gfill(hex){return function(c){var a=c.chart.chartArea;if(!a)return 'rgba(0,0,0,0)';
+  var g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);
+  g.addColorStop(0,hex+'59');g.addColorStop(0.85,hex+'0d');g.addColorStop(1,hex+'00');return g;};}
 var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0},border:{display:false}};
 var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
 var baseOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('er-ac'),{data:{labels:L,datasets:[
-  {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:'rgba(245,200,66,0.18)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:ACbg,pointBorderColor:ACbg,order:2},
-  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:3,tension:0,fill:false,order:1}
+  {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:gfill('#f5c842'),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:ACbg,pointBorderColor:'#1e2224',pointBorderWidth:1.5,order:2},
+  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[5,4],borderWidth:1.5,pointBackgroundColor:'#ff9933',pointRadius:0,pointHoverRadius:4,tension:0.35,fill:false,order:1}
 ]},options:baseOpts});
 new Chart(document.getElementById('er-sh'),{data:{labels:L,datasets:[
-  {type:'line',data:SH,borderColor:'#e05555',backgroundColor:'rgba(224,85,85,0.12)',fill:true,stepped:true,pointRadius:3,pointBackgroundColor:SHbg,pointBorderColor:SHbg}
+  {type:'line',data:SH,borderColor:'#e05555',backgroundColor:gfill('#e05555'),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:'#1e2224',pointBorderWidth:1.5}
 ]},options:baseOpts});
 })();</script>
 <a class="emb-f" href="https://pla-tracker.pages.dev/index.html" target="_top" rel="noopener"><span>資料來源：國防部　·　圖表：解放軍擾台動態追蹤</span><span class="emb-cta">看完整數據 →</span></a>

@@ -791,16 +791,20 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 _CHART_JS_RECENT = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
+// 垂直漸層填色（頂濃底透）：area chart 質感關鍵；匯出 PNG 端會保留此函式重畫。
+function gfill(hex){return function(c){var a=c.chart.chartArea;if(!a)return 'rgba(0,0,0,0)';
+  var g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);
+  g.addColorStop(0,hex+'59');g.addColorStop(0.85,hex+'0d');g.addColorStop(1,hex+'00');return g;};}
 var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0},border:{display:false}};
 var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
 var baseOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
-  {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:'rgba(245,200,66,0.18)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:ACbg,pointBorderColor:ACbg,order:2},
-  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:3,tension:0,fill:false,order:1}
+  {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:gfill('#f5c842'),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:ACbg,pointBorderColor:'#1e2224',pointBorderWidth:1.5,order:2},
+  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[5,4],borderWidth:1.5,pointBackgroundColor:'#ff9933',pointRadius:0,pointHoverRadius:4,tension:0.35,fill:false,order:1}
 ]},options:baseOpts});
 new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
-  {type:'line',data:SH,borderColor:'#e05555',backgroundColor:'rgba(224,85,85,0.12)',fill:true,stepped:true,pointRadius:3,pointBackgroundColor:SHbg,pointBorderColor:SHbg}
+  {type:'line',data:SH,borderColor:'#e05555',backgroundColor:gfill('#e05555'),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:'#1e2224',pointBorderWidth:1.5}
 ]},options:baseOpts});
 })();"""
 
@@ -1330,7 +1334,16 @@ document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
 # 再疊上標題與「資料來源 / 圖表出處 / 網址」浮水印，最後 toBlob 觸發下載。
 _CHART_EXPORT_JS = """\
 <script>(function(){
-function clone(o){return JSON.parse(JSON.stringify(o));}
+// 淺拷貝 data：保留 scriptable 函式（如漸層 backgroundColor，JSON 會把函式吃掉），
+// 同時複製陣列避免與頁面上的 live chart 共用可變狀態。
+function copyData(d){
+  return {labels:(d.labels||[]).slice(),datasets:(d.datasets||[]).map(function(ds){
+    var nd={};for(var k in ds){nd[k]=ds[k];}
+    ['data','backgroundColor','pointBackgroundColor','pointBorderColor','borderColor','borderDash'].forEach(function(k){
+      if(Array.isArray(ds[k]))nd[k]=ds[k].slice();});
+    return nd;
+  })};
+}
 function dtype(src){
   if(src.config.type)return src.config.type;
   var ds=src.config.data.datasets||[];
@@ -1343,7 +1356,7 @@ function renderHi(src,w,h,scale){
   var n=(src.config.data.labels||[]).length;
   return new Chart(c.getContext('2d'),{
     type:dtype(src),
-    data:clone(src.config.data),
+    data:copyData(src.config.data),
     options:{
       responsive:false,maintainAspectRatio:false,animation:false,devicePixelRatio:scale,
       plugins:{legend:{display:false},tooltip:{enabled:false}},
