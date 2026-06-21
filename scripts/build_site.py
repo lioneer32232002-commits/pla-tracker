@@ -42,7 +42,7 @@ STRINGS = {
         },
         'site_title': '中國擾台趨勢數據分析',
         'site_sub': 'PLA Activity Around Taiwan',
-        'nav_about': '方法論',
+        'nav_about': '關於',
         'footer_hub': '← 由 Skyfaring 製作',
         'sitrep_text':      '{date}：偵獲中共軍機 {ac} 架次，其中 {ml} 架次逾越海峽中線（越線率 {rate}）；中共艦艇 {sh} 艘。',
         'sitrep_text_zero': '{date}：當日未偵獲中共軍機；中共艦艇 {sh} 艘。',
@@ -733,11 +733,11 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   nav{gap:.95rem;flex-wrap:wrap;justify-content:flex-end}
   main{padding:1rem}
   .stats-row{grid-template-columns:repeat(3,1fr);gap:0}
-  .stat{padding:0 .6rem;min-width:0}
+  .stat{padding:0 .5rem;min-width:0}
   .stat:first-child{border-left:none;padding-left:0}
   .stat-n{font-size:2.3rem}
-  .stat-l{white-space:normal;font-size:.82rem}
-  .stat-detail{white-space:normal}
+  .stat-l{white-space:normal;font-size:.78rem;overflow-wrap:break-word}
+  .stat-detail{display:block;white-space:nowrap;margin-top:.1rem}
   footer{padding:.75rem 1rem;gap:.4rem 1.2rem}
   .footer-hub{margin-left:0;flex-basis:100%}
   .prose-title{font-size:1.3rem}
