@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>方法論與資料來源 — 中國擾台趨勢數據分析</title>
+<meta name="description" content="本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。">
+<link rel="canonical" href="https://pla-tracker.pages.dev/about.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/about.html">
+<link rel="alternate" hreflang="en" href="https://pla-tracker.pages.dev/en/about.html">
+<link rel="alternate" hreflang="x-default" href="https://pla-tracker.pages.dev/about.html">
+<meta name="theme-color" content="#090d0f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="中國擾台趨勢數據分析">
+<meta property="og:title" content="方法論與資料來源 — 中國擾台趨勢數據分析">
+<meta property="og:description" content="本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。">
+<meta property="og:url" content="https://pla-tracker.pages.dev/about.html">
+<meta property="og:image" content="https://pla-tracker.pages.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="中國擾台趨勢數據分析">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="方法論與資料來源 — 中國擾台趨勢數據分析">
+<meta name="twitter:description" content="本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。">
+<meta name="twitter:image" content="https://pla-tracker.pages.dev/og.png">
+<meta name="twitter:image:alt" content="中國擾台趨勢數據分析">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260621">
+<link rel="stylesheet" href="style.css?v=20260621">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='20260621')location.reload(true);});</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "8d6b79b3348642d981b992d2928e98ab"}'></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-brand">
+      <div class="site-title">中國擾台趨勢數據分析</div>
+      <div class="site-sub">PLA Activity Around Taiwan</div>
+    </div>
+    <nav><a href="/index.html">總覽</a><a href="/records.html">每日紀錄</a><a href="/monthly.html">月統計</a><a href="/about.html" class=active>方法論</a><a href="/en/about.html" class="lang-toggle">EN</a></nav>
+  </div>
+</header>
+
+<main>
+  <article class="prose">
+    <h1 class="prose-title">方法論與資料來源</h1>
+    <p class="lead">本站每日追蹤中國解放軍（PLA）在台灣周邊的軍事活動。所有數字均逐字取自
+      中華民國國防部每日公布的資料，不推估、不加工。本頁說明資料來源、更新方式，以及
+      「海峽中線」與「12 浬領海線」等關鍵名詞的定義差異，供媒體與研究者查證引用。</p>
+    <div class="about-meta">
+      <span>資料區間：2026-01-01 ～ 2026-06-21</span>
+      <span>171 筆每日紀錄</span>
+      <span>授權：CC BY 4.0</span>
+    </div>
+
+    <h2>資料來源</h2>
+    <p>唯一來源為 <a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">中華民國國防部「即時軍事動態」</a>，
+      即國防部每日就「中共解放軍進入我周邊海空域動態」所發布的官方公告與航跡圖。
+      本站僅做轉錄、結構化與視覺化，不引用任何未經國防部證實的訊息。</p>
+
+    <h2>更新頻率</h2>
+    <p>每日自動更新一次，於台灣時間中午國防部公布後擷取（約 12:00–14:00），並設有備援班次重試。
+      若當日國防部延遲或未發布，則當日從缺，不以估計值填補。歷史資料一旦寫入即不再修改（僅新增），
+      以確保被引用的數字穩定不變。</p>
+
+    <h2>關鍵名詞定義</h2>
+    <div class="def-card">
+      <div class="term">海峽中線 <span class="en">Taiwan Strait median line / Davis Line</span></div>
+      <p>台灣海峽中央一條未經雙方正式條約承認的默契分界線。長期以來兩岸軍機艦多半不越線，
+        因此越線具有高度政治與軍事訊號意義。但越過中線<strong>並不構成國際法上的領土或領空侵犯</strong>，
+        不會自動觸發自衛權。本站「逾越中線」數字即指當日越過此線的共機架次。</p>
+    </div>
+    <div class="def-card">
+      <div class="term">12 浬領海線 <span class="en">12 NM territorial sea</span></div>
+      <p>依《聯合國海洋法公約》，自基線起算 12 浬為一國領海，其上空為領空，是真正具法律意義的邊界。
+        共機艦一旦進入此界線內的領海或領空，依國際法及我國《國防法》，台灣方得採取防衛行動。
+        這與「越中線」屬於兩個不同層級的事件。</p>
+    </div>
+    <div class="def-card">
+      <div class="term">防空識別區 <span class="en">ADIZ</span></div>
+      <p>為早期識別空中目標而劃設的空域，範圍遠大於領空。進入 ADIZ 不等於侵犯主權，
+        但常被用來觀察活動強度與態勢。</p>
+    </div>
+    <div class="def-card">
+      <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
+      <p>「架次」為當日偵獲的共機出動次數，以國防部計數為準；「共艦」為當日偵獲的解放軍海軍艦艇艘數。
+        空飄氣球等其他活動另記於每日紀錄的備註欄。</p>
+    </div>
+
+    <h2>數據如何整理</h2>
+    <p>處理流程為決定式（deterministic），不使用人工估計：</p>
+    <ul>
+      <li>國防部公告 → 擷取欄位寫入單一 CSV 主檔；</li>
+      <li>自動驗證：逾越中線數不得大於總架次、越線率與計算值一致（容許 ±1%）、日期不重複、機型值合法；</li>
+      <li>通過驗證後才產生靜態網頁與圖表，中英雙語同步輸出。</li>
+    </ul>
+
+    <h2>引用與授權</h2>
+    <p>底層數字屬國防部公開資訊。本站的整理、欄位結構與圖表以
+      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎媒體與研究者引用，請註明：</p>
+    <p><strong>資料來源：中華民國國防部；整理與圖表：解放軍擾台動態追蹤（https://pla-tracker.pages.dev）。</strong></p>
+    <ul>
+      <li>原始資料（CSV）：<a href="https://pla-tracker.pages.dev/data/records.csv" target="_blank" rel="noopener">https://pla-tracker.pages.dev/data/records.csv</a></li>
+      <li>相關發布：<a href="https://yi-tienpan.blogspot.com" target="_blank" rel="noopener">部落格</a></li>
+    </ul>
+  </article>
+</main>
+
+<footer><span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">中華民國國防部</a></span><span>製作：Adam Pan</span><span>更新：6/21</span><span class="footer-hub"><a href="https://skyfaring.pages.dev/" rel="noopener">← 由 Skyfaring 製作</a></span></footer>
+</body></html>

@@ -105,6 +105,39 @@ footer{border-top:1px solid var(--bdr);padding:1rem 1.5rem;margin-top:1rem;
   font-size:.65rem;color:var(--sub);letter-spacing:.05em}
 footer a{color:var(--sub);text-decoration:none}
 footer a:hover{color:var(--tx)}
+.footer-hub{margin-left:auto}
+.footer-hub a{color:var(--y)}
+.footer-hub a:hover{color:#fff}
+
+/* ── Text SITREP (crawler-readable one-liner) ── */
+.sitrep-text{font-size:.9rem;color:var(--sub);line-height:1.7;
+  margin-top:1.1rem;padding-top:.85rem;border-top:1px solid var(--bdr)}
+html[lang="zh-Hant"] .sitrep-text{font-size:.95rem}
+
+/* ── About / methodology prose ── */
+.prose{max-width:760px;margin:0 auto}
+.prose-title{font-size:1.5rem;font-weight:800;letter-spacing:-.01em;
+  color:var(--tx);margin-bottom:.6rem}
+.prose h2{font-size:1rem;font-weight:800;color:var(--tx);letter-spacing:.02em;
+  margin:2rem 0 .6rem;padding-bottom:.4rem;border-bottom:1px solid var(--bdr)}
+.prose p{font-size:.92rem;line-height:1.85;color:var(--tx);margin:.6rem 0}
+.prose .lead{font-size:1rem;color:var(--sub);line-height:1.8;margin-bottom:.4rem}
+.prose a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;
+  word-break:break-word}
+.prose a:hover{color:#fff;border-bottom-color:var(--y)}
+.prose strong{color:var(--tx);font-weight:700}
+.prose ul{margin:.6rem 0 .6rem 1.2rem}
+.prose li{font-size:.92rem;line-height:1.8;color:var(--tx);margin:.35rem 0}
+html[lang="zh-Hant"] .prose p,html[lang="zh-Hant"] .prose li{font-size:.95rem}
+.about-meta{display:flex;flex-wrap:wrap;gap:.4rem 1.5rem;font-size:.72rem;
+  color:var(--sub);letter-spacing:.04em;margin:.6rem 0 1.5rem;
+  padding:.6rem 0;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.def-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:.85rem 1rem;margin:.7rem 0}
+.def-card .term{font-weight:800;color:var(--tx);font-size:.95rem}
+.def-card .term .en{color:var(--sub);font-weight:500;font-size:.78rem;margin-left:.4rem}
+.def-card p{margin:.4rem 0 0;font-size:.88rem;color:var(--sub);line-height:1.8}
+html[lang="zh-Hant"] .def-card p{font-size:.9rem}
 
 /* ── Activity Map ── */
 .map-wrap{background:#070b0d;border-radius:var(--rad);overflow:hidden;border:1px solid var(--bdr)}
@@ -157,12 +190,22 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 @media(max-width:640px){
   .top-bar{display:none}
   .site-header{padding:.7rem 1rem}
+  .header-inner{gap:.5rem}
+  nav{gap:.95rem;flex-wrap:wrap;justify-content:flex-end}
   main{padding:1rem}
   .stats-row{grid-template-columns:repeat(3,1fr);gap:0}
-  .stat{padding:0 .75rem}
+  .stat{padding:0 .6rem;min-width:0}
   .stat:first-child{border-left:none;padding-left:0}
   .stat-n{font-size:2.3rem}
-  footer{padding:.75rem 1rem}
+  .stat-l{white-space:normal;font-size:.82rem}
+  .stat-detail{white-space:normal}
+  footer{padding:.75rem 1rem;gap:.4rem 1.2rem}
+  .footer-hub{margin-left:0;flex-basis:100%}
+  .prose-title{font-size:1.3rem}
   #activity-map{height:260px}
 }
-@media(max-width:380px){.stat-n{font-size:1.9rem}}
+@media(max-width:380px){
+  .stat-n{font-size:1.9rem}
+  nav{gap:.7rem}
+  html[lang="zh-Hant"] nav a{font-size:.78rem;letter-spacing:.03em}
+}

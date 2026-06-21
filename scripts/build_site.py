@@ -15,6 +15,13 @@ DATA_FILE = ROOT / 'data' / 'records.csv'
 SITE_DIR  = ROOT
 SITE_DIR.mkdir(exist_ok=True)
 
+# 正式部署網域（canonical / OG / sitemap / robots 的絕對網址基準）
+BASE_URL = 'https://pla-tracker.pages.dev'
+# Skyfaring 作品集主站（頁尾回連）
+HUB_URL  = 'https://skyfaring.pages.dev/'
+# 相關發布（部落格）
+BLOG_URL = 'https://yi-tienpan.blogspot.com'
+
 
 # ── 字串對照表（UI 文字全部抽在這裡）────────────────────────────────────────────
 
@@ -25,9 +32,20 @@ STRINGS = {
             'index':   '中國擾台趨勢數據分析',
             'records': '每日紀錄 — 中國擾台趨勢數據分析',
             'monthly': '月統計 — 中國擾台趨勢數據分析',
+            'about':   '方法論與資料來源 — 中國擾台趨勢數據分析',
+        },
+        'meta_descs': {
+            'index':   '每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。',
+            'records': '解放軍擾台每日紀錄表：逐日共機架次、逾越中線數、機型、共艦艘數。資料來源：國防部，每日更新。',
+            'monthly': '解放軍擾台月統計：每月共機總架次、逾越中線數、越線率與共艦日均。資料來源：國防部。',
+            'about':   '本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。',
         },
         'site_title': '中國擾台趨勢數據分析',
         'site_sub': 'PLA Activity Around Taiwan',
+        'nav_about': '方法論',
+        'footer_hub': '← 由 Skyfaring 製作',
+        'sitrep_text':      '{date}：偵獲中共軍機 {ac} 架次，其中 {ml} 架次逾越海峽中線（越線率 {rate}）；中共艦艇 {sh} 艘。',
+        'sitrep_text_zero': '{date}：當日未偵獲中共軍機；中共艦艇 {sh} 艘。',
         'nav_index': '總覽',
         'nav_records': '每日紀錄',
         'nav_monthly': '月統計',
@@ -114,9 +132,20 @@ STRINGS = {
             'index':   'PLA Activity Tracker — Taiwan Strait',
             'records': 'Daily Records — PLA Activity Tracker',
             'monthly': 'Monthly Stats — PLA Activity Tracker',
+            'about':   'Methodology & Data Sources — PLA Activity Tracker',
+        },
+        'meta_descs': {
+            'index':   'Daily tracking of PLA military activity around Taiwan: aircraft sorties, Taiwan Strait median-line crossings, naval vessels and trends. Source: ROC Ministry of National Defense daily releases.',
+            'records': 'Daily log of PLA activity around Taiwan: per-day sorties, median-line crossings, aircraft type and vessel counts. Source: ROC MND, updated daily.',
+            'monthly': 'Monthly PLA activity statistics for the Taiwan Strait: total sorties, median-line crossings, crossing rate and average vessels per day. Source: ROC MND.',
+            'about':   'Methodology: data source (ROC MND daily releases), update frequency, the difference between the Taiwan Strait median line and the 12 NM territorial sea, data compilation and citation/licensing.',
         },
         'site_title': 'PLA Activity Tracker — Taiwan Strait',
         'site_sub': 'Daily data from ROC MND public releases',
+        'nav_about': 'About',
+        'footer_hub': '← Made by Skyfaring',
+        'sitrep_text':      'On {date}, {ac} PLA aircraft sorties were detected, of which {ml} crossed the Taiwan Strait median line ({rate} crossing rate); {sh} PLA naval vessels.',
+        'sitrep_text_zero': 'On {date}, no PLA aircraft were detected; {sh} PLA naval vessels.',
         'nav_index': 'Overview',
         'nav_records': 'Daily Records',
         'nav_monthly': 'Monthly',
@@ -485,6 +514,14 @@ def fmt_date_display(date_str, lang):
     return fmt_date_en(date_str) if lang == 'en' else fmt_date(date_str)
 
 
+def fmt_date_full(date_str, lang):
+    """YYYY-MM-DD → 'Jun 18, 2026' (en) / '2026年6月18日' (zh) for prose text."""
+    dt = pd.to_datetime(date_str)
+    if lang == 'en':
+        return f"{dt.strftime('%b')} {dt.day}, {dt.year}"
+    return f"{dt.year}年{dt.month}月{dt.day}日"
+
+
 def delta_span(cur, prev_val):
     try:
         d = float(cur) - float(prev_val)
@@ -607,6 +644,39 @@ footer{border-top:1px solid var(--bdr);padding:1rem 1.5rem;margin-top:1rem;
   font-size:.65rem;color:var(--sub);letter-spacing:.05em}
 footer a{color:var(--sub);text-decoration:none}
 footer a:hover{color:var(--tx)}
+.footer-hub{margin-left:auto}
+.footer-hub a{color:var(--y)}
+.footer-hub a:hover{color:#fff}
+
+/* ── Text SITREP (crawler-readable one-liner) ── */
+.sitrep-text{font-size:.9rem;color:var(--sub);line-height:1.7;
+  margin-top:1.1rem;padding-top:.85rem;border-top:1px solid var(--bdr)}
+html[lang="zh-Hant"] .sitrep-text{font-size:.95rem}
+
+/* ── About / methodology prose ── */
+.prose{max-width:760px;margin:0 auto}
+.prose-title{font-size:1.5rem;font-weight:800;letter-spacing:-.01em;
+  color:var(--tx);margin-bottom:.6rem}
+.prose h2{font-size:1rem;font-weight:800;color:var(--tx);letter-spacing:.02em;
+  margin:2rem 0 .6rem;padding-bottom:.4rem;border-bottom:1px solid var(--bdr)}
+.prose p{font-size:.92rem;line-height:1.85;color:var(--tx);margin:.6rem 0}
+.prose .lead{font-size:1rem;color:var(--sub);line-height:1.8;margin-bottom:.4rem}
+.prose a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;
+  word-break:break-word}
+.prose a:hover{color:#fff;border-bottom-color:var(--y)}
+.prose strong{color:var(--tx);font-weight:700}
+.prose ul{margin:.6rem 0 .6rem 1.2rem}
+.prose li{font-size:.92rem;line-height:1.8;color:var(--tx);margin:.35rem 0}
+html[lang="zh-Hant"] .prose p,html[lang="zh-Hant"] .prose li{font-size:.95rem}
+.about-meta{display:flex;flex-wrap:wrap;gap:.4rem 1.5rem;font-size:.72rem;
+  color:var(--sub);letter-spacing:.04em;margin:.6rem 0 1.5rem;
+  padding:.6rem 0;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.def-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:.85rem 1rem;margin:.7rem 0}
+.def-card .term{font-weight:800;color:var(--tx);font-size:.95rem}
+.def-card .term .en{color:var(--sub);font-weight:500;font-size:.78rem;margin-left:.4rem}
+.def-card p{margin:.4rem 0 0;font-size:.88rem;color:var(--sub);line-height:1.8}
+html[lang="zh-Hant"] .def-card p{font-size:.9rem}
 
 /* ── Activity Map ── */
 .map-wrap{background:#070b0d;border-radius:var(--rad);overflow:hidden;border:1px solid var(--bdr)}
@@ -659,15 +729,25 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 @media(max-width:640px){
   .top-bar{display:none}
   .site-header{padding:.7rem 1rem}
+  .header-inner{gap:.5rem}
+  nav{gap:.95rem;flex-wrap:wrap;justify-content:flex-end}
   main{padding:1rem}
   .stats-row{grid-template-columns:repeat(3,1fr);gap:0}
-  .stat{padding:0 .75rem}
+  .stat{padding:0 .6rem;min-width:0}
   .stat:first-child{border-left:none;padding-left:0}
   .stat-n{font-size:2.3rem}
-  footer{padding:.75rem 1rem}
+  .stat-l{white-space:normal;font-size:.82rem}
+  .stat-detail{white-space:normal}
+  footer{padding:.75rem 1rem;gap:.4rem 1.2rem}
+  .footer-hub{margin-left:0;flex-basis:100%}
+  .prose-title{font-size:1.3rem}
   #activity-map{height:260px}
 }
-@media(max-width:380px){.stat-n{font-size:1.9rem}}
+@media(max-width:380px){
+  .stat-n{font-size:1.9rem}
+  nav{gap:.7rem}
+  html[lang="zh-Hant"] nav a{font-size:.78rem;letter-spacing:.03em}
+}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
@@ -932,24 +1012,34 @@ def map_section_html(ac_val, ml_val, sh_val, special, s):
 _VER = date.today().strftime('%Y%m%d')
 
 
-def make_head(lang, page_name, s):
-    """Build complete <head> block for the given lang and page."""
+def make_head(lang, page_name, s, head_extra=''):
+    """Build complete <head> block for the given lang and page.
+
+    head_extra: optional raw HTML (e.g. JSON-LD) injected just before </head>.
+    """
     title    = s['page_titles'][page_name]
     html_lng = s['html_lang']
+    desc     = s['meta_descs'][page_name]
 
-    # Absolute canonical paths for hreflang
-    canonical_zh = f'/{page_name}.html'
-    canonical_en = f'/en/{page_name}.html'
+    # Absolute URLs for canonical / hreflang / OG (full domain, per SEO best practice)
+    path     = f'/{page_name}.html'
+    canon_zh = f'{BASE_URL}{path}'
+    canon_en = f'{BASE_URL}/en{path}'
+    canonical = canon_en if lang == 'en' else canon_zh
 
     # Asset paths: en/ pages use absolute paths to avoid subdirectory issues
     if lang == 'en':
         css_href = f'/style.css?v={_VER}'
         fav_href = f'/favicon.svg?v={_VER}'
         ver_path = '/version.txt'
+        og_image = f'{BASE_URL}/og-en.png'
+        og_locale, og_locale_alt = 'en_US', 'zh_TW'
     else:
         css_href = f'style.css?v={_VER}'
         fav_href = f'favicon.svg?v={_VER}'
         ver_path = 'version.txt'
+        og_image = f'{BASE_URL}/og.png'
+        og_locale, og_locale_alt = 'zh_TW', 'en_US'
 
     return f"""\
 <!DOCTYPE html>
@@ -958,16 +1048,90 @@ def make_head(lang, page_name, s):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title>
-<link rel="alternate" hreflang="zh-Hant" href="{canonical_zh}">
-<link rel="alternate" hreflang="en" href="{canonical_en}">
+<meta name="description" content="{desc}">
+<link rel="canonical" href="{canonical}">
+<link rel="alternate" hreflang="zh-Hant" href="{canon_zh}">
+<link rel="alternate" hreflang="en" href="{canon_en}">
+<link rel="alternate" hreflang="x-default" href="{canon_zh}">
+<meta name="theme-color" content="#090d0f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{s['site_title']}">
+<meta property="og:title" content="{title}">
+<meta property="og:description" content="{desc}">
+<meta property="og:url" content="{canonical}">
+<meta property="og:image" content="{og_image}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{s['site_title']}">
+<meta property="og:locale" content="{og_locale}">
+<meta property="og:locale:alternate" content="{og_locale_alt}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}">
+<meta name="twitter:description" content="{desc}">
+<meta name="twitter:image" content="{og_image}">
+<meta name="twitter:image:alt" content="{s['site_title']}">
 <link rel="icon" type="image/svg+xml" href="{fav_href}">
 <link rel="stylesheet" href="{css_href}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>fetch('{ver_path}?t='+Date.now(),{{cache:'no-store'}}).then(r=>r.text()).then(v=>{{if(v.trim()!=='{_VER}')location.reload(true);}});</script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8d6b79b3348642d981b992d2928e98ab"}}'></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8d6b79b3348642d981b992d2928e98ab"}}'></script>{head_extra}
 </head>"""
+
+
+# ── schema.org Dataset 結構化資料（JSON-LD，給 Google Dataset Search）──────────
+
+def dataset_jsonld(df, lang):
+    """Build a schema.org Dataset JSON-LD block from the live data range."""
+    start = df['date'].min()
+    end   = df['date'].max()
+    if lang == 'en':
+        name = 'PLA Activity Around Taiwan — Daily Dataset'
+        desc = ("Daily structured record of People's Liberation Army (PLA) military activity "
+                "around Taiwan, compiled from ROC Ministry of National Defense public releases: "
+                "aircraft sorties, Taiwan Strait median-line crossings and naval vessel counts.")
+        page = f'{BASE_URL}/en/index.html'   # 與 canonical / og:url 一致
+    else:
+        name = '中國擾台每日數據集'
+        desc = ('每日整理中國解放軍（PLA）在台灣周邊軍事活動的結構化資料，'
+                '來源為中華民國國防部每日公布：共機架次、逾越海峽中線數、共艦艘數。')
+        page = f'{BASE_URL}/index.html'      # 與 canonical / og:url 一致
+
+    data = {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": name,
+        "description": desc,
+        "url": page,
+        "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait",
+                     "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions",
+                     "PLAAF", "PLAN", "cross-strait tensions",
+                     "解放軍", "擾台", "海峽中線", "防空識別區"],
+        "creator": {"@type": "Person", "name": "Adam Pan"},
+        "isAccessibleForFree": True,
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "temporalCoverage": f"{start}/{end}",
+        "dateModified": end,
+        "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"},
+        "variableMeasured": [
+            {"@type": "PropertyValue", "name": "aircraft_total",
+             "description": "PLA aircraft sorties detected per day"},
+            {"@type": "PropertyValue", "name": "median_line_cross",
+             "description": "Sorties crossing the Taiwan Strait median line per day"},
+            {"@type": "PropertyValue", "name": "ships_total",
+             "description": "PLA naval vessels detected per day"},
+        ],
+        "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist",
+        "creditText": "Source: ROC Ministry of National Defense (MND)",
+        "distribution": [{
+            "@type": "DataDownload",
+            "encodingFormat": "text/csv",
+            "contentUrl": f"{BASE_URL}/data/records.csv",
+        }],
+    }
+    return ('\n<script type="application/ld+json">'
+            + json.dumps(data, ensure_ascii=False) + '</script>')
 
 
 def nav_html(active, lang, page_name, s):
@@ -979,6 +1143,7 @@ def nav_html(active, lang, page_name, s):
         ('index',   s['nav_index']),
         ('records', s['nav_records']),
         ('monthly', s['nav_monthly']),
+        ('about',   s['nav_about']),
     ]
     items = ''.join(
         f'<a href="{base}/{p}.html"{"" if active != p else " class=active"}>{label}</a>'
@@ -991,10 +1156,11 @@ def nav_html(active, lang, page_name, s):
 def footer_html(update_label, s):
     return (
         f'<footer>'
-        f'<span>{s["footer_src_label"]}<a href="{s["footer_src_url"]}" target="_blank">'
+        f'<span>{s["footer_src_label"]}<a href="{s["footer_src_url"]}" target="_blank" rel="noopener">'
         f'{s["footer_src_name"]}</a></span>'
         f'<span>{s["footer_credit"]}</span>'
         f'<span>{s["footer_update"]}{update_label}</span>'
+        f'<span class="footer-hub"><a href="{HUB_URL}" rel="noopener">{s["footer_hub"]}</a></span>'
         f'</footer>'
     )
 
@@ -1019,9 +1185,9 @@ def monthly_stats_html(df, today_date, s):
         f'<div class="sitrep anim-ready" style="margin-top:2.5rem">'
         f'<div class="sitrep-label">{mo_label} &nbsp;·&nbsp; {days} {s["mo_days"]}</div>'
         f'<div class="stats-row">'
-        f'<div class="stat"><div class="stat-n y" data-count="{mo_ac}">0</div>'
+        f'<div class="stat"><div class="stat-n y" data-count="{mo_ac}">{mo_ac}</div>'
         f'<div class="stat-l">{s["mo_aircraft"]}</div></div>'
-        f'<div class="stat"><div class="stat-n y" data-count="{mo_cr}">0</div>'
+        f'<div class="stat"><div class="stat-n y" data-count="{mo_cr}">{mo_cr}</div>'
         f'<div class="stat-l">{s["mo_cross"]}&nbsp;<span class="stat-detail">{cr_rate}</span></div></div>'
         f'<div class="stat"><div class="stat-n r">{mo_sh_avg:.1f}</div>'
         f'<div class="stat-l">{s["mo_ships_avg"]}</div></div>'
@@ -1062,6 +1228,8 @@ def type_info(atype_raw, special_str, s):
 
 _ANIM_JS = """\
 <script>(function(){
+/* Static HTML already holds the real numbers (for crawlers / no-JS); with JS reset to 0 then count up */
+document.querySelectorAll('[data-count]').forEach(function(el){el.textContent='0';});
 function animCount(el,t,d){
 var s=performance.now();
 function step(n){
@@ -1138,7 +1306,16 @@ def build_index(df, lang, out_dir, s):
     monthly_html = monthly_stats_html(df, today_date, s)
     map_html     = map_section_html(ac_val, ml_val, sh_val, _raw_special, s)
 
-    head = make_head(lang, 'index', s)
+    # 可被爬蟲索引的一句話 SITREP（純文字，數字直接取自當日資料）
+    full_date = fmt_date_full(today_date, lang)
+    if ac_val == 0:
+        sitrep_text = s['sitrep_text_zero'].format(date=full_date, sh=sh_val)
+    else:
+        sitrep_text = s['sitrep_text'].format(
+            date=full_date, ac=ac_val, ml=ml_val, rate=cr_str, sh=sh_val)
+    sitrep_text_html = f'<p class="sitrep-text">{sitrep_text}</p>'
+
+    head = make_head(lang, 'index', s, head_extra=dataset_jsonld(df, lang))
     html = f"""{head}
 <body>
 <div class="top-bar">
@@ -1162,20 +1339,21 @@ def build_index(df, lang, out_dir, s):
     <div class="sitrep-label">{s['sitrep_label']} &nbsp;·&nbsp; {today_label}{sitrep_badge}</div>
     <div class="stats-row">
       <div class="stat">
-        <div class="stat-n y" data-count="{ac_val}">0</div>
+        <div class="stat-n y" data-count="{ac_val}">{ac_val}</div>
         <div class="stat-l">{s['stat_aircraft']}</div>
         {ac_delta}
       </div>
       <div class="stat">
-        <div class="stat-n y" data-count="{ml_val}">0</div>
+        <div class="stat-n y" data-count="{ml_val}">{ml_val}</div>
         <div class="stat-l">{s['stat_median']}&nbsp;<span class="stat-detail">{cr_str}</span></div>
       </div>
       <div class="stat">
-        <div class="stat-n r" data-count="{sh_val}">0</div>
+        <div class="stat-n r" data-count="{sh_val}">{sh_val}</div>
         <div class="stat-l">{s['stat_ships']}</div>
         {sh_delta}
       </div>
     </div>
+    {sitrep_text_html}
   </div>
 
   {monthly_html}
@@ -1327,6 +1505,237 @@ def build_monthly(df, lang, out_dir, s):
     print(f'[OK] {out_dir.name}/monthly.html' if out_dir != SITE_DIR else '[OK] monthly.html')
 
 
+# ── about.html（方法論與資料來源）──────────────────────────────────────────────
+
+def build_about(df, lang, out_dir, s):
+    """Methodology / data-source page. Bilingual via lang branch (en = no CJK)."""
+    start = df['date'].min()
+    end   = df['date'].max()
+    n     = len(df)
+    MND   = 'https://www.mnd.gov.tw/news/plaactlist'
+    CSV   = f'{BASE_URL}/data/records.csv'
+    CC    = 'https://creativecommons.org/licenses/by/4.0/'
+    today_label = fmt_date_display(end, lang)
+
+    if lang == 'en':
+        body = f"""\
+  <article class="prose">
+    <h1 class="prose-title">Methodology &amp; Data Sources</h1>
+    <p class="lead">This site tracks the daily military activity of the People's Liberation
+      Army (PLA) around Taiwan. Every figure is transcribed verbatim from the daily public
+      releases of the Republic of China (Taiwan) Ministry of National Defense (MND) — nothing
+      is estimated or inferred. This page documents the source, update process, and the
+      definitions of key terms such as the "Taiwan Strait median line" versus the
+      "12 nautical-mile territorial sea", so journalists and researchers can verify and cite
+      the data.</p>
+    <div class="about-meta">
+      <span>Coverage: {start} – {end}</span>
+      <span>{n} daily records</span>
+      <span>License: CC BY 4.0</span>
+    </div>
+
+    <h2>Data source</h2>
+    <p>The single source is the <a href="{MND}" target="_blank" rel="noopener">ROC Ministry
+      of National Defense "Real-time Military Activity" bulletins</a> — the official daily
+      announcements and flight-path graphics on PLA activity in the airspace and waters around
+      Taiwan. This site only transcribes, structures and visualizes that data; it never
+      incorporates information not confirmed by the MND.</p>
+
+    <h2>Update frequency</h2>
+    <p>Updated automatically once per day, fetched after the MND publishes around midday Taiwan
+      time (≈ 12:00–14:00), with backup retry runs. If the MND is delayed or does not publish
+      on a given day, that day is left blank rather than filled with an estimate. Historical
+      records are append-only and never altered once written, so cited figures stay stable.</p>
+
+    <h2>Key term definitions</h2>
+    <div class="def-card">
+      <div class="term">Taiwan Strait median line <span class="en">/ Davis Line</span></div>
+      <p>An informal line down the centre of the Taiwan Strait, never recognized by any formal
+        treaty between the two sides. For decades aircraft and vessels largely refrained from
+        crossing it, so a crossing carries strong political and military signalling weight.
+        However, crossing the median line <strong>does not constitute a violation of territory
+        or sovereign airspace under international law</strong> and does not automatically
+        trigger the right of self-defense. The "median-line crossings" figure on this site
+        counts the PLA sorties that crossed this line on a given day.</p>
+    </div>
+    <div class="def-card">
+      <div class="term">12 NM territorial sea</div>
+      <p>Under the UN Convention on the Law of the Sea, the 12 nautical miles measured from the
+        baseline constitute a state's territorial sea, and the airspace above it is sovereign
+        airspace — the boundary that actually carries legal weight. Once PLA aircraft or vessels
+        enter the territorial sea or airspace within this line, Taiwan may take defensive action
+        under international law and its Defense Act. This is a different order of event from a
+        median-line crossing.</p>
+    </div>
+    <div class="def-card">
+      <div class="term">ADIZ <span class="en">Air Defense Identification Zone</span></div>
+      <p>A zone declared for the early identification of airborne objects; it is far larger than
+        sovereign airspace. Entering an ADIZ is not a violation of sovereignty, but is commonly
+        used to gauge the intensity and posture of activity.</p>
+    </div>
+    <div class="def-card">
+      <div class="term">Sorties &amp; vessels</div>
+      <p>"Sorties" is the number of PLA aircraft missions detected that day, per the MND's own
+        count; "vessels" is the number of PLA Navy ships detected that day. Other activity such
+        as surveillance balloons is noted separately in the notes column of the daily records.</p>
+    </div>
+
+    <h2>How the data is compiled</h2>
+    <p>The pipeline is deterministic and uses no manual estimation:</p>
+    <ul>
+      <li>MND bulletin → fields extracted into a single master CSV;</li>
+      <li>Automated validation: median-line crossings may not exceed total sorties; the crossing
+        rate must match the computed value (±1%); no duplicate dates; aircraft-type values must
+        be valid;</li>
+      <li>Only after validation passes are the static pages and charts generated, in both
+        Chinese and English.</li>
+    </ul>
+
+    <h2>Citation &amp; license</h2>
+    <p>The underlying figures are public information from the MND. This site's compilation, field
+      structure and charts are released under <a href="{CC}" target="_blank" rel="noopener">CC
+      BY 4.0</a>. Journalists and researchers are welcome to cite them, please credit:</p>
+    <p><strong>Source: ROC Ministry of National Defense; compilation &amp; charts: PLA Activity
+      Tracker ({BASE_URL}).</strong></p>
+    <ul>
+      <li>Raw data (CSV): <a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></li>
+      <li>Related posts: <a href="{BLOG_URL}" target="_blank" rel="noopener">Blog</a></li>
+    </ul>
+  </article>"""
+    else:
+        body = f"""\
+  <article class="prose">
+    <h1 class="prose-title">方法論與資料來源</h1>
+    <p class="lead">本站每日追蹤中國解放軍（PLA）在台灣周邊的軍事活動。所有數字均逐字取自
+      中華民國國防部每日公布的資料，不推估、不加工。本頁說明資料來源、更新方式，以及
+      「海峽中線」與「12 浬領海線」等關鍵名詞的定義差異，供媒體與研究者查證引用。</p>
+    <div class="about-meta">
+      <span>資料區間：{start} ～ {end}</span>
+      <span>{n} 筆每日紀錄</span>
+      <span>授權：CC BY 4.0</span>
+    </div>
+
+    <h2>資料來源</h2>
+    <p>唯一來源為 <a href="{MND}" target="_blank" rel="noopener">中華民國國防部「即時軍事動態」</a>，
+      即國防部每日就「中共解放軍進入我周邊海空域動態」所發布的官方公告與航跡圖。
+      本站僅做轉錄、結構化與視覺化，不引用任何未經國防部證實的訊息。</p>
+
+    <h2>更新頻率</h2>
+    <p>每日自動更新一次，於台灣時間中午國防部公布後擷取（約 12:00–14:00），並設有備援班次重試。
+      若當日國防部延遲或未發布，則當日從缺，不以估計值填補。歷史資料一旦寫入即不再修改（僅新增），
+      以確保被引用的數字穩定不變。</p>
+
+    <h2>關鍵名詞定義</h2>
+    <div class="def-card">
+      <div class="term">海峽中線 <span class="en">Taiwan Strait median line / Davis Line</span></div>
+      <p>台灣海峽中央一條未經雙方正式條約承認的默契分界線。長期以來兩岸軍機艦多半不越線，
+        因此越線具有高度政治與軍事訊號意義。但越過中線<strong>並不構成國際法上的領土或領空侵犯</strong>，
+        不會自動觸發自衛權。本站「逾越中線」數字即指當日越過此線的共機架次。</p>
+    </div>
+    <div class="def-card">
+      <div class="term">12 浬領海線 <span class="en">12 NM territorial sea</span></div>
+      <p>依《聯合國海洋法公約》，自基線起算 12 浬為一國領海，其上空為領空，是真正具法律意義的邊界。
+        共機艦一旦進入此界線內的領海或領空，依國際法及我國《國防法》，台灣方得採取防衛行動。
+        這與「越中線」屬於兩個不同層級的事件。</p>
+    </div>
+    <div class="def-card">
+      <div class="term">防空識別區 <span class="en">ADIZ</span></div>
+      <p>為早期識別空中目標而劃設的空域，範圍遠大於領空。進入 ADIZ 不等於侵犯主權，
+        但常被用來觀察活動強度與態勢。</p>
+    </div>
+    <div class="def-card">
+      <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
+      <p>「架次」為當日偵獲的共機出動次數，以國防部計數為準；「共艦」為當日偵獲的解放軍海軍艦艇艘數。
+        空飄氣球等其他活動另記於每日紀錄的備註欄。</p>
+    </div>
+
+    <h2>數據如何整理</h2>
+    <p>處理流程為決定式（deterministic），不使用人工估計：</p>
+    <ul>
+      <li>國防部公告 → 擷取欄位寫入單一 CSV 主檔；</li>
+      <li>自動驗證：逾越中線數不得大於總架次、越線率與計算值一致（容許 ±1%）、日期不重複、機型值合法；</li>
+      <li>通過驗證後才產生靜態網頁與圖表，中英雙語同步輸出。</li>
+    </ul>
+
+    <h2>引用與授權</h2>
+    <p>底層數字屬國防部公開資訊。本站的整理、欄位結構與圖表以
+      <a href="{CC}" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎媒體與研究者引用，請註明：</p>
+    <p><strong>資料來源：中華民國國防部；整理與圖表：解放軍擾台動態追蹤（{BASE_URL}）。</strong></p>
+    <ul>
+      <li>原始資料（CSV）：<a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></li>
+      <li>相關發布：<a href="{BLOG_URL}" target="_blank" rel="noopener">部落格</a></li>
+    </ul>
+  </article>"""
+
+    head = make_head(lang, 'about', s)
+    html = f"""{head}
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-brand">
+      <div class="site-title">{s['site_title']}</div>
+      <div class="site-sub">{s['site_sub']}</div>
+    </div>
+    {nav_html('about', lang, 'about', s)}
+  </div>
+</header>
+
+<main>
+{body}
+</main>
+
+{footer_html(today_label, s)}
+</body></html>"""
+
+    (out_dir / 'about.html').write_text(html, encoding='utf-8')
+    print(f'[OK] {out_dir.name}/about.html' if out_dir != SITE_DIR else '[OK] about.html')
+
+
+# ── sitemap.xml / robots.txt ──────────────────────────────────────────────────
+
+def build_sitemap(df):
+    """Generate sitemap.xml covering both languages, with hreflang alternates."""
+    data_mod   = df['date'].max()                       # 資料頁用最新資料日期
+    build_mod  = f'{_VER[:4]}-{_VER[4:6]}-{_VER[6:]}'   # 靜態頁用 build 日期
+    pages = [
+        ('index',   'daily',   '1.0', data_mod),
+        ('records', 'daily',   '0.9', data_mod),
+        ('monthly', 'weekly',  '0.7', data_mod),
+        ('about',   'monthly', '0.6', build_mod),
+    ]
+    blocks = []
+    for page, freq, prio, mod in pages:
+        zh = f'{BASE_URL}/{page}.html'
+        en = f'{BASE_URL}/en/{page}.html'
+        for loc in (zh, en):
+            blocks.append(
+                '  <url>\n'
+                f'    <loc>{loc}</loc>\n'
+                f'    <lastmod>{mod}</lastmod>\n'
+                f'    <changefreq>{freq}</changefreq>\n'
+                f'    <priority>{prio}</priority>\n'
+                f'    <xhtml:link rel="alternate" hreflang="zh-Hant" href="{zh}"/>\n'
+                f'    <xhtml:link rel="alternate" hreflang="en" href="{en}"/>\n'
+                f'    <xhtml:link rel="alternate" hreflang="x-default" href="{zh}"/>\n'
+                '  </url>'
+            )
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+           '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
+           + '\n'.join(blocks) + '\n</urlset>\n')
+    (SITE_DIR / 'sitemap.xml').write_text(xml, encoding='utf-8')
+    print('[OK] sitemap.xml')
+
+
+def build_robots():
+    """Generate robots.txt pointing at the sitemap."""
+    txt = ('User-agent: *\n'
+           'Allow: /\n\n'
+           f'Sitemap: {BASE_URL}/sitemap.xml\n')
+    (SITE_DIR / 'robots.txt').write_text(txt, encoding='utf-8')
+    print('[OK] robots.txt')
+
+
 # ── 入口 ──────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
@@ -1344,6 +1753,10 @@ if __name__ == '__main__':
         build_index(df, lang, out_dir, s)
         build_records(df, lang, out_dir, s)
         build_monthly(df, lang, out_dir, s)
+        build_about(df, lang, out_dir, s)
+
+    build_sitemap(df)
+    build_robots()
 
     (SITE_DIR / 'version.txt').write_text(_VER, encoding='utf-8')
     print('[OK] version.txt')

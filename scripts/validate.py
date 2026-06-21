@@ -28,6 +28,14 @@ EN_INDEX   = EN_DIR / 'index.html'
 EN_RECORDS = EN_DIR / 'records.html'
 EN_MONTHLY = EN_DIR / 'monthly.html'
 
+ABOUT_HTML = ROOT / 'about.html'
+EN_ABOUT   = EN_DIR / 'about.html'
+SITEMAP    = ROOT / 'sitemap.xml'
+ROBOTS     = ROOT / 'robots.txt'
+OG_IMG     = ROOT / 'og.png'
+OG_IMG_EN  = ROOT / 'og-en.png'
+BASE_URL   = 'https://pla-tracker.pages.dev'
+
 VALID_TYPES = {'manned', 'uav', 'mixed', 'zero',
                'Manned', 'UAV', 'Mixed', 'Zero',
                'Helicopter', 'helicopter'}
@@ -141,10 +149,18 @@ def validate_html():
     if INDEX_HTML.exists():
         content = INDEX_HTML.read_text(encoding='utf-8')
         checks = [
-            ('class="sitrep',      'SITREP 區塊'),
-            ('class="stat"',       '統計數字區塊'),
-            ('class="stats-row"',  '統計列'),
-            ('至今',               '月份至今區塊'),
+            ('class="sitrep',       'SITREP 區塊'),
+            ('class="stat"',        '統計數字區塊'),
+            ('class="stats-row"',   '統計列'),
+            ('至今',                ' 月份至今區塊'),
+            ('name="description"',  'meta description'),
+            ('rel="canonical"',     'canonical 連結'),
+            ('property="og:image"', 'OG 圖標籤'),
+            ('name="twitter:card"', 'Twitter 卡片'),
+            ('application/ld+json',  'JSON-LD 區塊'),
+            ('"@type": "Dataset"',  'Dataset 結構化資料'),
+            ('class="sitrep-text"', '一句話文字 SITREP'),
+            (f'{BASE_URL}/og.png',  'OG 圖絕對網址'),
         ]
         for marker, desc in checks:
             if marker not in content:
@@ -161,8 +177,9 @@ def validate_html():
 
     # ── 英文版三頁檢查 ──────────────────────────────────────────────────────────
 
-    EN_MIN_SIZES = {EN_INDEX: 10_000, EN_RECORDS: 10_000, EN_MONTHLY: 1_000}
-    for path in [EN_INDEX, EN_RECORDS, EN_MONTHLY]:
+    EN_MIN_SIZES = {EN_INDEX: 10_000, EN_RECORDS: 10_000,
+                    EN_MONTHLY: 1_000, EN_ABOUT: 3_000}
+    for path in [EN_INDEX, EN_RECORDS, EN_MONTHLY, EN_ABOUT]:
         if not path.exists():
             errors.append(f'en/{path.name} 不存在（build 可能未產出英文版）')
             continue
@@ -195,6 +212,60 @@ def validate_html():
             errors.append(
                 f'en/{path.name} 含有中文字元（翻譯規則可能遺漏）：{sample}'
             )
+
+    # ── 英文首頁 SEO 標籤（與中文首頁對稱，防止未來只在 zh 產生而 en 漏掉）─────
+    if EN_INDEX.exists():
+        en_idx = EN_INDEX.read_text(encoding='utf-8')
+        for marker, desc in [
+            ('name="description"',     'meta description'),
+            ('rel="canonical"',        'canonical 連結'),
+            ('property="og:image"',    'OG 圖標籤'),
+            (f'{BASE_URL}/og-en.png',  'OG 圖(en)絕對網址'),
+            ('name="twitter:card"',    'Twitter 卡片'),
+            ('"@type": "Dataset"',     'Dataset 結構化資料'),
+            ('class="sitrep-text"',    '一句話文字 SITREP'),
+        ]:
+            if marker not in en_idx:
+                errors.append(f'en/index.html 缺少 {desc}（找不到「{marker}」）')
+
+    # ── about.html（中文方法論頁）─────────────────────────────────────────────
+    if not ABOUT_HTML.exists():
+        errors.append('about.html 不存在（build 可能未產出方法論頁）')
+    else:
+        about = ABOUT_HTML.read_text(encoding='utf-8')
+        if ABOUT_HTML.stat().st_size < 3_000:
+            errors.append(f'about.html 檔案過小（{ABOUT_HTML.stat().st_size} bytes）')
+        for marker, desc in [('方法論', '頁面標題'),
+                             ('class="def-card"', '名詞定義卡'),
+                             ('12 浬領海', '12浬領海定義'),
+                             ('rel="canonical"', 'canonical 連結')]:
+            if marker not in about:
+                errors.append(f'about.html 缺少 {desc}（找不到「{marker}」）')
+
+    # ── sitemap.xml / robots.txt ─────────────────────────────────────────────
+    if not SITEMAP.exists():
+        errors.append('sitemap.xml 不存在')
+    else:
+        sm = SITEMAP.read_text(encoding='utf-8')
+        for page in ['index', 'records', 'monthly', 'about']:
+            if f'{BASE_URL}/{page}.html' not in sm:
+                errors.append(f'sitemap.xml 缺少中文 {page} 頁')
+            if f'{BASE_URL}/en/{page}.html' not in sm:
+                errors.append(f'sitemap.xml 缺少英文 {page} 頁')
+
+    if not ROBOTS.exists():
+        errors.append('robots.txt 不存在')
+    else:
+        rb = ROBOTS.read_text(encoding='utf-8')
+        if f'Sitemap: {BASE_URL}/sitemap.xml' not in rb:
+            errors.append('robots.txt 缺少正確的 Sitemap 指向')
+
+    # ── OG 分享圖 ────────────────────────────────────────────────────────────
+    for og in [OG_IMG, OG_IMG_EN]:
+        if not og.exists():
+            errors.append(f'{og.name} 不存在（請執行 scripts/make_og_image.py）')
+        elif og.stat().st_size < 5_000:
+            errors.append(f'{og.name} 檔案過小（{og.stat().st_size} bytes）')
 
     if errors:
         print(f'[FAIL] HTML 驗證發現 {len(errors)} 個問題：')

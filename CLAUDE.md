@@ -44,11 +44,20 @@
 | 檔案 | 用途 |
 |------|------|
 | `data/records.csv` | 主資料（只能新增，禁止修改歷史） |
-| `scripts/build_site.py` | 從 CSV 產生全部 HTML 頁面 |
-| `scripts/validate.py` | 兩段式驗證（CSV 資料 + HTML 結構） |
-| `index.html` | 首頁（總覽 + SITREP） |
+| `scripts/build_site.py` | 從 CSV 產生全部 HTML 頁面（含 SEO/OG meta、Dataset JSON-LD、sitemap、robots） |
+| `scripts/validate.py` | 兩段式驗證（CSV 資料 + HTML 結構 + SEO/about/sitemap/robots/OG） |
+| `scripts/make_og_image.py` | 一次性產生 `og.png` / `og-en.png`（社群分享圖，與當日資料無關，刻意不進每日 build） |
+| `index.html` | 首頁（總覽 + SITREP + 一句話文字 SITREP） |
 | `records.html` | 每日紀錄頁 |
+| `about.html` / `en/about.html` | 方法論與資料來源頁（build 產生，每日更新資料區間/筆數） |
+| `sitemap.xml` / `robots.txt` | build 產生；canonical/OG/sitemap 基準網址 = `https://pla-tracker.pages.dev` |
+| `og.png` / `og-en.png` | OG 分享圖（靜態，只有改品牌視覺時才需重跑 make_og_image.py） |
 | `version.txt` | build 時間戳，build 後必定更新 |
+
+> SEO 資產說明：所有 `<head>` meta、canonical、hreflang、OG/Twitter 卡、JSON-LD、
+> sitemap、robots 一律由 `build_site.py` 產生，禁止手改 HTML。新增頁面時記得同步更新
+> `.github/workflows/daily_update.yml` 的 `git add` 白名單（about.html / sitemap.xml 每日會變動，
+> 必須在白名單內，否則線上版會停更）。改 OG 圖視覺才需手動 `python scripts/make_og_image.py`。
 
 ---
 

@@ -4,8 +4,28 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>中國擾台趨勢數據分析</title>
-<link rel="alternate" hreflang="zh-Hant" href="/index.html">
-<link rel="alternate" hreflang="en" href="/en/index.html">
+<meta name="description" content="每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。">
+<link rel="canonical" href="https://pla-tracker.pages.dev/index.html">
+<link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/index.html">
+<link rel="alternate" hreflang="en" href="https://pla-tracker.pages.dev/en/index.html">
+<link rel="alternate" hreflang="x-default" href="https://pla-tracker.pages.dev/index.html">
+<meta name="theme-color" content="#090d0f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="中國擾台趨勢數據分析">
+<meta property="og:title" content="中國擾台趨勢數據分析">
+<meta property="og:description" content="每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。">
+<meta property="og:url" content="https://pla-tracker.pages.dev/index.html">
+<meta property="og:image" content="https://pla-tracker.pages.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="中國擾台趨勢數據分析">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="中國擾台趨勢數據分析">
+<meta name="twitter:description" content="每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。">
+<meta name="twitter:image" content="https://pla-tracker.pages.dev/og.png">
+<meta name="twitter:image:alt" content="中國擾台趨勢數據分析">
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260621">
 <link rel="stylesheet" href="style.css?v=20260621">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
@@ -13,6 +33,7 @@
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='20260621')location.reload(true);});</script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "8d6b79b3348642d981b992d2928e98ab"}'></script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "中國擾台每日數據集", "description": "每日整理中國解放軍（PLA）在台灣周邊軍事活動的結構化資料，來源為中華民國國防部每日公布：共機架次、逾越海峽中線數、共艦艘數。", "url": "https://pla-tracker.pages.dev/index.html", "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait", "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions", "PLAAF", "PLAN", "cross-strait tensions", "解放軍", "擾台", "海峽中線", "防空識別區"], "creator": {"@type": "Person", "name": "Adam Pan"}, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "temporalCoverage": "2026-01-01/2026-06-21", "dateModified": "2026-06-21", "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"}, "variableMeasured": [{"@type": "PropertyValue", "name": "aircraft_total", "description": "PLA aircraft sorties detected per day"}, {"@type": "PropertyValue", "name": "median_line_cross", "description": "Sorties crossing the Taiwan Strait median line per day"}, {"@type": "PropertyValue", "name": "ships_total", "description": "PLA naval vessels detected per day"}], "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist", "creditText": "Source: ROC Ministry of National Defense (MND)", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://pla-tracker.pages.dev/data/records.csv"}]}</script>
 </head>
 <body>
 <div class="top-bar">
@@ -25,7 +46,7 @@
       <div class="site-title">中國擾台趨勢數據分析</div>
       <div class="site-sub">PLA Activity Around Taiwan</div>
     </div>
-    <nav><a href="/index.html" class=active>總覽</a><a href="/records.html">每日紀錄</a><a href="/monthly.html">月統計</a><a href="/en/index.html" class="lang-toggle">EN</a></nav>
+    <nav><a href="/index.html" class=active>總覽</a><a href="/records.html">每日紀錄</a><a href="/monthly.html">月統計</a><a href="/about.html">方法論</a><a href="/en/index.html" class="lang-toggle">EN</a></nav>
   </div>
 </header>
 
@@ -36,7 +57,7 @@
     <div class="sitrep-label">SITREP &nbsp;·&nbsp; 6/21</div>
     <div class="stats-row">
       <div class="stat">
-        <div class="stat-n y" data-count="2">0</div>
+        <div class="stat-n y" data-count="2">2</div>
         <div class="stat-l">中共軍機架次</div>
         <span class="delta-dn">▼3</span>
       </div>
@@ -45,14 +66,15 @@
         <div class="stat-l">逾越中線&nbsp;<span class="stat-detail">0%</span></div>
       </div>
       <div class="stat">
-        <div class="stat-n r" data-count="12">0</div>
+        <div class="stat-n r" data-count="12">12</div>
         <div class="stat-l">中共艦艇</div>
         <span class="delta-dn">▼2</span>
       </div>
     </div>
+    <p class="sitrep-text">2026年6月21日：偵獲中共軍機 2 架次，其中 0 架次逾越海峽中線（越線率 0%）；中共艦艇 12 艘。</p>
   </div>
 
-  <div class="sitrep anim-ready" style="margin-top:2.5rem"><div class="sitrep-label">6月至今 &nbsp;·&nbsp; 20 天</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="136">0</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y" data-count="67">0</div><div class="stat-l">逾越中線&nbsp;<span class="stat-detail">49%</span></div></div><div class="stat"><div class="stat-n r">11.7</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
+  <div class="sitrep anim-ready" style="margin-top:2.5rem"><div class="sitrep-label">6月至今 &nbsp;·&nbsp; 20 天</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="136">136</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y" data-count="67">67</div><div class="stat-l">逾越中線&nbsp;<span class="stat-detail">49%</span></div></div><div class="stat"><div class="stat-n r">11.7</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
 
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><div class="map-note"><strong>12海里領海界線（綠色虛線）</strong>為實質法律邊界。解放軍機艦越過中線不觸發自衛權；一旦進入此界線內的領海或領空，依國際法及《國防法》，台灣方面可採取防衛行動。</div><script>(function(){
 var ML=0,AC=2,SH=12,ZONES={"n": false, "sw": false, "e": false, "ne": false, "s": false};
@@ -214,6 +236,8 @@ new Chart(document.getElementById('ytd-sh'),{data:{labels:L,datasets:[
 </main>
 
 <script>(function(){
+/* Static HTML already holds the real numbers (for crawlers / no-JS); with JS reset to 0 then count up */
+document.querySelectorAll('[data-count]').forEach(function(el){el.textContent='0';});
 function animCount(el,t,d){
 var s=performance.now();
 function step(n){
@@ -237,5 +261,5 @@ if(!t)return;
 setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0.15});
 document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
 })();</script>
-<footer><span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank">中華民國國防部</a></span><span>製作：Adam Pan</span><span>更新：6/21</span></footer>
+<footer><span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">中華民國國防部</a></span><span>製作：Adam Pan</span><span>更新：6/21</span><span class="footer-hub"><a href="https://skyfaring.pages.dev/" rel="noopener">← 由 Skyfaring 製作</a></span></footer>
 </body></html>
