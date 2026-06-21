@@ -30,6 +30,12 @@ EN_MONTHLY = EN_DIR / 'monthly.html'
 
 ABOUT_HTML = ROOT / 'about.html'
 EN_ABOUT   = EN_DIR / 'about.html'
+
+# 可嵌入圖表頁（媒體可引用：PNG 下載 + iframe 嵌入）
+EMBED_SLUGS    = ['recent', 'ytd']
+ZH_EMBED_DIR   = ROOT / 'embed'
+EN_EMBED_DIR   = EN_DIR / 'embed'
+
 SITEMAP    = ROOT / 'sitemap.xml'
 ROBOTS     = ROOT / 'robots.txt'
 OG_IMG     = ROOT / 'og.png'
@@ -266,6 +272,44 @@ def validate_html():
             errors.append(f'{og.name} 不存在（請執行 scripts/make_og_image.py）')
         elif og.stat().st_size < 5_000:
             errors.append(f'{og.name} 檔案過小（{og.stat().st_size} bytes）')
+
+    # ── 媒體可引用：首頁工具列 + 可嵌入圖表頁 ─────────────────────────────────
+    import re as _re2
+    # 首頁（中英）必須帶 PNG 下載 + 嵌入工具列，否則代表 build_index 工具列漏掉
+    for idx_path, label in [(INDEX_HTML, 'index.html'), (EN_INDEX, 'en/index.html')]:
+        if idx_path.exists():
+            idx = idx_path.read_text(encoding='utf-8')
+            for marker, desc in [('plaDownloadChart', 'PNG 下載按鈕/腳本'),
+                                 ('class="embed-box"', 'iframe 嵌入碼區塊')]:
+                if marker not in idx:
+                    errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
+
+    # 可嵌入圖表頁本體：存在、noindex、Chart.js、canvas、頁腳回連本站
+    embed_targets = (
+        [(ZH_EMBED_DIR / f'{s}.html', f'embed/{s}.html', False) for s in EMBED_SLUGS] +
+        [(EN_EMBED_DIR / f'{s}.html', f'en/embed/{s}.html', True) for s in EMBED_SLUGS]
+    )
+    for path, label, is_en in embed_targets:
+        if not path.exists():
+            errors.append(f'{label} 不存在（build 可能未產出嵌入頁）')
+            continue
+        if path.stat().st_size < 1_500:
+            errors.append(f'{label} 檔案過小（{path.stat().st_size} bytes）')
+            continue
+        emb = path.read_text(encoding='utf-8')
+        for marker, desc in [('name="robots" content="noindex', 'noindex 標記'),
+                             ('cdn.jsdelivr.net/npm/chart.js', 'Chart.js 載入'),
+                             ('<canvas', '圖表 canvas'),
+                             (BASE_URL, '頁腳回連本站')]:
+            if marker not in emb:
+                errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
+        # 英文嵌入頁不得殘留中文（與英文主頁同規則，script 內資料不算）
+        if is_en:
+            no_script = _re2.sub(r'<script[^>]*>.*?</script>', '', emb, flags=_re2.DOTALL)
+            cjk = _re2.findall(r'[一-鿿]+', no_script)
+            if cjk:
+                sample = '、'.join(sorted(set(cjk))[:5])
+                errors.append(f'{label} 含有中文字元（翻譯規則可能遺漏）：{sample}')
 
     if errors:
         print(f'[FAIL] HTML 驗證發現 {len(errors)} 個問題：')

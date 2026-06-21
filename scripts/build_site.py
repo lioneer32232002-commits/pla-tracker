@@ -3,6 +3,7 @@ build_site.py — 讀取 records.csv，產出靜態網站（中英雙語）
 圖表使用 Chart.js 瀏覽器端渲染，不需要 matplotlib 或字型安裝。
 en/ 子目錄由本腳本自動產生，禁止手動修改。
 """
+import html
 import json
 import re
 import sys
@@ -62,6 +63,14 @@ STRINGS = {
         'mo_ships_avg': '艦艇日均（艘）',
         'chart_recent': '10日觀察',
         'chart_ytd': '2026 至今',
+        'chart_dl': '下載 PNG',
+        'chart_embed': '嵌入',
+        'chart_embed_hint': '把這段貼到你的網站或部落格：',
+        'chart_embed_copy': '複製',
+        'chart_embed_copied': '已複製 ✓',
+        'embed_wm': '資料來源：中華民國國防部　·　圖表：解放軍擾台動態追蹤　·　pla-tracker.pages.dev',
+        'embed_foot': '資料來源：國防部　·　圖表：解放軍擾台動態追蹤',
+        'embed_cta': '看完整數據 →',
         'obs_ac': '今日 {n} 架次',
         'obs_sh': '{n} 艘艦艇',
         'peak_ac': '本月峰值 {n} 架次（{d}）',
@@ -162,6 +171,14 @@ STRINGS = {
         'mo_ships_avg': 'Avg Vessels/Day',
         'chart_recent': '10-Day Trend',
         'chart_ytd': '2026 YTD',
+        'chart_dl': 'Download PNG',
+        'chart_embed': 'Embed',
+        'chart_embed_hint': 'Paste this into your site or blog:',
+        'chart_embed_copy': 'Copy',
+        'chart_embed_copied': 'Copied ✓',
+        'embed_wm': 'Source: ROC MND   ·   Chart: PLA Activity Tracker   ·   pla-tracker.pages.dev',
+        'embed_foot': 'Source: ROC MND   ·   Chart: PLA Activity Tracker',
+        'embed_cta': 'See full data →',
         'obs_ac': 'Today: {n} sorties',
         'obs_sh': '{n} vessels',
         'peak_ac': 'Month peak: {n} ({d})',
@@ -622,6 +639,22 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .panel-wrap-ac{position:relative;height:200px}
 .panel-wrap-sh{position:relative;height:130px;margin-top:8px}
 
+/* ── Chart tools: PNG download + iframe embed (媒體可引用) ── */
+.chart-tools{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.7rem}
+.chart-btn{background:var(--sur);border:1px solid var(--bdr);color:var(--sub);
+  font:inherit;font-size:.68rem;font-weight:700;letter-spacing:.04em;
+  padding:.36em .85em;border-radius:5px;cursor:pointer;transition:.15s}
+.chart-btn:hover{color:var(--tx);border-color:#2c4049;background:#11201f}
+.embed-box{display:none;flex-basis:100%;margin-top:.3rem}
+.embed-hint{font-size:.66rem;color:var(--sub);margin-bottom:.35rem;letter-spacing:.03em}
+.embed-box textarea{width:100%;height:66px;resize:vertical;display:block;
+  background:#0a1014;border:1px solid var(--bdr);border-radius:5px;color:var(--tx);
+  font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;padding:.55rem .6rem}
+.embed-copy{margin-top:.45rem;background:var(--y);border:0;color:#1a1400;
+  font-weight:800;font-size:.66rem;letter-spacing:.03em;
+  padding:.38em .95em;border-radius:5px;cursor:pointer}
+.embed-copy:hover{background:#ffd75e}
+
 /* ── Records table ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:.8rem;white-space:nowrap}
@@ -820,7 +853,7 @@ def _build_panels(uid, df_slice, today_date, template):
             f'<script>{js}</script>')
 
 
-def chart_section_html(title, chart_html, obs_ac='', obs_sh=''):
+def chart_section_html(title, chart_html, obs_ac='', obs_sh='', tools_html=''):
     ac_tag = f'<span class="chart-obs">{obs_ac}</span>' if obs_ac else ''
     sh_tag = f'<span class="chart-obs" style="color:var(--r)">{obs_sh}</span>' if obs_sh else ''
     return (f'<section class="chart-section anim-ready">'
@@ -828,7 +861,44 @@ def chart_section_html(title, chart_html, obs_ac='', obs_sh=''):
             f'<span class="chart-title">{title}</span>{ac_tag}{sh_tag}'
             f'</div>'
             f'{chart_html}'
+            f'{tools_html}'
             f'</section>')
+
+
+def chart_tools_html(slug, uid, title, today_date, s, lang):
+    """媒體可引用工具列：高解析 PNG 下載 + iframe 嵌入碼（皆瀏覽器端，無需 CI 字型）.
+
+    slug  → 嵌入頁檔名（/embed/{slug}.html）
+    uid   → 頁面內 canvas 前綴（{uid}-ac / {uid}-sh），供 plaDownloadChart 取圖
+    """
+    base   = '/en' if lang == 'en' else ''
+    src    = f'{BASE_URL}{base}/embed/{slug}.html'
+    box_id = f'emb-{uid}'
+    fn     = f'pla-tracker-{slug}-{today_date}'
+    # iframe 片段放進 <textarea>：以實體編碼顯示，使用者複製到的就是可用標記
+    iframe = (
+        f'&lt;iframe src=&quot;{src}&quot; width=&quot;100%&quot; height=&quot;470&quot; '
+        f'style=&quot;border:0;max-width:680px;width:100%&quot; loading=&quot;lazy&quot; '
+        f'title=&quot;{html.escape(title, quote=True)}&quot;&gt;&lt;/iframe&gt;'
+    )
+    return (
+        '<div class="chart-tools">'
+        f'<button type="button" class="chart-btn" data-uid="{uid}" '
+        f'data-title="{html.escape(title, quote=True)}" '
+        f'data-sub="{html.escape(s["site_title"], quote=True)}" '
+        f'data-wm="{html.escape(s["embed_wm"], quote=True)}" data-fn="{fn}" '
+        f'onclick="plaDownloadChart(this)">↓ {s["chart_dl"]}</button>'
+        f'<button type="button" class="chart-btn" '
+        f'onclick="plaToggleEmbed(&#39;{box_id}&#39;)">&lt;/&gt; {s["chart_embed"]}</button>'
+        f'<div id="{box_id}" class="embed-box">'
+        f'<div class="embed-hint">{s["chart_embed_hint"]}</div>'
+        f'<textarea readonly rows="3" onclick="this.select()">{iframe}</textarea>'
+        f'<button type="button" class="embed-copy" '
+        f'data-done="{html.escape(s["chart_embed_copied"], quote=True)}" '
+        f'onclick="plaCopyEmbed(this)">{s["chart_embed_copy"]}</button>'
+        '</div>'
+        '</div>'
+    )
 
 
 # ── 活動區域地圖（地圖標籤改用佔位符，由 map_section_html 填入）────────────────
@@ -1255,6 +1325,104 @@ document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
 })();</script>"""
 
 
+# ── 圖表匯出：高解析 PNG 下載 + 嵌入碼切換（全部瀏覽器端，無需 CI 字型）──────────
+# 不複製 Chart 的 options（內含函式），只取乾淨可序列化的 config.data 重畫一張高解析圖，
+# 再疊上標題與「資料來源 / 圖表出處 / 網址」浮水印，最後 toBlob 觸發下載。
+_CHART_EXPORT_JS = """\
+<script>(function(){
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function dtype(src){
+  if(src.config.type)return src.config.type;
+  var ds=src.config.data.datasets||[];
+  for(var i=0;i<ds.length;i++){if(ds[i].type)return ds[i].type;}
+  return 'line';
+}
+function renderHi(src,w,h,scale){
+  var c=document.createElement('canvas');
+  c.width=Math.round(w*scale);c.height=Math.round(h*scale);
+  var n=(src.config.data.labels||[]).length;
+  return new Chart(c.getContext('2d'),{
+    type:dtype(src),
+    data:clone(src.config.data),
+    options:{
+      responsive:false,maintainAspectRatio:false,animation:false,devicePixelRatio:scale,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{
+        x:{grid:{display:false},border:{display:false},
+           ticks:{color:'#96b0b8',font:{size:12},maxRotation:0,autoSkip:n<=20,
+             callback:function(v){var L=this.getLabelForValue(v);
+               return n>20?((L&&String(L).endsWith('/1'))?L:''):L;}}},
+        y:{grid:{color:function(x){return x.tick.value===0?'#3a4448':'rgba(58,68,72,0.22)';}},
+           border:{display:false},beginAtZero:true,
+           ticks:{color:'#96b0b8',font:{size:12},maxTicksLimit:4}}
+      }
+    }
+  });
+}
+window.plaDownloadChart=function(btn){
+  if(typeof Chart==='undefined')return;
+  var d=btn.dataset;
+  var acS=Chart.getChart(d.uid+'-ac'),shS=Chart.getChart(d.uid+'-sh');
+  if(!acS||!shS)return;
+  var old=btn.textContent;btn.disabled=true;
+  var scale=2,W=1000,pad=28,head=82,gap=10,acH=360,shH=210,foot=56;
+  var H=head+acH+gap+shH+foot;
+  var out=document.createElement('canvas');
+  out.width=W*scale;out.height=H*scale;
+  var ctx=out.getContext('2d');ctx.scale(scale,scale);
+  ctx.fillStyle='#0e1618';ctx.fillRect(0,0,W,H);
+  ctx.textBaseline='top';
+  ctx.fillStyle='#c4d4dc';
+  ctx.font='700 27px "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif';
+  ctx.fillText(d.title||'',pad,24);
+  ctx.fillStyle='#8a9faa';
+  ctx.font='500 15px "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif';
+  ctx.fillText(d.sub||'',pad,58);
+  var acC=renderHi(acS,W-pad*2,acH,scale),shC=renderHi(shS,W-pad*2,shH,scale);
+  try{
+    ctx.drawImage(acC.canvas,pad,head,W-pad*2,acH);
+    ctx.drawImage(shC.canvas,pad,head+acH+gap,W-pad*2,shH);
+  }finally{acC.destroy();shC.destroy();}   // 一定銷毀暫存 Chart，避免洩漏
+  ctx.fillStyle='#0a1014';ctx.fillRect(0,H-foot,W,foot);
+  ctx.fillStyle='#7c929b';ctx.textBaseline='middle';
+  ctx.font='500 14px "Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif';
+  ctx.fillText(d.wm||'',pad,H-foot/2);
+  var fn=(d.fn||'chart')+'.png';
+  var reset=function(){btn.disabled=false;btn.textContent=old;};
+  var save=function(href,revoke){
+    var a=document.createElement('a');a.href=href;a.download=fn;
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){if(revoke)URL.revokeObjectURL(href);a.remove();},150);
+    reset();
+  };
+  if(out.toBlob){
+    out.toBlob(function(b){b?save(URL.createObjectURL(b),true):reset();},'image/png');
+  }else{
+    try{save(out.toDataURL('image/png'),false);}catch(e){reset();}  // 舊瀏覽器後備
+  }
+};
+window.plaToggleEmbed=function(id){
+  var el=document.getElementById(id);if(!el)return;
+  var open=el.style.display==='block';
+  el.style.display=open?'none':'block';
+  if(!open){var ta=el.querySelector('textarea');if(ta){ta.focus();ta.select();}}
+};
+window.plaCopyEmbed=function(btn){
+  var ta=btn.parentNode.querySelector('textarea');if(!ta)return;
+  ta.focus();ta.select();
+  // 真正的按鈕標籤存進 data-label，避免在「已複製」回饋期間連點時把回饋文字當原文
+  var label=btn.dataset.label||btn.textContent;btn.dataset.label=label;
+  var done=function(){btn.textContent=btn.dataset.done||'OK';
+    setTimeout(function(){btn.textContent=btn.dataset.label;},1600);};
+  var legacy=function(){try{return document.execCommand('copy');}catch(e){return false;}};
+  // 只有真的成功才顯示「已複製」；全失敗就保留選取讓使用者手動 Ctrl+C
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(done,function(){legacy()?done():ta.select();});
+  }else{legacy()?done():ta.select();}
+};
+})();</script>"""
+
+
 def build_index(df, lang, out_dir, s):
     latest = df.iloc[-1]
     prev   = df.iloc[-2] if len(df) > 1 else latest
@@ -1288,6 +1456,9 @@ def build_index(df, lang, out_dir, s):
     recent_html = _build_panels('rc',  df.tail(10), today_date, _CHART_JS_RECENT)
     year_prefix = today_date[:4]
     ytd_html    = _build_panels('ytd', df[df['date'] >= year_prefix], today_date, _CHART_JS_YTD)
+
+    recent_tools = chart_tools_html('recent', 'rc',  s['chart_recent'], today_date, s, lang)
+    ytd_tools    = chart_tools_html('ytd',    'ytd', s['chart_ytd'],    today_date, s, lang)
 
     df_mo    = df[df['date'].str.startswith(today_date[:7])]
     mo_max   = int(df_mo['aircraft_total'].max()) if len(df_mo) else 0
@@ -1360,12 +1531,13 @@ def build_index(df, lang, out_dir, s):
 
   {map_html}
 
-  {chart_section_html(s['chart_recent'], recent_html, split_ac, split_sh)}
-  {chart_section_html(s['chart_ytd'], ytd_html, streak_ac, streak_sh)}
+  {chart_section_html(s['chart_recent'], recent_html, split_ac, split_sh, recent_tools)}
+  {chart_section_html(s['chart_ytd'], ytd_html, streak_ac, streak_sh, ytd_tools)}
 
 </main>
 
 {_ANIM_JS}
+{_CHART_EXPORT_JS}
 {footer_html(today_label, s)}
 </body></html>"""
 
@@ -1693,6 +1865,68 @@ def build_about(df, lang, out_dir, s):
 
 # ── sitemap.xml / robots.txt ──────────────────────────────────────────────────
 
+# ── 可嵌入圖表頁（/embed/*.html）─────────────────────────────────────────────
+# 自成一頁、樣式內嵌，給其他網站/部落格以 <iframe> 引用。noindex（不參與排名，
+# 反向連結來自嵌入者頁面與頁腳回連）。圖表同樣 Chart.js 瀏覽器端渲染，無需 CI 字型。
+
+_EMBED_CSS = (
+    "*{margin:0;box-sizing:border-box}"
+    "html,body{background:#090d0f}"
+    "body{color:#c4d4dc;font-family:'Noto Sans TC','Microsoft JhengHei',system-ui,"
+    "-apple-system,sans-serif;padding:10px}"
+    ".emb{background:#0e1618;border:1px solid #1a2830;border-radius:6px;"
+    "padding:12px 12px 10px;max-width:660px;margin:0 auto}"
+    ".emb-h{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;"
+    "color:#8a9faa;margin-bottom:.55rem;padding-bottom:.45rem;border-bottom:1px solid #1a2830}"
+    ".split-panels{background:#1e2224;border-radius:6px;padding:10px 10px 6px}"
+    ".panel-wrap-ac{position:relative;height:188px}"
+    ".panel-wrap-sh{position:relative;height:118px;margin-top:8px}"
+    ".emb-f{display:flex;flex-wrap:wrap;gap:.25rem .7rem;align-items:center;"
+    "justify-content:space-between;margin-top:.65rem;padding-top:.5rem;"
+    "border-top:1px solid #1a2830;font-size:.62rem;color:#7c929b;text-decoration:none;"
+    "letter-spacing:.02em}"
+    ".emb-f:hover{color:#9fb3bd}"
+    ".emb-cta{color:#f5c842;font-weight:700;white-space:nowrap}"
+)
+
+
+def build_embed(df, lang, out_dir, s):
+    today_date = df.iloc[-1]['date']
+    year_prefix = today_date[:4]
+    embed_dir = out_dir / 'embed'
+    embed_dir.mkdir(exist_ok=True)
+
+    base = '/en' if lang == 'en' else ''
+    site_link = f'{BASE_URL}{base}/index.html'
+
+    charts = [
+        ('recent', s['chart_recent'], 'er', df.tail(10),                      _CHART_JS_RECENT),
+        ('ytd',    s['chart_ytd'],    'ey', df[df['date'] >= year_prefix],     _CHART_JS_YTD),
+    ]
+    for slug, title, uid, sl, tmpl in charts:
+        panels = _build_panels(uid, sl, today_date, tmpl)
+        page = (
+            '<!DOCTYPE html>\n'
+            f'<html lang="{s["html_lang"]}">\n<head>\n'
+            '<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+            '<meta name="robots" content="noindex,follow">\n'
+            f'<title>{title} — {s["site_title"]}</title>\n'
+            f'<style>{_EMBED_CSS}</style>\n'
+            '<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>\n'
+            '</head>\n<body>\n'
+            '<div class="emb">\n'
+            f'<div class="emb-h">{title}</div>\n'
+            f'{panels}\n'
+            f'<a class="emb-f" href="{site_link}" target="_top" rel="noopener">'
+            f'<span>{s["embed_foot"]}</span><span class="emb-cta">{s["embed_cta"]}</span></a>\n'
+            '</div>\n</body></html>'
+        )
+        (embed_dir / f'{slug}.html').write_text(page, encoding='utf-8')
+
+    print(f'[OK] {("en/" if lang == "en" else "")}embed/ ({len(charts)} charts)')
+
+
 def build_sitemap(df):
     """Generate sitemap.xml covering both languages, with hreflang alternates."""
     data_mod   = df['date'].max()                       # 資料頁用最新資料日期
@@ -1754,6 +1988,7 @@ if __name__ == '__main__':
         build_records(df, lang, out_dir, s)
         build_monthly(df, lang, out_dir, s)
         build_about(df, lang, out_dir, s)
+        build_embed(df, lang, out_dir, s)
 
     build_sitemap(df)
     build_robots()

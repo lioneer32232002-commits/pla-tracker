@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<title>10-Day Trend — PLA Activity Tracker — Taiwan Strait</title>
+<style>*{margin:0;box-sizing:border-box}html,body{background:#090d0f}body{color:#c4d4dc;font-family:'Noto Sans TC','Microsoft JhengHei',system-ui,-apple-system,sans-serif;padding:10px}.emb{background:#0e1618;border:1px solid #1a2830;border-radius:6px;padding:12px 12px 10px;max-width:660px;margin:0 auto}.emb-h{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#8a9faa;margin-bottom:.55rem;padding-bottom:.45rem;border-bottom:1px solid #1a2830}.split-panels{background:#1e2224;border-radius:6px;padding:10px 10px 6px}.panel-wrap-ac{position:relative;height:188px}.panel-wrap-sh{position:relative;height:118px;margin-top:8px}.emb-f{display:flex;flex-wrap:wrap;gap:.25rem .7rem;align-items:center;justify-content:space-between;margin-top:.65rem;padding-top:.5rem;border-top:1px solid #1a2830;font-size:.62rem;color:#7c929b;text-decoration:none;letter-spacing:.02em}.emb-f:hover{color:#9fb3bd}.emb-cta{color:#f5c842;font-weight:700;white-space:nowrap}</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="emb">
+<div class="emb-h">10-Day Trend</div>
+<div class="split-panels"><div class="panel-wrap-ac"><canvas id="er-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="er-sh"></canvas></div></div><script>(function(){
+var L=["6/11", "6/12", "6/13", "6/14", "6/15", "6/17", "6/18", "6/19", "6/20", "6/21"],AC=[11, 14, 6, 1, 0, 0, 0, 4, 5, 2],CR=[9, 13, 0, 0, 0, 0, 0, 4, 0, 0],SH=[9, 13, 10, 7, 5, 6, 8, 11, 14, 12],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
+var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0},border:{display:false}};
+var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
+var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
+var baseOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
+new Chart(document.getElementById('er-ac'),{data:{labels:L,datasets:[
+  {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:'rgba(245,200,66,0.18)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:ACbg,pointBorderColor:ACbg,order:2},
+  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:3,tension:0,fill:false,order:1}
+]},options:baseOpts});
+new Chart(document.getElementById('er-sh'),{data:{labels:L,datasets:[
+  {type:'line',data:SH,borderColor:'#e05555',backgroundColor:'rgba(224,85,85,0.12)',fill:true,stepped:true,pointRadius:3,pointBackgroundColor:SHbg,pointBorderColor:SHbg}
+]},options:baseOpts});
+})();</script>
+<a class="emb-f" href="https://pla-tracker.pages.dev/en/index.html" target="_top" rel="noopener"><span>Source: ROC MND   ·   Chart: PLA Activity Tracker</span><span class="emb-cta">See full data →</span></a>
+</div>
+</body></html>

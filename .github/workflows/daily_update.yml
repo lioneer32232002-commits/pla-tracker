@@ -59,7 +59,7 @@ jobs:
         run: |
           git config user.name "pla-tracker-bot"
           git config user.email "bot@pla-tracker"
-          git add data/records.csv index.html records.html monthly.html about.html style.css favicon.svg version.txt sitemap.xml robots.txt og.png og-en.png en/
+          git add data/records.csv index.html records.html monthly.html about.html style.css favicon.svg version.txt sitemap.xml robots.txt og.png og-en.png embed/ en/
           git diff --cached --quiet && echo "changed=false" >> $GITHUB_OUTPUT && exit 0
           git commit -m "auto: daily update $(date -u +%Y-%m-%d)"
           git push

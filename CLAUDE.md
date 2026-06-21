@@ -50,14 +50,16 @@
 | `index.html` | 首頁（總覽 + SITREP + 一句話文字 SITREP） |
 | `records.html` | 每日紀錄頁 |
 | `about.html` / `en/about.html` | 方法論與資料來源頁（build 產生，每日更新資料區間/筆數） |
+| `embed/*.html` / `en/embed/*.html` | 媒體可引用圖表頁（build 產生，noindex，供他站 `<iframe>` 嵌入；首頁工具列另提供高解析 PNG 下載。圖表全程 Chart.js 瀏覽器端渲染，不需 CI 字型） |
 | `sitemap.xml` / `robots.txt` | build 產生；canonical/OG/sitemap 基準網址 = `https://pla-tracker.pages.dev` |
 | `og.png` / `og-en.png` | OG 分享圖（靜態，只有改品牌視覺時才需重跑 make_og_image.py） |
 | `version.txt` | build 時間戳，build 後必定更新 |
 
 > SEO 資產說明：所有 `<head>` meta、canonical、hreflang、OG/Twitter 卡、JSON-LD、
 > sitemap、robots 一律由 `build_site.py` 產生，禁止手改 HTML。新增頁面時記得同步更新
-> `.github/workflows/daily_update.yml` 的 `git add` 白名單（about.html / sitemap.xml 每日會變動，
-> 必須在白名單內，否則線上版會停更）。改 OG 圖視覺才需手動 `python scripts/make_og_image.py`。
+> `.github/workflows/daily_update.yml` 的 `git add` 白名單（about.html / sitemap.xml / `embed/` 每日會變動，
+> 必須在白名單內，否則線上版會停更；`en/embed/` 已被 `en/` 涵蓋）。改 OG 圖視覺才需手動
+> `python scripts/make_og_image.py`。圖表 PNG 下載與嵌入頁皆瀏覽器端渲染，禁止為此在 build 加入字型／Pillow 圖表產生（會破壞 CI 字型免裝原則）。
 
 ---
 
