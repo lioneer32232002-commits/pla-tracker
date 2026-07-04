@@ -1,94 +1,60 @@
 # PLA Tracker — Claude 工作規則
 
-## 專案說明
+每日追蹤解放軍在台灣周邊軍事活動的靜態網站（https://pla-tracker.pages.dev，
+push 到 main 即自動部署）。回覆一律用繁體中文。
 
-每日追蹤中共解放軍在台灣周邊的軍事活動。資料來源為中華民國國防部每日發布圖片。
-用途：發布於 Threads 與部落格 https://yi-tienpan.blogspot.com
+## 你的角色
 
----
+**每日更新已由 GitHub Actions 全自動執行**（每天台灣時間 12:00/14:00/20:00）。
+Session 的工作是：開發功能、修 bug、回填資料、SEO/內容。
+只有使用者明確提供國防部圖片、或要求補某日資料時，才走下面的手動更新流程。
+某日資料缺漏 → 先查 CI 紀錄（`gh run list --workflow daily_update.yml --limit 5`），
+不要直接重做。
 
-## 每日更新流程（每步都要做，不能跳）
+## 鐵律（違反任何一條都算失敗）
 
-1. 使用者提供國防部圖片 → 用視覺辨識擷取欄位
-2. 將新一行資料寫入 `data/records.csv`（只能新增，不能修改歷史資料）
-3. 驗證 CSV：`python -X utf8 scripts/validate.py csv`
-   - 有錯誤 → 立刻停手修正，不得繼續
-4. 重新建置網站：`python scripts/build_site.py`
-5. 驗證 HTML：`python -X utf8 scripts/validate.py html`
-   - 有錯誤 → 立刻停手修正，不得繼續
-6. Commit 所有變更檔案 → `git push origin HEAD:main`
+1. `data/records.csv` 只能新增列，禁止修改歷史資料。
+2. 驗證未通過禁止 commit。跑腳本一律加 `-X utf8`。
+3. 改任何腳本後必須重新 build＋驗證，再一次 commit 全部變更（腳本＋HTML＋version.txt）。
+4. 產出 HTML（index/records/monthly/about/embed/sitemap/robots）禁止手改，一律改 `build_site.py`。
+5. 禁止留未 push 的 commit。編輯完成即 commit＋push，不需詢問。
+   Push：`git push origin HEAD:main`；被拒→`git pull --rebase origin main` 再推（通常是 CI bot 剛推過）。
+   **唯一例外**：結構性變更（新頁面、改導覽、改網址結構，見 judgment.md 第 3 節）
+   要在**動工前**先問使用者；批准後照常做完即 commit＋push，中途不留懸置 commit。
+6. 新增網站頁面必須同步加進 `daily_update.yml` 的 `git add` 白名單，否則線上版停更。
+7. 禁止在 build/CI 加入字型或 Pillow 圖表渲染（CI 無 CJK 字型；圖表一律 Chart.js 客戶端）。
 
-**驗證規則：silent on pass（通過不說話），失敗才回報並阻止 commit。**
+## 手動更新流程（備援，每步必做）
 
----
+1. 視覺辨識圖片 → 新一行寫入 `data/records.csv`
+2. `python -X utf8 scripts/validate.py csv` — 失敗即停手修正
+3. `python -X utf8 scripts/build_site.py`
+4. `python -X utf8 scripts/validate.py html` — 失敗即停手修正
+5. Commit 全部變更 → `git push origin HEAD:main`
 
-## Git 規則
+驗證規則：通過不說話，失敗才回報並阻止 commit。
 
-- 每次編輯或更新資料後，立刻 commit + push，不需詢問使用者
-- 不需要確認，直接執行
-- Push 指令：`git push origin HEAD:main`
-- 若 push 被拒（遠端有新 commit）：先 `git pull --rebase origin main`，再 push
-
----
-
-## 編輯腳本後的規則
-
-- 改完任何腳本（`build_site.py` 等）後，必須先執行 `python scripts/build_site.py` 重新產生 HTML
-- 再執行 `python -X utf8 scripts/validate.py html` 確認輸出正確
-- 最後才 commit，且要一次 commit 所有變更的檔案（腳本 + HTML + version.txt）
-
----
-
-## 關鍵檔案
-
-| 檔案 | 用途 |
-|------|------|
-| `data/records.csv` | 主資料（只能新增，禁止修改歷史） |
-| `scripts/build_site.py` | 從 CSV 產生全部 HTML 頁面（含 SEO/OG meta、Dataset JSON-LD、sitemap、robots） |
-| `scripts/validate.py` | 兩段式驗證（CSV 資料 + HTML 結構 + SEO/about/sitemap/robots/OG） |
-| `scripts/make_og_image.py` | 一次性產生 `og.png` / `og-en.png`（社群分享圖，與當日資料無關，刻意不進每日 build） |
-| `index.html` | 首頁（總覽 + SITREP + 一句話文字 SITREP） |
-| `records.html` | 每日紀錄頁 |
-| `about.html` / `en/about.html` | 方法論與資料來源頁（build 產生，每日更新資料區間/筆數） |
-| `embed/*.html` / `en/embed/*.html` | 媒體可引用圖表頁（build 產生，noindex，供他站 `<iframe>` 嵌入；首頁工具列另提供高解析 PNG 下載。圖表全程 Chart.js 瀏覽器端渲染，不需 CI 字型） |
-| `sitemap.xml` / `robots.txt` | build 產生；canonical/OG/sitemap 基準網址 = `https://pla-tracker.pages.dev` |
-| `og.png` / `og-en.png` | OG 分享圖（靜態，只有改品牌視覺時才需重跑 make_og_image.py） |
-| `version.txt` | build 時間戳，build 後必定更新 |
-
-> SEO 資產說明：所有 `<head>` meta、canonical、hreflang、OG/Twitter 卡、JSON-LD、
-> sitemap、robots 一律由 `build_site.py` 產生，禁止手改 HTML。新增頁面時記得同步更新
-> `.github/workflows/daily_update.yml` 的 `git add` 白名單（about.html / sitemap.xml / `embed/` 每日會變動，
-> 必須在白名單內，否則線上版會停更；`en/embed/` 已被 `en/` 涵蓋）。改 OG 圖視覺才需手動
-> `python scripts/make_og_image.py`。圖表 PNG 下載與嵌入頁皆瀏覽器端渲染，禁止為此在 build 加入字型／Pillow 圖表產生（會破壞 CI 字型免裝原則）。
-
----
-
-## CSV 欄位說明
+## CSV 欄位
 
 ```
 date, aircraft_total, median_line_cross, cross_rate,
 aircraft_type, ships_total, activity_start, activity_end, special_event
 ```
 
-- `aircraft_type` 合法值：`Manned` / `UAV` / `Mixed` / `Zero` / `Helicopter`
-- `cross_rate` = median_line_cross ÷ aircraft_total × 100（允許 ±1% 誤差）
-- `median_line_cross` 不能大於 `aircraft_total`
+`aircraft_type` ∈ Manned/UAV/Mixed/Zero/Helicopter；
+`cross_rate` = cross÷total×100（±1%）；cross ≤ total。
 
----
+## 路由表（做右欄的事之前，先讀左欄的檔）
 
-## 圖表與設計規格
+| 檔案 | 什麼時候讀 |
+|------|-----------|
+| `.claude/rules/00-diagnosis.md` | 每個 session 開工前掃一眼（本環境三大坑：大檔讀取、CI 誤解、Windows 陷阱） |
+| `.claude/rules/project-reference.md` | 要動 build_site.py／新增頁面／查檔案用途／查 CI 細節／改圖表 |
+| `.claude/rules/model-dispatch.md` | 要派 subagent、大量讀檔掃 repo、查網頁、或任務連錯兩次 |
+| `.claude/rules/judgment.md` | 不確定「該不該問使用者」「算不算完成」「要不要換方法」時 |
+| `.claude/rules/delegation-templates.md` | 撰寫 subagent 派工 prompt 時直接套模板 |
+| `.claude/rules/maintenance.md` | 要修改以上任何規則檔、或踩了坑要寫教訓時 |
+| `.claude/rules/letter.md` | 接手大型／跨 session 工作前 |
 
-- 深色背景：`#1e2224`
-- 軍機顏色：黃色（當日 `#f5c842`，其他 `#8a7020`）
-- 艦艇顏色：紅色（當日 `#e05555`，其他 `#7a2a2a`）
-- 當日長條永遠高亮
-- 字體大小依月份天數自動縮放（`adaptive_fs()`）
-
----
-
-## 禁止事項
-
-- 禁止修改 `data/records.csv` 的歷史資料
-- 禁止在驗證未通過的情況下 commit
-- 禁止改完腳本後沒有重新 build 就 commit HTML
-- 禁止留下未 push 的 commit
+規則檔互相矛盾時：CLAUDE.md 鐵律 > 各規則檔 > 你的預設習慣。發現矛盾就照
+`maintenance.md` 修掉並告知使用者。
