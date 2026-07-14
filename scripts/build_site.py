@@ -1150,7 +1150,7 @@ def make_head(lang, page_name, s, head_extra=''):
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>fetch('{ver_path}?t='+Date.now(),{{cache:'no-store'}}).then(r=>r.text()).then(v=>{{if(v.trim()!=='{_VER}')location.reload(true);}});</script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{{"token": "8d6b79b3348642d981b992d2928e98ab"}}'></script>{head_extra}
+{head_extra}
 </head>"""
 
 
