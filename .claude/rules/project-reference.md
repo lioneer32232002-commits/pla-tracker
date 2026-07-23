@@ -26,10 +26,9 @@
 | `scripts/send_daily_email.py` | CI 用的每日報告信／失敗提醒信 |
 | `scripts/backfill_history.py` | 歷史回填工具（一次性） |
 | `scripts/make_og_image.py` | 一次性產生 `og.png`/`og-en.png`（用 Windows 字型，只能本機跑；改品牌視覺才需要重跑） |
-| `index.html` | 首頁（總覽＋SITREP＋一句話文字 SITREP） |
+| `index.html` | 首頁（總覽＋SITREP；一句話文字 SITREP 在地圖區塊之後，2026-07-23 起） |
 | `records.html` / `monthly.html` | 每日紀錄頁／月度頁 |
 | `about.html` / `en/about.html` | 方法論頁（build 產生，每日更新資料區間/筆數） |
-| `embed/*.html` / `en/embed/*.html` | 媒體引用圖表頁（build 產生、noindex、供 iframe 嵌入） |
 | `sitemap.xml` / `robots.txt` | build 產生；基準網址 = `https://pla-tracker.pages.dev` |
 | `version.txt` | build 時間戳，每次 build 必變 |
 
@@ -48,14 +47,17 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 
 ## 圖表與設計規格（改 build_site.py 圖表區才需要）
 
-- 深色背景：`#1e2224`
-- 軍機顏色：黃（當日 `#f5c842`，其他 `#8a7020`）
-- 艦艇顏色：紅（當日 `#e05555`，其他 `#7a2a2a`）
+- **雙主題（2026-07-23 起）**：build 時由 CSV 最後一列決定整站深/淺色——
+  嚴重日（`aircraft_total ≥ SEVERE_AC(15)` 且 `median_line_cross ≥ SEVERE_ML(10)`）
+  深色，其餘淺色。`<html data-theme="dark|light">`；本機測試可用環境變數
+  `PLA_THEME_OVERRIDE=light|dark` 強制。色盤常數與注入邏輯在 build_site.py 頂部
+  （Grep `SEVERE_AC` 定位）。
+- 深色圖表面板：`#1e2224`；軍機黃（當日 `#f5c842`，其他 `#8a7020`）；
+  艦艇紅（當日 `#e05555`，其他 `#7a2a2a`）。淺色對應值見 build_site.py 色盤常數。
 - 當日長條永遠高亮；圖表字體由 Chart.js options 的字級設定控制（要改先在
   build_site.py Grep `font` 定位，不要憑記憶找函式名）
 - 圖表全程 Chart.js 瀏覽器端渲染。**鐵律：禁止為圖表在 build/CI 加入字型或
-  Pillow 渲染**（CI 是 ubuntu、無 CJK 字型；2026-06-21 的功能 E 就因此改走
-  客戶端 PNG 匯出，這是所有未來圖表功能的範本）
+  Pillow 渲染**（CI 是 ubuntu、無 CJK 字型）
 
 ## SEO 資產規則
 
@@ -63,7 +65,6 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   一律由 `build_site.py` 產生，**禁止手改任何產出 HTML**。
 - OG 分享圖 `og.png`/`og-en.png` 是靜態檔，只有改品牌視覺才本機重跑
   `python -X utf8 scripts/make_og_image.py`。
-- 首頁圖表工具列提供高解析 PNG 下載＋iframe 嵌入碼（客戶端渲染）。
 
 ## 新增頁面 checklist（每一項都要做）
 
@@ -79,5 +80,18 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 - 2026-06-18 前：零架次且無航跡圖的日子，fetcher 誤判為「未發布」而漏資料
   （CI 仍 success）。已修（commit 741cff8）：無圖時改讀 `div.maincontent` 公告文字。
 - 2026-06-21：SEO 地基（95b84ca）＋媒體引用圖表（51e04e5）上線。
+- 2026-07-23：大改版日。(1) 功能 E（PNG 下載/iframe 嵌入、embed 頁）**整組移除**
+  （使用者判斷無人引用，b2038a6）；(2) 一句話 SITREP 移到地圖下方、SITREP/月統計
+  卡片化、導覽列藥丸化（58b8261/b2038a6）；(3) 嚴重日自動配色上線（ec935b3）；
+  (4) `_VER` 改分鐘級＋fetcher exists 路徑真正跳過重建（58b8261/2715450，
+  原本 log 說不重建卻照建，配分鐘版本會產生噪音 commit）；(5) 日報信加
+  今日/昨日對比＋Threads 草稿（固定兩段式：擾台形式＋國內國防新聞並置）。
+- [2026-07-23] 症狀：主對話 commit 單一檔案時，另一個並行 subagent 已 `git rm`
+  的刪除被一併帶進 commit。根因：`git add <檔>` 後的 `git commit` 會提交 index
+  中**所有**已 stage 內容。規則：多 agent 並行改 repo 時，commit 一律用
+  pathspec 限定（`git commit -- <路徑>`）。
 - 待辦（使用者未催）：功能 F＝每日自動社群卡圖（1200×675）。難點是 CI 無 CJK
   字型；方向建議延續客戶端渲染，不要在 build 塞字型/Pillow。
+- 進行中（2026-07-23 啟動）：「美製武器實戰檔案」內容區（/arsenal/，魚叉/愛國者/
+  HIMARS 三篇研究稿在 session scratchpad，待使用者審後建頁）；
+  pla-tracker × skyfaring 串接計畫（調查報告同 scratchpad）。
