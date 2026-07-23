@@ -291,6 +291,43 @@ def fetch_defense_news(days: int = 2) -> list[dict]:
     return results[:20]
 
 
+# ── 純 Python 對比（不依賴 LLM，數字保證準確）──────────────
+
+def compute_comparison(df: pd.DataFrame) -> list[dict]:
+    """計算今日 vs 昨日的軍機／越線／越線率／艦艇數字與增減。
+    昨日無資料（例如歷史回填缺口）時，delta 顯示「—」。
+    """
+    today = df.iloc[-1]
+    has_yesterday = len(df) >= 2
+    yesterday = df.iloc[-2] if has_yesterday else None
+
+    fields = [
+        ('aircraft_total',    '軍機',   False),
+        ('median_line_cross', '越線',   False),
+        ('cross_rate',        '越線率', True),
+        ('ships_total',       '艦艇',   False),
+    ]
+    rows = []
+    for col, label, is_rate in fields:
+        cur = today[col]
+        if not has_yesterday or pd.isna(yesterday[col]) or pd.isna(cur):
+            rows.append({'label': label,
+                         'value': f'{cur:.1f}%' if is_rate else str(int(cur)),
+                         'delta': '—'})
+            continue
+        prev = yesterday[col]
+        d = cur - prev
+        if is_rate:
+            value = f'{cur:.1f}%'
+            delta = f'+{d:.1f}%' if d > 0 else (f'{d:.1f}%' if d < 0 else '±0%')
+        else:
+            cur_i, d_i = int(cur), int(d)
+            value = str(cur_i)
+            delta = f'+{d_i}' if d_i > 0 else (str(d_i) if d_i < 0 else '±0')
+        rows.append({'label': label, 'value': value, 'delta': delta})
+    return rows
+
+
 # ── Claude 分析 ───────────────────────────────────────────
 
 def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
@@ -351,11 +388,12 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
     if tank_news:
         news_block += f'\n\n【美國智庫】\n{fmt(tank_news)}'
 
-    client = anthropic.Anthropic()
-    msg = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1500,
-        messages=[{"role": "user", "content": f"""你是台海情報分析官。你的任務是把今日 PLA 數據與各方新聞整合成一份情報簡報，找出因果關係並做事實查核。
+    try:
+        client = anthropic.Anthropic()
+        msg = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": f"""你是台海情報分析官。你的任務是把今日 PLA 數據與各方新聞整合成一份情報簡報，找出因果關係並做事實查核，並草擬社群貼文。
 
 ## 輸入資料
 
@@ -366,7 +404,7 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
 
 ## 輸出要求
 
-用繁體中文，依序寫出以下四節。每個陳述後面必須用「〔來源〕」標注依據（數據請寫「國防部數據」，新聞請寫「[編號] 來源名稱」）。
+用繁體中文，依序寫出以下五節。前四節每個陳述後面必須用「〔來源〕」標注依據（數據請寫「國防部數據」，新聞請寫「[編號] 來源名稱」）；第五節（Threads 貼文建議）不需要標註來源。
 
 ---
 
@@ -386,20 +424,57 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
 針對「因果鏈」節中每條陳述，逐一標記：
 ✅ 確認：有新聞標題或數據直接支持
 ⚠️ 推論：僅基於時間相關性或情境推斷，無直接聲明
-（❌ 無法確認者不得出現在分析中）"""}],
-    )
-    return msg.content[0].text
+（❌ 無法確認者不得出現在分析中）
+
+**Threads 貼文建議**
+草擬 2-3 則 Threads 貼文草稿，供使用者挑選、修改後自行發文。要求：
+- 繁體中文，口語但克制，不要誇張聳動或情緒化用詞
+- 以今日 PLA 數據為骨幹（架次、越線、越線率、艦艇），數字須與上方「情勢摘要」一致
+- 每則角度不同，例如：①今日數據速報 ②近期趨勢對照（近7日或本月 vs 上月）③今日最值得注意的一個細節（因果鏈、特殊空域、或連續零越線天數等）
+- 每則不超過500字（含標點），語氣像資訊帳號分享觀察，不是新聞稿
+- 每則結尾另起一行附上：https://pla-tracker.pages.dev
+- 草稿之間用單獨一行「---」分隔，前後不要加其他文字"""}],
+        )
+        return msg.content[0].text
+    except Exception as e:
+        print(f'[email] Claude API 分析生成失敗: {e}')
+        return '（今日情勢分析與 Threads 貼文草稿產生失敗，請查看 GitHub Actions 執行紀錄）'
 
 
 # ── 寄信 ──────────────────────────────────────────────────
 
-def send_email(analysis: str, today_str: str, news: list[dict]):
-    analysis_html = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', analysis)
+def comparison_html(rows: list[dict]) -> str:
+    """今日 vs 昨日對比列（純 Python 計算結果，與 LLM 分析內容獨立，確保數字可靠）。"""
+    if not rows:
+        return ''
+    items = ''.join(
+        f'<span style="margin-right:18px;white-space:nowrap">{r["label"]} '
+        f'<b>{r["value"]}</b> '
+        f'<span style="color:#8aa0b0;font-size:.85em">（{r["delta"]}）</span></span>'
+        for r in rows
+    )
+    return (
+        f'<div style="margin-bottom:14px;padding-bottom:12px;'
+        f'border-bottom:1px solid #1a3040;font-size:.92em;line-height:2">'
+        f'<span style="color:#8aa0b0;font-size:.78em;display:block;margin-bottom:4px">'
+        f'今日 vs 昨日</span>{items}</div>'
+    )
+
+
+def send_email(analysis: str, today_str: str, news: list[dict], comparison: list[dict] | None = None):
+    # 標準分隔線 "---"（獨立成行）轉為 <hr>，用於 Threads 貼文草稿之間的視覺分隔。
+    analysis_html = re.sub(r'(?m)^\s*---\s*$', '\0HR\0', analysis)
+    analysis_html = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', analysis_html)
     analysis_html = re.sub(r'〔(.+?)〕', r'<span style="color:#556a7a;font-size:.85em">〔\1〕</span>', analysis_html)
     analysis_html = analysis_html.replace(' → ', ' <span style="color:#f5c842">→</span> ')
     analysis_html = analysis_html.replace('✅', '<span style="color:#5bc8af">✅</span>')
     analysis_html = analysis_html.replace('⚠️', '<span style="color:#f5c842">⚠️</span>')
     analysis_html = analysis_html.replace('\n', '<br>').replace('• ', '&bull;&nbsp;')
+    analysis_html = analysis_html.replace(
+        '\0HR\0', '<hr style="border:none;border-top:1px dashed #234a5a;margin:14px 0">'
+    )
+
+    comp_html = comparison_html(comparison or [])
 
     def news_group_html(tag: str, items: list[dict]) -> str:
         if not items:
@@ -446,7 +521,7 @@ def send_email(analysis: str, today_str: str, news: list[dict]):
     <span style="color:#8aa0b0;font-size:.85em;margin-left:12px">{today_str}</span>
   </div>
   <div style="background:#0d1b2a;border-left:3px solid #f5c842;padding:16px 20px;border-radius:4px;line-height:1.9;font-size:.95em">
-    {analysis_html}
+    {comp_html}{analysis_html}
   </div>{news_html}
   <div style="margin-top:16px;font-size:.72em;color:#3a6070;text-align:center">
     資料來源：中華民國國防部 &nbsp;·&nbsp; pla-tracker
@@ -530,8 +605,9 @@ def main():
     tanks = sum(1 for n in news if n.get('tag') == '智庫')
     print(f'[email] 新聞：台灣 {tw} 則 / 美日官方 {intl} 則 / 智庫 {tanks} 則')
 
-    analysis = build_analysis(df, news)
-    send_email(analysis, today_str, news)
+    comparison = compute_comparison(df)
+    analysis   = build_analysis(df, news)
+    send_email(analysis, today_str, news, comparison)
 
 
 if __name__ == '__main__':
