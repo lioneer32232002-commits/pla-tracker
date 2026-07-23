@@ -162,6 +162,7 @@ def validate_html():
             ('"@type": "Dataset"',  'Dataset 結構化資料'),
             ('class="sitrep-text"', '一句話文字 SITREP'),
             (f'{BASE_URL}/og.png',  'OG 圖絕對網址'),
+            ('data-theme="',        '主題屬性（嚴重日配色）'),
         ]
         for marker, desc in checks:
             if marker not in content:
@@ -225,6 +226,7 @@ def validate_html():
             ('name="twitter:card"',    'Twitter 卡片'),
             ('"@type": "Dataset"',     'Dataset 結構化資料'),
             ('class="sitrep-text"',    '一句話文字 SITREP'),
+            ('data-theme="',           '主題屬性（嚴重日配色）'),
         ]:
             if marker not in en_idx:
                 errors.append(f'en/index.html 缺少 {desc}（找不到「{marker}」）')

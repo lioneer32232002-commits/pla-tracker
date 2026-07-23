@@ -218,3 +218,44 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   nav{gap:.05rem}
   html[lang="zh-Hant"] nav a{font-size:.78rem;letter-spacing:.03em}
 }
+
+/* ── 淺色主題（平常日）── :root 即深色主題，維持不動；以下僅覆蓋顏色/邊框色/陰影，
+   絕不改動任何 padding / margin / font-size，版面高度與深色版一致 ── */
+html[data-theme="light"]{
+  --bg:#f5f4f0; --sur:#ffffff; --bdr:#e3dfd4;
+  --tx:#20262b; --sub:#5d6b75; --y:#9a7500; --r:#c23a3a; --grn:#2f8f4f;
+  --nav-active:#eee9db;
+}
+html[data-theme="light"] .top-bar{background:#eceadf}
+html[data-theme="light"] .alert{background:#fdf6dd;border-color:#eadfae;
+  border-left-color:#6f5600;color:#6f5600}
+html[data-theme="light"] .badge.manned    {background:#e4f3dc;color:#2f7a1e}
+html[data-theme="light"] .badge.uav       {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .badge.mixed     {background:#f3ecc9;color:#8a6a00}
+html[data-theme="light"] .badge.helicopter{background:#ece1f7;color:#7a4fb0}
+html[data-theme="light"] .delta-up,html[data-theme="light"] .delta-dn{color:var(--tx)}
+html[data-theme="light"] th{background:#f0eee6}
+html[data-theme="light"] tr:hover td{background:#f7f5ee}
+/* 深色版 .split-panels 無邊框；淺色改用 inset box-shadow 模擬 1px 描邊，
+   不佔版面寬高（符合「版面高度不得改變」硬約束，box-shadow 為允許變更項）。 */
+html[data-theme="light"] .split-panels{background:#fbfaf6;
+  box-shadow:inset 0 0 0 1px var(--bdr)}
+html[data-theme="light"] .prose a{border-bottom-color:#d9c98a}
+html[data-theme="light"] .prose a:hover{color:var(--tx);border-bottom-color:var(--y)}
+html[data-theme="light"] .map-wrap{background:#fbfaf6}
+html[data-theme="light"] .leaflet-tile-pane{filter:saturate(.9) contrast(1.02)}
+html[data-theme="light"] .leaflet-control-attribution{
+  background:rgba(255,255,255,0.85)!important;color:#5d6b75!important;
+  border-top-color:#e3dfd4!important}
+html[data-theme="light"] .leaflet-control-attribution a{color:#5d6b75!important}
+html[data-theme="light"] .leaflet-control-zoom a{
+  background:#ffffff!important;color:var(--sub)!important}
+html[data-theme="light"] .leaflet-control-zoom a:hover{
+  background:#eee9db!important;color:var(--tx)!important}
+html[data-theme="light"] .map-lbl{color:#33454f;
+  text-shadow:0 1px 4px #fff,0 0 8px rgba(255,255,255,.9)}
+html[data-theme="light"] .map-lbl-sm{color:#5d7079;
+  text-shadow:0 1px 3px #fff,0 0 6px #fff}
+html[data-theme="light"] .map-info{background:rgba(255,255,255,0.9)}
+html[data-theme="light"] .map-ml-label{color:#5a7280}
+html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}

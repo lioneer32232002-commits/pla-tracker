@@ -5,6 +5,7 @@ en/ 子目錄由本腳本自動產生，禁止手動修改。
 """
 import html
 import json
+import os
 import re
 import sys
 from datetime import date, datetime
@@ -22,6 +23,60 @@ BASE_URL = 'https://pla-tracker.pages.dev'
 HUB_URL  = 'https://skyfaring.pages.dev/'
 # 相關發布（部落格）
 BLOG_URL = 'https://yi-tienpan.blogspot.com'
+
+
+# ── 嚴重日自動配色 ────────────────────────────────────────────────────────────
+# 顏色本身即資訊：平常日整站淺色、嚴重日整站深色，訪客一開頁就從色調得知態勢。
+# 門檻由 203 天歷史分布決定（aircraft_total 與 median_line_cross 的聯合分布，
+# 落在 P86 附近 → 約 14% 的日子被判為「嚴重」）。嚴重＝當日 aircraft_total ≥
+# SEVERE_AC 且 median_line_cross ≥ SEVERE_ML；零架次日必為淺色。
+SEVERE_AC = 15   # 當日共機總架次門檻
+SEVERE_ML = 10   # 當日逾越中線架次門檻
+
+# theme-color meta：深/淺各一（深色沿用原值，淺色為淺主題背景）
+THEME_COLOR = {'dark': '#090d0f', 'light': '#f5f4f0'}
+
+# 圖表注入色（既有 __XX__ 佔位符機制）：深色維持原設計，淺色為對應可讀色。
+_CHART_COLORS = {
+    'dark':  {'tick': '#96b0b8', 'zero': '#3a4448',
+              'ac_line': '#f5c842', 'sh_line': '#e05555',
+              'cr_line': '#ff9933', 'pt_ring': '#1e2224',
+              'ac_today': '#f5c842', 'ac_other': '#8a7020',
+              'sh_today': '#e05555', 'sh_other': '#7a2a2a'},
+    'light': {'tick': '#6b7a84', 'zero': '#cfc9ba',
+              'ac_line': '#d99f00', 'sh_line': '#c74040',
+              'cr_line': '#cc7a1f', 'pt_ring': '#fbfaf6',
+              'ac_today': '#d99f00', 'ac_other': '#d6c79b',
+              'sh_today': '#c74040', 'sh_other': '#e0b9b9'},
+}
+
+# 地圖注入色（直接以裸 hex 取代，因同一顏色在 _MAP_JS 中同時出現於 JS 字串與
+# 內嵌 CSS/SVG 兩種引號情境，裸 hex→裸 hex 可保留各自既有引號）。
+# tiles：淺色改用 CARTO light_all 底圖，讓深色地圖標籤文字在淺主題下仍可讀。
+_MAP_COLORS = {
+    'dark':  {'tiles': 'dark_all',  'ml_hi': '#e05555', 'ml_lo': '#3a6070',
+              'zone': '#f5c842', 'nm': '#4dba6a',
+              'zlbl_sh': '0 1px 4px #000,0 0 8px #000'},
+    'light': {'tiles': 'light_all', 'ml_hi': '#c23a3a', 'ml_lo': '#8196a1',
+              'zone': '#c98f00', 'nm': '#2f8f4f',
+              'zlbl_sh': '0 1px 3px #fff,0 0 6px #fff'},
+}
+
+# 全站主題（'dark' | 'light'）；由 __main__ 依當日資料呼叫 resolve_theme() 設定。
+THEME = 'dark'
+
+
+def resolve_theme(df):
+    """決定全站主題：嚴重日 → dark，平常日（含零架次）→ light。
+    嚴重＝當日 aircraft_total ≥ SEVERE_AC 且 median_line_cross ≥ SEVERE_ML。
+    PLA_THEME_OVERRIDE=light|dark 可強制覆蓋——僅供本機視覺測試，CI 不設此變數。"""
+    override = os.environ.get('PLA_THEME_OVERRIDE', '').strip().lower()
+    if override in ('light', 'dark'):
+        return override
+    latest = df.iloc[-1]
+    ac = int(latest['aircraft_total'])    if pd.notna(latest['aircraft_total'])    else 0
+    ml = int(latest['median_line_cross']) if pd.notna(latest['median_line_cross']) else 0
+    return 'dark' if (ac >= SEVERE_AC and ml >= SEVERE_ML) else 'light'
 
 
 # ── 字串對照表（UI 文字全部抽在這裡）────────────────────────────────────────────
@@ -758,6 +813,47 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   nav{gap:.05rem}
   html[lang="zh-Hant"] nav a{font-size:.78rem;letter-spacing:.03em}
 }
+
+/* ── 淺色主題（平常日）── :root 即深色主題，維持不動；以下僅覆蓋顏色/邊框色/陰影，
+   絕不改動任何 padding / margin / font-size，版面高度與深色版一致 ── */
+html[data-theme="light"]{
+  --bg:#f5f4f0; --sur:#ffffff; --bdr:#e3dfd4;
+  --tx:#20262b; --sub:#5d6b75; --y:#9a7500; --r:#c23a3a; --grn:#2f8f4f;
+  --nav-active:#eee9db;
+}
+html[data-theme="light"] .top-bar{background:#eceadf}
+html[data-theme="light"] .alert{background:#fdf6dd;border-color:#eadfae;
+  border-left-color:#6f5600;color:#6f5600}
+html[data-theme="light"] .badge.manned    {background:#e4f3dc;color:#2f7a1e}
+html[data-theme="light"] .badge.uav       {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .badge.mixed     {background:#f3ecc9;color:#8a6a00}
+html[data-theme="light"] .badge.helicopter{background:#ece1f7;color:#7a4fb0}
+html[data-theme="light"] .delta-up,html[data-theme="light"] .delta-dn{color:var(--tx)}
+html[data-theme="light"] th{background:#f0eee6}
+html[data-theme="light"] tr:hover td{background:#f7f5ee}
+/* 深色版 .split-panels 無邊框；淺色改用 inset box-shadow 模擬 1px 描邊，
+   不佔版面寬高（符合「版面高度不得改變」硬約束，box-shadow 為允許變更項）。 */
+html[data-theme="light"] .split-panels{background:#fbfaf6;
+  box-shadow:inset 0 0 0 1px var(--bdr)}
+html[data-theme="light"] .prose a{border-bottom-color:#d9c98a}
+html[data-theme="light"] .prose a:hover{color:var(--tx);border-bottom-color:var(--y)}
+html[data-theme="light"] .map-wrap{background:#fbfaf6}
+html[data-theme="light"] .leaflet-tile-pane{filter:saturate(.9) contrast(1.02)}
+html[data-theme="light"] .leaflet-control-attribution{
+  background:rgba(255,255,255,0.85)!important;color:#5d6b75!important;
+  border-top-color:#e3dfd4!important}
+html[data-theme="light"] .leaflet-control-attribution a{color:#5d6b75!important}
+html[data-theme="light"] .leaflet-control-zoom a{
+  background:#ffffff!important;color:var(--sub)!important}
+html[data-theme="light"] .leaflet-control-zoom a:hover{
+  background:#eee9db!important;color:var(--tx)!important}
+html[data-theme="light"] .map-lbl{color:#33454f;
+  text-shadow:0 1px 4px #fff,0 0 8px rgba(255,255,255,.9)}
+html[data-theme="light"] .map-lbl-sm{color:#5d7079;
+  text-shadow:0 1px 3px #fff,0 0 6px #fff}
+html[data-theme="light"] .map-info{background:rgba(255,255,255,0.9)}
+html[data-theme="light"] .map-ml-label{color:#5a7280}
+html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
@@ -772,29 +868,29 @@ var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
 function gfill(hex){return function(c){var a=c.chart.chartArea;if(!a)return 'rgba(0,0,0,0)';
   var g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);
   g.addColorStop(0,hex+'59');g.addColorStop(0.85,hex+'0d');g.addColorStop(1,hex+'00');return g;};}
-var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0},border:{display:false}};
-var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
+var xA={grid:{display:false},ticks:{color:__TICK__,font:{size:10},maxRotation:0},border:{display:false}};
+var yA={grid:{color:function(ctx){return ctx.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
 var baseOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
-  {type:'line',data:AC,borderColor:'#f5c842',backgroundColor:gfill('#f5c842'),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:ACbg,pointBorderColor:'#1e2224',pointBorderWidth:1.5,order:2},
-  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[5,4],borderWidth:1.5,pointBackgroundColor:'#ff9933',pointRadius:0,pointHoverRadius:4,tension:0.35,fill:false,order:1}
+  {type:'line',data:AC,borderColor:__ACLINE__,backgroundColor:gfill(__ACLINE__),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:ACbg,pointBorderColor:__PTRING__,pointBorderWidth:1.5,order:2},
+  {type:'line',data:CR,borderColor:__CRLINE__,borderDash:[5,4],borderWidth:1.5,pointBackgroundColor:__CRLINE__,pointRadius:0,pointHoverRadius:4,tension:0.35,fill:false,order:1}
 ]},options:baseOpts});
 new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
-  {type:'line',data:SH,borderColor:'#e05555',backgroundColor:gfill('#e05555'),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:'#1e2224',pointBorderWidth:1.5}
+  {type:'line',data:SH,borderColor:__SHLINE__,backgroundColor:gfill(__SHLINE__),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:__PTRING__,pointBorderWidth:1.5}
 ]},options:baseOpts});
 })();"""
 
 _CHART_JS_YTD = """\
 (function(){
 var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
-var xA={grid:{display:false},ticks:{color:'#96b0b8',font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{display:false}};
-var yA={grid:{color:function(ctx){return ctx.tick.value===0?'#3a4448':'transparent';}},ticks:{color:'#96b0b8',font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
+var xA={grid:{display:false},ticks:{color:__TICK__,font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{display:false}};
+var yA={grid:{color:function(ctx){return ctx.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*15+c.datasetIndex*60:0;};
 var baseOpts={animation:{delay:animDelay,duration:600,easing:'easeOutExpo'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
   {type:'bar',data:AC,backgroundColor:ACbg,borderRadius:2,order:2},
-  {type:'line',data:CR,borderColor:'#ff9933',borderDash:[4,3],pointBackgroundColor:'#ff9933',pointRadius:2,tension:0,fill:false,order:1}
+  {type:'line',data:CR,borderColor:__CRLINE__,borderDash:[4,3],pointBackgroundColor:__CRLINE__,pointRadius:2,tension:0,fill:false,order:1}
 ]},options:baseOpts});
 new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
   {type:'bar',data:SH,backgroundColor:SHbg,borderRadius:2}
@@ -815,17 +911,24 @@ def _build_panels(uid, df_slice, today_date, template):
     crosses  = [int(r['median_line_cross']) if pd.notna(r['median_line_cross']) else 0 for _, r in data.iterrows()]
     ships    = [int(r['ships_total'])       if pd.notna(r['ships_total'])       else 0 for _, r in data.iterrows()]
 
-    ac_bg = ['#f5c842' if i == today_idx else '#8a7020' for i in range(n)]
-    sh_bg = ['#e05555' if i == today_idx else '#7a2a2a' for i in range(n)]
+    tc = _CHART_COLORS[THEME]
+    ac_bg = [tc['ac_today'] if i == today_idx else tc['ac_other'] for i in range(n)]
+    sh_bg = [tc['sh_today'] if i == today_idx else tc['sh_other'] for i in range(n)]
 
     js = (template
-          .replace('__L__',    json.dumps(labels))
-          .replace('__AC__',   json.dumps(aircraft))
-          .replace('__CR__',   json.dumps(crosses))
-          .replace('__SH__',   json.dumps(ships))
-          .replace('__ACbg__', json.dumps(ac_bg))
-          .replace('__SHbg__', json.dumps(sh_bg))
-          .replace('__UID__',  uid))
+          .replace('__L__',      json.dumps(labels))
+          .replace('__AC__',     json.dumps(aircraft))
+          .replace('__CR__',     json.dumps(crosses))
+          .replace('__SH__',     json.dumps(ships))
+          .replace('__ACbg__',   json.dumps(ac_bg))
+          .replace('__SHbg__',   json.dumps(sh_bg))
+          .replace('__TICK__',   json.dumps(tc['tick']))
+          .replace('__ZERO__',   json.dumps(tc['zero']))
+          .replace('__ACLINE__', json.dumps(tc['ac_line']))
+          .replace('__SHLINE__', json.dumps(tc['sh_line']))
+          .replace('__CRLINE__', json.dumps(tc['cr_line']))
+          .replace('__PTRING__', json.dumps(tc['pt_ring']))
+          .replace('__UID__',    uid))
 
     return (f'<div class="split-panels">'
             f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
@@ -988,7 +1091,15 @@ def map_section_html(ac_val, ml_val, sh_val, special, s):
         'ne': has_ne,
         's':  '南部' in special_str and '西南部' not in special_str,
     }
+    # 地圖主題色注入（裸 hex→裸 hex，保留各自既有引號情境；tiles 換底圖）
+    m = _MAP_COLORS[THEME]
     js = (_MAP_JS
+          .replace('dark_all',    m['tiles'])
+          .replace('#e05555',     m['ml_hi'])
+          .replace('#3a6070',     m['ml_lo'])
+          .replace('#f5c842',     m['zone'])
+          .replace('#4dba6a',     m['nm'])
+          .replace('0 1px 4px #000,0 0 8px #000', m['zlbl_sh'])
           .replace('__ML__',      str(ml_val))
           .replace('__AC__',      str(ac_val))
           .replace('__SH__',      str(sh_val))
@@ -1058,7 +1169,7 @@ def make_head(lang, page_name, s, head_extra=''):
 
     return f"""\
 <!DOCTYPE html>
-<html lang="{html_lng}">
+<html lang="{html_lng}" data-theme="{THEME}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1068,7 +1179,7 @@ def make_head(lang, page_name, s, head_extra=''):
 <link rel="alternate" hreflang="zh-Hant" href="{canon_zh}">
 <link rel="alternate" hreflang="en" href="{canon_en}">
 <link rel="alternate" hreflang="x-default" href="{canon_zh}">
-<meta name="theme-color" content="#090d0f">
+<meta name="theme-color" content="{THEME_COLOR[THEME]}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{s['site_title']}">
 <meta property="og:title" content="{title}">
@@ -1756,6 +1867,8 @@ def build_robots():
 
 if __name__ == '__main__':
     df = load_df()
+    THEME = resolve_theme(df)   # 依當日資料決定全站主題（嚴重日 dark / 平常日 light）
+    print(f'[OK] theme = {THEME}')
     build_css()
 
     for lang in ('zh', 'en'):
