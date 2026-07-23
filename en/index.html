@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="Daily tracking of PLA military activity around Taiwan: aircraft sorties, Taiwan Strait median-line crossings, naval vessels and trends. Source: ROC Ministry of National Defense daily releases.">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/og-en.png">
 <meta name="twitter:image:alt" content="PLA Activity Tracker — Taiwan Strait">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260723">
-<link rel="stylesheet" href="/style.css?v=20260723">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607231434">
+<link rel="stylesheet" href="/style.css?v=202607231434">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='20260723')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607231434')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "PLA Activity Around Taiwan — Daily Dataset", "description": "Daily structured record of People's Liberation Army (PLA) military activity around Taiwan, compiled from ROC Ministry of National Defense public releases: aircraft sorties, Taiwan Strait median-line crossings and naval vessel counts.", "url": "https://pla-tracker.pages.dev/en/index.html", "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait", "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions", "PLAAF", "PLAN", "cross-strait tensions", "解放軍", "擾台", "海峽中線", "防空識別區"], "creator": {"@type": "Person", "name": "Adam Pan"}, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "temporalCoverage": "2026-01-01/2026-07-23", "dateModified": "2026-07-23", "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"}, "variableMeasured": [{"@type": "PropertyValue", "name": "aircraft_total", "description": "PLA aircraft sorties detected per day"}, {"@type": "PropertyValue", "name": "median_line_cross", "description": "Sorties crossing the Taiwan Strait median line per day"}, {"@type": "PropertyValue", "name": "ships_total", "description": "PLA naval vessels detected per day"}], "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist", "creditText": "Source: ROC Ministry of National Defense (MND)", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://pla-tracker.pages.dev/data/records.csv"}]}</script>
 </head>
@@ -71,7 +71,6 @@
         <span class="delta-dn">▼9</span>
       </div>
     </div>
-    <p class="sitrep-text">On Jul 23, 2026, 21 PLA aircraft sorties were detected, of which 20 crossed the Taiwan Strait median line (95% crossing rate); 8 PLA naval vessels.</p>
   </div>
 
   <div class="sitrep anim-ready" style="margin-top:2.5rem"><div class="sitrep-label">July MTD &nbsp;·&nbsp; 23 days</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="176">176</div><div class="stat-l">PLA Sorties</div></div><div class="stat"><div class="stat-n y" data-count="110">110</div><div class="stat-l">Median Line Crossings&nbsp;<span class="stat-detail">62%</span></div></div><div class="stat"><div class="stat-n r">11.1</div><div class="stat-l">Avg Vessels/Day</div></div></div></div>
@@ -203,6 +202,8 @@ map.whenReady(function(){
 });
 
 })();</script></section>
+
+  <p class="sitrep-text">On Jul 23, 2026, 21 PLA aircraft sorties were detected, of which 20 crossed the Taiwan Strait median line (95% crossing rate); 8 PLA naval vessels.</p>
 
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">10-Day Trend</span><span class="chart-obs">Today: 21 sorties</span><span class="chart-obs" style="color:var(--r)">8 vessels</span></div><div class="split-panels"><div class="panel-wrap-ac"><canvas id="rc-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="rc-sh"></canvas></div></div><script>(function(){
 var L=["7/14", "7/15", "7/16", "7/17", "7/18", "7/19", "7/20", "7/21", "7/22", "7/23"],AC=[3, 6, 5, 9, 0, 10, 2, 4, 12, 21],CR=[3, 0, 3, 6, 0, 8, 2, 4, 0, 20],SH=[14, 10, 9, 9, 12, 12, 8, 11, 17, 8],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
@@ -366,5 +367,5 @@ window.plaCopyEmbed=function(btn){
   }else{legacy()?done():ta.select();}
 };
 })();</script>
-<footer><span>Source: <a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">ROC Ministry of National Defense</a></span><span>By Adam Pan</span><span>Updated: Jul 23</span><span class="footer-hub"><a href="https://skyfaring.pages.dev/" rel="noopener">← Made by Skyfaring</a></span></footer>
+<footer><span>Source: <a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">ROC Ministry of National Defense</a></span><span>By Adam Pan</span><span>Updated: Jul 23</span><span class="footer-hub"><a href="https://skyfaring.pages.dev/" rel="noopener">Made by Skyfaring</a></span></footer>
 </body></html>

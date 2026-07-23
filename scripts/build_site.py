@@ -7,7 +7,7 @@ import html
 import json
 import re
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import pandas as pd
 
@@ -44,7 +44,7 @@ STRINGS = {
         'site_title': '中國擾台趨勢數據分析',
         'site_sub': 'PLA Activity Around Taiwan',
         'nav_about': '關於',
-        'footer_hub': '← 由 Skyfaring 製作',
+        'footer_hub': '由 Skyfaring 製作',
         'sitrep_text':      '{date}：偵獲中共軍機 {ac} 架次，其中 {ml} 架次逾越海峽中線（越線率 {rate}）；中共艦艇 {sh} 艘。',
         'sitrep_text_zero': '{date}：當日未偵獲中共軍機；中共艦艇 {sh} 艘。',
         'nav_index': '總覽',
@@ -152,7 +152,7 @@ STRINGS = {
         'site_title': 'PLA Activity Tracker — Taiwan Strait',
         'site_sub': 'Daily data from ROC MND public releases',
         'nav_about': 'About',
-        'footer_hub': '← Made by Skyfaring',
+        'footer_hub': 'Made by Skyfaring',
         'sitrep_text':      'On {date}, {ac} PLA aircraft sorties were detected, of which {ml} crossed the Taiwan Strait median line ({rate} crossing rate); {sh} PLA naval vessels.',
         'sitrep_text_zero': 'On {date}, no PLA aircraft were detected; {sh} PLA naval vessels.',
         'nav_index': 'Overview',
@@ -560,7 +560,7 @@ def build_css():
   --bg:#090d0f; --sur:#0e1618; --bdr:#1a2830;
   --y:#f5c842;  --r:#e05555;
   --tx:#c4d4dc; --sub:#8a9faa; --grn:#4dba6a;
-  --rad:6px;
+  --rad:10px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px}
@@ -596,7 +596,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   font-size:.83rem;font-weight:700;margin-bottom:2rem;letter-spacing:.02em}
 
 /* ── SITREP ── */
-.sitrep{margin-bottom:1.2rem}
+.sitrep{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:1rem 1.25rem 1.1rem;margin-bottom:1.25rem}
 .sitrep-label{font-size:1rem;text-transform:uppercase;letter-spacing:.16em;
   color:var(--sub);margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
 .sitrep-label::after{content:'';flex:1;min-width:30px;height:1px;background:var(--bdr)}
@@ -618,7 +619,7 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .delta-dn{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
 
 /* ── Badge ── */
-.badge{display:inline-block;padding:.18em .6em;border-radius:3px;font-size:.78rem;font-weight:700}
+.badge{display:inline-block;padding:.2em .7em;border-radius:999px;font-size:.78rem;font-weight:700}
 .badge.manned    {background:#152b0c;color:#7ed46a}
 .badge.uav       {background:#0d1d2e;color:#6aaee0}
 .badge.mixed     {background:#272008;color:var(--y)}
@@ -630,8 +631,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .chart-header{display:flex;align-items:baseline;flex-wrap:wrap;
   gap:.5rem 1rem;margin-bottom:.75rem;
   padding-bottom:.5rem;border-bottom:1px solid var(--bdr)}
-.chart-title{font-size:.72rem;font-weight:800;text-transform:uppercase;
-  letter-spacing:.15em;color:var(--sub);white-space:nowrap}
+.chart-title{font-size:.7rem;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--sub);white-space:nowrap}
 .chart-obs{font-size:.95rem;color:var(--y);font-weight:600}
 
 /* ── Chart.js split panels ── */
@@ -643,7 +644,7 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .chart-tools{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.7rem}
 .chart-btn{background:var(--sur);border:1px solid var(--bdr);color:var(--sub);
   font:inherit;font-size:.68rem;font-weight:700;letter-spacing:.04em;
-  padding:.36em .85em;border-radius:5px;cursor:pointer;transition:.15s}
+  padding:.42em 1em;border-radius:999px;cursor:pointer;transition:.15s}
 .chart-btn:hover{color:var(--tx);border-color:#2c4049;background:#11201f}
 .embed-box{display:none;flex-basis:100%;margin-top:.3rem}
 .embed-hint{font-size:.66rem;color:var(--sub);margin-bottom:.35rem;letter-spacing:.03em}
@@ -652,7 +653,7 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;padding:.55rem .6rem}
 .embed-copy{margin-top:.45rem;background:var(--y);border:0;color:#1a1400;
   font-weight:800;font-size:.66rem;letter-spacing:.03em;
-  padding:.38em .95em;border-radius:5px;cursor:pointer}
+  padding:.38em .95em;border-radius:999px;cursor:pointer}
 .embed-copy:hover{background:#ffd75e}
 
 /* ── Records table ── */
@@ -667,24 +668,24 @@ tr:hover td{background:#0e1a20}
 
 /* ── Monthly stats table ── */
 .monthly-section{margin-bottom:2.5rem}
-.monthly-month-label{font-size:.72rem;font-weight:800;text-transform:uppercase;
-  letter-spacing:.15em;color:var(--sub);padding:.6rem 0 .4rem;
+.monthly-month-label{font-size:.7rem;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--sub);padding:.6rem 0 .4rem;
   border-bottom:1px solid var(--bdr);margin-bottom:.75rem}
 
 /* ── Footer ── */
-footer{border-top:1px solid var(--bdr);padding:1rem 1.5rem;margin-top:1rem;
+footer{border-top:1px solid var(--bdr);padding:1.1rem 1.5rem 1.4rem;margin-top:1rem;
   display:flex;flex-wrap:wrap;gap:.5rem 2rem;
   font-size:.65rem;color:var(--sub);letter-spacing:.05em}
 footer a{color:var(--sub);text-decoration:none}
 footer a:hover{color:var(--tx)}
 .footer-hub{margin-left:auto}
-.footer-hub a{color:var(--y)}
-.footer-hub a:hover{color:#fff}
+.footer-hub a{color:var(--sub)}
+.footer-hub a:hover{color:var(--y)}
 
 /* ── Text SITREP (crawler-readable one-liner) ── */
-.sitrep-text{font-size:.9rem;color:var(--sub);line-height:1.7;
-  margin-top:1.1rem;padding-top:.85rem;border-top:1px solid var(--bdr)}
-html[lang="zh-Hant"] .sitrep-text{font-size:.95rem}
+.sitrep-text{font-size:.85rem;color:var(--sub);line-height:1.75;
+  margin:1rem 0 2.25rem;padding:0}
+html[lang="zh-Hant"] .sitrep-text{font-size:.9rem}
 
 /* ── About / methodology prose ── */
 .prose{max-width:760px;margin:0 auto}
@@ -764,7 +765,10 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   .site-header{padding:.7rem 1rem}
   .header-inner{gap:.5rem}
   nav{gap:.95rem;flex-wrap:wrap;justify-content:flex-end}
-  main{padding:1rem}
+  main{padding:.6rem 1rem 1rem}
+  .alert{margin-bottom:1rem}
+  .sitrep{padding:.55rem .9rem .6rem;margin-bottom:1rem}
+  .map-note{margin-top:.5rem}
   .stats-row{grid-template-columns:repeat(3,1fr);gap:0}
   .stat{padding:0 .5rem;min-width:0}
   .stat:first-child{border-left:none;padding-left:0}
@@ -1083,7 +1087,8 @@ def map_section_html(ac_val, ml_val, sh_val, special, s):
 
 # ── HTML 共用片段 ─────────────────────────────────────────────────────────────
 
-_VER = date.today().strftime('%Y%m%d')
+# 精確到分：同日重 build（改 CSS/版面）也能失效快取並觸發 version.txt 自動 reload
+_VER = datetime.now().strftime('%Y%m%d%H%M')
 
 
 def make_head(lang, page_name, s, head_extra=''):
@@ -1537,12 +1542,13 @@ def build_index(df, lang, out_dir, s):
         {sh_delta}
       </div>
     </div>
-    {sitrep_text_html}
   </div>
 
   {monthly_html}
 
   {map_html}
+
+  {sitrep_text_html}
 
   {chart_section_html(s['chart_recent'], recent_html, split_ac, split_sh, recent_tools)}
   {chart_section_html(s['chart_ytd'], ytd_html, streak_ac, streak_sh, ytd_tools)}

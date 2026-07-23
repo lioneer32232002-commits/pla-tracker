@@ -4,7 +4,7 @@
     {
       "name": "pla-tracker",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server"],
+      "runtimeArgs": ["-m", "http.server", "8765"],
       "port": 8765,
       "autoPort": true
     }

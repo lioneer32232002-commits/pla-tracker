@@ -412,8 +412,8 @@ def main():
         # 當日資料已存在（典型為備援班次）→ 不再寄信，避免重複通知。
         set_output('outcome', 'exists')
         if os.environ.get('FORCE_REBUILD', 'false').lower() != 'true':
+            # 不重建：_VER 為分鐘級，備援班重建會產生只有版本號變動的噪音 commit
             log('今日數據已是最新，無需重建')
-            run_script('build_site.py')
             log('=== 完成（無新數據）===')
             return
         log('FORCE_REBUILD=true，強制重建網站')
