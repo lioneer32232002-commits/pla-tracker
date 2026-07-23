@@ -4,3 +4,7 @@ __pycache__/
 *.log
 .DS_Store
 Thumbs.db
+
+# 本機工作產物（草稿/快取，不上線——repo 會被 Cloudflare 整包部署）
+output/
+data/.cache/
