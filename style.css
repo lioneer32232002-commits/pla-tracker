@@ -4,6 +4,7 @@
   --bg:#090d0f; --sur:#0e1618; --bdr:#1a2830;
   --y:#f5c842;  --r:#e05555;
   --tx:#c4d4dc; --sub:#8a9faa; --grn:#4dba6a;
+  --nav-active:#1c2a33;
   --rad:10px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -23,12 +24,15 @@ body{background:var(--bg);color:var(--tx);
   align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .site-title{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
 .site-sub{font-size:.65rem;color:var(--sub);letter-spacing:.05em;margin-top:.1rem}
-nav{display:flex;gap:1.5rem;align-items:center}
+nav{display:flex;gap:.15rem;align-items:center;background:var(--sur);
+  border:1px solid var(--bdr);border-radius:999px;padding:.22rem}
 nav a{color:var(--sub);text-decoration:none;font-size:.72rem;
-  font-weight:700;letter-spacing:.09em;text-transform:uppercase}
-nav a.active,nav a:hover{color:var(--tx)}
-nav a.lang-toggle{border:1px solid var(--bdr);padding:.15em .55em;
-  border-radius:3px;margin-left:.5rem;letter-spacing:.06em}
+  font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;
+  padding:.34em .85em;border-radius:999px;transition:color .15s,background .15s}
+nav a:hover{color:var(--tx)}
+nav a.active{color:var(--tx);background:var(--nav-active)}
+nav a.lang-toggle{border:0;border-left:1px solid var(--bdr);border-radius:0;
+  margin-left:.15rem;padding-left:.9em}
 
 /* ── Main ── */
 main{max-width:900px;margin:0 auto;padding:1.5rem}
@@ -83,22 +87,6 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .split-panels{background:#1e2224;border-radius:var(--rad);padding:12px 12px 8px}
 .panel-wrap-ac{position:relative;height:200px}
 .panel-wrap-sh{position:relative;height:130px;margin-top:8px}
-
-/* ── Chart tools: PNG download + iframe embed (媒體可引用) ── */
-.chart-tools{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-top:.7rem}
-.chart-btn{background:var(--sur);border:1px solid var(--bdr);color:var(--sub);
-  font:inherit;font-size:.68rem;font-weight:700;letter-spacing:.04em;
-  padding:.42em 1em;border-radius:999px;cursor:pointer;transition:.15s}
-.chart-btn:hover{color:var(--tx);border-color:#2c4049;background:#11201f}
-.embed-box{display:none;flex-basis:100%;margin-top:.3rem}
-.embed-hint{font-size:.66rem;color:var(--sub);margin-bottom:.35rem;letter-spacing:.03em}
-.embed-box textarea{width:100%;height:66px;resize:vertical;display:block;
-  background:#0a1014;border:1px solid var(--bdr);border-radius:5px;color:var(--tx);
-  font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;padding:.55rem .6rem}
-.embed-copy{margin-top:.45rem;background:var(--y);border:0;color:#1a1400;
-  font-weight:800;font-size:.66rem;letter-spacing:.03em;
-  padding:.38em .95em;border-radius:999px;cursor:pointer}
-.embed-copy:hover{background:#ffd75e}
 
 /* ── Records table ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -208,10 +196,11 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   .top-bar{display:none}
   .site-header{padding:.7rem 1rem}
   .header-inner{gap:.5rem}
-  nav{gap:.95rem;flex-wrap:wrap;justify-content:flex-end}
+  nav{gap:.05rem;padding:.18rem;flex-wrap:nowrap}
+  nav a{padding:.3em .5em;letter-spacing:.03em;font-size:.66rem}
   main{padding:.6rem 1rem 1rem}
   .alert{margin-bottom:1rem}
-  .sitrep{padding:.55rem .9rem .6rem;margin-bottom:1rem}
+  .sitrep{padding:.55rem .9rem .6rem;margin-bottom:.55rem}
   .map-note{margin-top:.5rem}
   .stats-row{grid-template-columns:repeat(3,1fr);gap:0}
   .stat{padding:0 .5rem;min-width:0}
@@ -226,6 +215,6 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
-  nav{gap:.7rem}
+  nav{gap:.05rem}
   html[lang="zh-Hant"] nav a{font-size:.78rem;letter-spacing:.03em}
 }
