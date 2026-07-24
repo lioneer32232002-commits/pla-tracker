@@ -57,7 +57,7 @@
   </url>
   <url>
     <loc>https://pla-tracker.pages.dev/about.html</loc>
-    <lastmod>2026-07-240400</lastmod>
+    <lastmod>2026-07-241300</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/about.html"/>
@@ -66,11 +66,29 @@
   </url>
   <url>
     <loc>https://pla-tracker.pages.dev/en/about.html</loc>
-    <lastmod>2026-07-240400</lastmod>
+    <lastmod>2026-07-241300</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/about.html"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://pla-tracker.pages.dev/en/about.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://pla-tracker.pages.dev/about.html"/>
+  </url>
+  <url>
+    <loc>https://pla-tracker.pages.dev/arsenal/</loc>
+    <lastmod>2026-07-241300</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/arsenal/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pla-tracker.pages.dev/en/arsenal/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pla-tracker.pages.dev/arsenal/"/>
+  </url>
+  <url>
+    <loc>https://pla-tracker.pages.dev/en/arsenal/</loc>
+    <lastmod>2026-07-241300</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/arsenal/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pla-tracker.pages.dev/en/arsenal/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pla-tracker.pages.dev/arsenal/"/>
   </url>
 </urlset>

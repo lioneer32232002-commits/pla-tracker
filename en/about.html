@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="Methodology: data source (ROC MND daily releases), update frequency, the difference between the Taiwan Strait median line and the 12 NM territorial sea, data compilation and citation/licensing.">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/og-en.png">
 <meta name="twitter:image:alt" content="PLA Activity Tracker — Taiwan Strait">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607240400">
-<link rel="stylesheet" href="/style.css?v=202607240400">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607241300">
+<link rel="stylesheet" href="/style.css?v=202607241300">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607240400')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607241300')location.reload(true);});</script>
 
 </head>
 <body>
@@ -41,7 +41,7 @@
       <div class="site-title">PLA Activity Tracker — Taiwan Strait</div>
       <div class="site-sub">Daily data from ROC MND public releases</div>
     </div>
-    <nav><a href="/en/index.html">Overview</a><a href="/en/records.html">Daily Records</a><a href="/en/monthly.html">Monthly</a><a href="/en/about.html" class=active>About</a><a href="/about.html" class="lang-toggle">中文</a></nav>
+    <nav><a href="/en/index.html">Overview</a><a href="/en/records.html">Daily Records</a><a href="/en/monthly.html">Monthly</a><a href="/en/arsenal/">Arms</a><a href="/en/about.html" class=active>About</a><a href="/about.html" class="lang-toggle">中文</a></nav>
   </div>
 </header>
 
@@ -117,6 +117,18 @@
       <li>Only after validation passes are the static pages and charts generated, in both
         Chinese and English.</li>
     </ul>
+
+    <h2>Arms-procurement tracking method</h2>
+    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset from the daily
+      activity log. It follows US Foreign Military Sales (FMS) to Taiwan notified to Congress by the
+      Defense Security Cooperation Agency (DSCA) since 2019. Note that a DSCA notification is the
+      congressional-notification stage only — it is <strong>not</strong> a signed contract, and
+      neither is a delivery; the Letter of Offer and Acceptance (LOA) and delivery schedule come
+      later, and notified values are ceilings that signed amounts often fall below. Direct commercial
+      sales and US-forces transfers are excluded. Each case is compiled by hand from the official
+      DSCA notice (or a web-archive snapshot where the original page is offline), with delivery
+      progress cross-checked against CNA / MND / defense-trade press, and every case carries its own
+      source link.</p>
 
     <h2>Citation &amp; license</h2>
     <p>The underlying figures are public information from the MND. This site's compilation, field

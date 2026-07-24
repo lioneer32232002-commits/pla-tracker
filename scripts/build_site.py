@@ -14,6 +14,8 @@ import pandas as pd
 
 ROOT      = Path(__file__).parent.parent
 DATA_FILE = ROOT / 'data' / 'records.csv'
+ARSENAL_FILE = ROOT / 'data' / 'arsenal.csv'          # 軍購案主表（49 案）
+PEERS_FILE   = ROOT / 'data' / 'arsenal_peers.csv'    # 國際買家對比
 SITE_DIR  = ROOT
 SITE_DIR.mkdir(exist_ok=True)
 
@@ -62,6 +64,96 @@ _MAP_COLORS = {
               'zlbl_sh': '0 1px 3px #fff,0 0 6px #fff'},
 }
 
+# ── 軍購儀表板列舉對照 ────────────────────────────────────────────────────────
+# category / delivery_status 皆為 CSV 內受控列舉；此處集中翻譯與顯示順序，
+# validate.py 另有同名列舉檢查，兩邊須一致。
+ARSENAL_CATEGORIES = {  # category enum → (zh, en)
+    'aircraft':    ('戰機',   'Aircraft'),
+    'missile':     ('飛彈',   'Missiles'),
+    'ground':      ('地面',   'Ground'),
+    'naval':       ('海軍',   'Naval'),
+    'uas':         ('無人系統', 'Unmanned'),
+    'c4isr':       ('指管情監', 'C4ISR'),
+    'sustainment': ('後勤支援', 'Sustainment'),
+}
+ARSENAL_STATUS = {  # delivery_status enum → (zh, en, css class)
+    'completed':  ('已完成', 'Completed',  'completed'),
+    'delivering': ('交付中', 'Delivering', 'delivering'),
+    'announced':  ('已公告', 'Announced',  'announced'),
+    'unknown':    ('未確認', 'Unconfirmed','unknown'),
+    'cancelled':  ('已終止', 'Cancelled',  'cancelled'),
+}
+# 主要裝備進度矩陣的名目填充比例（僅「狀態示意」，非精確交付比例；
+# 精確批次數量以各案展開的 delivered_note＋來源為準）。
+ARSENAL_FILL = {
+    'completed':  1.00,
+    'delivering': 0.35,
+    'announced':  0.00,
+    'unknown':    0.00,
+    'cancelled':  0.00,
+}
+
+# 延宕理由對照（案 → 官方／半官方理由 → 來源）。內容逐案取自 data/arsenal.csv 的
+# notes/delivered_note 欄所引來源，於此結構化。tag：official＝官方或官員對外說明；
+# semi＝業界／媒體報導未經官方逐點證實；none＝查無官方說明（誠實標註，不臆測）。
+ARSENAL_DELAYS = {
+    '19-50': ('洛克希德馬丁因台灣客製組態的軟體開發延遲，加上供應鏈與勞動力短缺，'
+              '生產進度落後，66 架全數交付恐延至 2027 年後。',
+              'Lockheed Martin fell behind on software for Taiwan’s customized configuration, '
+              'compounded by supply-chain and labor shortages; full delivery of all 66 jets may slip past 2027.',
+              'https://www.flightglobal.com/fixed-wing/taiwan-f-16-block-70-deliveries-slip-into-2027/165025.article',
+              'official'),
+    '20-68': ('美方通知因作業與產能因素，Boeing 最快自 2025 年起才能開始交付，'
+              '較原訂時程延後約 1 至 2 年。',
+              'The US notified that, due to production and workload factors, Boeing could begin deliveries '
+              'from 2025 at the earliest — roughly 1–2 years later than planned.',
+              'https://navalpost.com/taiwan-harpoon-coastal-defense-system-delivery-delays/',
+              'official'),
+    '19-21': ('美方將約四分之一刺針飛彈庫存移撥援助烏克蘭，雷神被迫重啟已停產的生產線，'
+              '對台交付延後，分批交付估延至 2031 年。',
+              'The US diverted about a quarter of its Stinger inventory to Ukraine, forcing Raytheon to '
+              'restart a closed line; Taiwan deliveries are pushed back, with batches estimated through 2031.',
+              'https://www.scmp.com/news/china/military/article/3176376/ukraine-war-could-delay-us-stinger-missile-delivery-taiwan',
+              'semi'),
+    '22-70': ('國防部官員向媒體表示延遲係「美方作業延遲及其他因素」所致，未提供具體技術原因。',
+              'An MND official told the press the delay was due to “US-side processing delays and other '
+              'factors,” without specifying a technical cause.',
+              'https://www.taiwannews.com.tw/news/5940023',
+              'official'),
+    '21-44': ('美方通知因俄烏戰爭排擠美國自走砲產能、優先順序調整，最快 2026 年後才能交付；'
+              '台灣遂於 2022-05 終止本案，預算改增購 HIMARS。',
+              'The US notified that the Russia–Ukraine war had squeezed US howitzer capacity and shifted '
+              'priorities, pushing delivery past 2026; Taiwan cancelled the case in May 2022 and bought more HIMARS.',
+              'https://www.taiwannews.com.tw/news/4525635',
+              'official'),
+    '20-07': ('據業界媒體報導（非官方直接證實），該型魚雷產線長期停產、雷神須重啟產線，完成期程遞延；'
+              '台灣國防部僅證實時程遞延，未說明原因。',
+              'Per trade-press reports (not directly confirmed officially), the torpedo line had long been idle '
+              'and Raytheon must restart it, delaying completion; Taiwan’s MND confirmed the slip but gave no reason.',
+              'https://thedefensepost.com/2025/09/01/taiwan-mk-48-torpedoes-us/',
+              'semi'),
+    '20-87': ('截至查證時未見官方對延遲的明確說明；僅知 2025-05 完成美方測考後，'
+              '原訂 2025 年 Q4 交付之首批仍未見到貨報導。',
+              'No official statement on the delay was found as of verification; after US testing completed in '
+              'May 2025, the first batch due Q4 2025 still had no reported arrival.',
+              '',
+              'none'),
+}
+# 延宕對照表列出順序（依裝備重要性／案值）
+ARSENAL_DELAY_ORDER = ['19-50', '20-68', '19-21', '22-70', '21-44', '20-07', '20-87']
+
+# 準時／如期交付的反例（案 → 說明 → 來源；來源取自 arsenal.csv 的 source_delivery）
+ARSENAL_COUNTERS = [
+    ('20-77',
+     '轟雷專案首批 11 套 HIMARS 於 2024-11 完成全數交付。',
+     'The first batch of 11 HIMARS launchers was fully delivered in November 2024.',
+     'https://www.cato.org/blog/taiwan-arms-backlog-november-2024-update-himars-delivery-second-trump-administration'),
+    ('20-74',
+     'MQ-9B 海上衛士無人機首批 2 架如期於 2026-03 交運抵台並展開組裝測試。',
+     'The first two MQ-9B SeaGuardian drones arrived in Taiwan on schedule in March 2026 and began assembly and testing.',
+     'https://news.usni.org/2026/03/23/taiwan-receives-first-u-s-mq-9-skyguardian-drones'),
+]
+
 # 全站主題（'dark' | 'light'）；由 __main__ 依當日資料呼叫 resolve_theme() 設定。
 THEME = 'dark'
 
@@ -89,12 +181,14 @@ STRINGS = {
             'records': '每日紀錄 — 中國擾台趨勢數據分析',
             'monthly': '月統計 — 中國擾台趨勢數據分析',
             'about':   '方法論與資料來源 — 中國擾台趨勢數據分析',
+            'arsenal': '台灣對美軍購交付追蹤 — 中國擾台趨勢數據分析',
         },
         'meta_descs': {
             'index':   '每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。',
             'records': '解放軍擾台每日紀錄表：逐日共機架次、逾越中線數、機型、共艦艘數。資料來源：國防部，每日更新。',
             'monthly': '解放軍擾台月統計：每月共機總架次、逾越中線數、越線率與共艦日均。資料來源：國防部。',
             'about':   '本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。',
+            'arsenal': '2019 年以來台灣對美軍購交付追蹤：49 案、逐案案值、交付進度、延宕與官方理由，每一筆都可溯源到美國國防安全合作署（DSCA）官方公告。',
         },
         'site_title': '中國擾台趨勢數據分析',
         'site_sub': 'PLA Activity Around Taiwan',
@@ -105,6 +199,7 @@ STRINGS = {
         'nav_index': '總覽',
         'nav_records': '每日紀錄',
         'nav_monthly': '月統計',
+        'nav_arsenal': '軍購',
         'nav_toggle': 'EN',
         'unclassified': 'UNCLASSIFIED // OPEN SOURCE',
         'sitrep_label': 'SITREP',
@@ -181,6 +276,54 @@ STRINGS = {
         'monthly_col_rate':  '越線率',
         'monthly_col_ships': '艦艇日均',
         'monthly_records_count': '共 {n} 筆',
+        'ars': {
+            'topbar':      'ARMS PROCUREMENT TRACKER',
+            'h1':          '台灣對美軍購追蹤',
+            'sub':         '{n} 案、約 {total} 億美元，每一筆都可溯源到美國官方公告',
+            'kpi_value':   '總案值',
+            'kpi_cases':   '軍售案數',
+            'kpi_deliver': '交付中',
+            'kpi_done':    '已完成',
+            'kpi_cancel':  '已終止',
+            'kpi_latest':  '最近公告',
+            'kpi_unit_case': '案',
+            'matrix_title':  '主要裝備交付進度',
+            'matrix_note':   '進度條為交付狀態示意（已交付／待交付／終止），交付中案以名目比例呈現「已展開交付」；精確批次數量請點各案展開，以官方與媒體來源為準。',
+            'matrix_expand': '展開延宕理由與來源',
+            'matrix_delay':  '延宕／進度：',
+            'chart_title':   '歷年軍售公告金額',
+            'chart_sub':     '單位：億美元 · 依 DSCA 公告年',
+            'chart_top':     '當年最大三案：',
+            'read_title':    '這些軍售說明什麼',
+            'read_intro':    '把台灣放進「美國賣給誰、賣多少」的國際脈絡裡，可以看出美國願意把哪一級的武器交給台灣。以下每個判讀都附國際買家對比資料的來源。',
+            'delay_title':   '延宕與它的官方理由',
+            'delay_intro':   '交付延宕是事實，但每一筆都有可查證的官方或半官方理由；沒有查到官方說明的，我們誠實標註「未見官方說明」，不臆測。',
+            'delay_col_case':   '案件',
+            'delay_col_reason': '延宕的官方／半官方理由',
+            'delay_col_src':    '來源',
+            'counter_title': '準時與如期的反例',
+            'table_title':   '全部軍售案',
+            'table_sub':     '{n} 案 · 2019 → 今',
+            'th_date':   '公告日',
+            'th_system': '系統',
+            'th_cat':    '類別',
+            'th_value':  '案值',
+            'th_status': '狀態',
+            'th_src':    '來源',
+            'src_announce': '公告',
+            'src_delivery': '交付報導',
+            'card_value':  '案值',
+            'card_qty':    '數量',
+            'card_status': '狀態',
+            'scope_title': '口徑說明',
+            'scope_body': ('本頁追蹤自 2019 年起、經美國國防安全合作署（DSCA）通知國會的對台軍售案（FMS）。'
+                           '<strong>公告 ≠ 已簽約 ≠ 已交付</strong>：DSCA 公告是「國會通知」階段，實際簽署發價書（LOA）與交付時程另計。'
+                           '本頁不含商售案與美軍自用移撥。案值為公告上限金額，實際簽約金額常較低。'
+                           '資料來源＝DSCA 官方公告與網路檔案館快照，交付進度輔以中央社／國防部／專業軍事媒體報導，逐案人工整理、逐案附來源。'),
+            'divert_label': '軍購交付追蹤',
+            'divert_pending': '待交付',
+            'divert_yi': '億美元',
+        },
     },
     'en': {
         'html_lang': 'en',
@@ -189,12 +332,14 @@ STRINGS = {
             'records': 'Daily Records — PLA Activity Tracker',
             'monthly': 'Monthly Stats — PLA Activity Tracker',
             'about':   'Methodology & Data Sources — PLA Activity Tracker',
+            'arsenal': 'Taiwan–US Arms Delivery Tracker — PLA Activity Tracker',
         },
         'meta_descs': {
             'index':   'Daily tracking of PLA military activity around Taiwan: aircraft sorties, Taiwan Strait median-line crossings, naval vessels and trends. Source: ROC Ministry of National Defense daily releases.',
             'records': 'Daily log of PLA activity around Taiwan: per-day sorties, median-line crossings, aircraft type and vessel counts. Source: ROC MND, updated daily.',
             'monthly': 'Monthly PLA activity statistics for the Taiwan Strait: total sorties, median-line crossings, crossing rate and average vessels per day. Source: ROC MND.',
             'about':   'Methodology: data source (ROC MND daily releases), update frequency, the difference between the Taiwan Strait median line and the 12 NM territorial sea, data compilation and citation/licensing.',
+            'arsenal': 'Tracking Taiwan\'s US arms procurement since 2019: 49 cases, per-case value, delivery progress, delays and their official reasons — every entry traceable to an official US DSCA notification.',
         },
         'site_title': 'PLA Activity Tracker — Taiwan Strait',
         'site_sub': 'Daily data from ROC MND public releases',
@@ -205,6 +350,7 @@ STRINGS = {
         'nav_index': 'Overview',
         'nav_records': 'Daily Records',
         'nav_monthly': 'Monthly',
+        'nav_arsenal': 'Arms',
         'nav_toggle': '中文',
         'unclassified': 'UNCLASSIFIED // OPEN SOURCE',
         'sitrep_label': 'SITREP',
@@ -281,6 +427,57 @@ STRINGS = {
         'monthly_col_rate':  'Cross Rate',
         'monthly_col_ships': 'Avg Vessels',
         'monthly_records_count': '{n} records',
+        'ars': {
+            'topbar':      'ARMS PROCUREMENT TRACKER',
+            'h1':          'Taiwan–US Arms Delivery Tracker',
+            'sub':         '{n} cases, {total} — every entry traceable to an official US notification',
+            'kpi_value':   'Total value',
+            'kpi_cases':   'Cases',
+            'kpi_deliver': 'Delivering',
+            'kpi_done':    'Completed',
+            'kpi_cancel':  'Cancelled',
+            'kpi_latest':  'Latest notice',
+            'kpi_unit_case': '',
+            'matrix_title':  'Major Systems — Delivery Progress',
+            'matrix_note':   'Bars indicate delivery status (delivered / pending / cancelled); in-progress cases use a nominal fill to show delivery has begun. For exact batch quantities, expand each case — official and press sources govern.',
+            'matrix_expand': 'Delay reason & sources',
+            'matrix_delay':  'Delay / progress: ',
+            'chart_title':   'Arms Sales by Year',
+            'chart_sub':     'US$ billion · by DSCA notice year',
+            'chart_top':     'Top 3 cases: ',
+            'read_title':    'What These Sales Tell Us',
+            'read_intro':    'Placing Taiwan in the international context of who the US sells to, and how much, shows what tier of weapon the US is willing to hand Taiwan. Each reading below cites the peer-buyer comparison data.',
+            'delay_title':   'Delays and Their Official Reasons',
+            'delay_intro':   'Delivery delays are real, but each has a verifiable official or semi-official reason. Where no official explanation was found, we honestly mark it "no official statement" rather than speculate.',
+            'delay_col_case':   'Case',
+            'delay_col_reason': 'Official / semi-official reason',
+            'delay_col_src':    'Source',
+            'counter_title': 'On-Time Counter-Examples',
+            'table_title':   'All Arms Sales Cases',
+            'table_sub':     '{n} cases · 2019 → now',
+            'th_date':   'Date',
+            'th_system': 'System',
+            'th_cat':    'Category',
+            'th_value':  'Value',
+            'th_status': 'Status',
+            'th_src':    'Source',
+            'src_announce': 'Notice',
+            'src_delivery': 'Delivery',
+            'card_value':  'Value',
+            'card_qty':    'Qty',
+            'card_status': 'Status',
+            'scope_title': 'Scope & Caveats',
+            'scope_body': ('This page tracks US Foreign Military Sales (FMS) to Taiwan notified to Congress by the '
+                           'Defense Security Cooperation Agency (DSCA) since 2019. '
+                           '<strong>A notification is not a signed contract, and neither is a delivery.</strong> '
+                           'A DSCA notice is the congressional-notification stage; the actual Letter of Offer and Acceptance (LOA) '
+                           'and delivery schedule come later. Direct commercial sales and US-forces transfers are excluded. '
+                           'Values are notified ceilings; signed amounts are often lower. Sources are official DSCA notices and web-archive '
+                           'snapshots, with delivery progress cross-checked against CNA / MND / defense-trade press, compiled case by case with a source for each.'),
+            'divert_label': 'Arms Delivery Tracker',
+            'divert_pending': 'Pending',
+            'divert_yi': '',
+        },
     },
 }
 
@@ -554,6 +751,31 @@ def load_df():
     return df.sort_values('date').reset_index(drop=True)
 
 
+def load_arsenal():
+    """讀取軍購案主表（49 案）。value_usd_m 轉數值，其餘欄位保持字串。"""
+    df = pd.read_csv(ARSENAL_FILE, dtype=str).fillna('')
+    df['value_usd_m'] = pd.to_numeric(df['value_usd_m'], errors='coerce').fillna(0.0)
+    return df
+
+
+def load_peers():
+    """讀取國際買家對比表。qty 轉數值。"""
+    df = pd.read_csv(PEERS_FILE, dtype=str).fillna('')
+    df['qty'] = pd.to_numeric(df['qty'], errors='coerce').fillna(0)
+    return df
+
+
+def fmt_money(value_usd_m, lang):
+    """金額顯示：zh 用「億」（≥10億→1位小數、以下→2位小數）；en 用 US$ 十億。"""
+    if lang == 'en':
+        bn = value_usd_m / 1000.0
+        num = f'{bn:.1f}' if bn >= 10 else f'{bn:.2f}'
+        return f'US${num}B'
+    yi = value_usd_m / 100.0
+    num = f'{yi:.1f}' if yi >= 10 else f'{yi:.2f}'
+    return f'{num}億'
+
+
 def fmt_date(date_str):
     """YYYY-MM-DD → M/D (used for chart labels and zh UI)."""
     dt = pd.to_datetime(date_str)
@@ -786,6 +1008,125 @@ html[lang="zh-Hant"] .site-sub{font-size:.72rem}
 html[lang="zh-Hant"] nav a{font-size:.82rem;letter-spacing:.06em}
 html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 
+/* ── Arsenal dashboard ── */
+.ars-hero{margin:.5rem 0 1.5rem}
+.ars-h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;color:var(--tx);line-height:1.15}
+html[lang="zh-Hant"] .ars-h1{font-size:1.85rem}
+.ars-sub{font-size:.9rem;color:var(--sub);line-height:1.6;margin-top:.5rem;max-width:640px}
+.ars-section{margin-bottom:2.25rem}
+.ars-sec-title{font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--sub);white-space:normal;padding-bottom:.5rem;margin-bottom:1rem;border-bottom:1px solid var(--bdr)}
+.ars-sec-title .sub{font-weight:600;letter-spacing:.04em;color:var(--sub);opacity:.75;margin-left:.6rem;text-transform:none}
+.ars-lead{font-size:.88rem;color:var(--sub);line-height:1.7;margin:-.3rem 0 1rem;max-width:680px}
+html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
+
+/* KPI grid */
+.ars-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:2rem}
+.ars-kpi{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.85rem 1rem}
+.ars-kpi-n{font-size:1.9rem;font-weight:800;line-height:1;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--tx)}
+.ars-kpi-n.y{color:var(--y)}
+.ars-kpi-n small{font-size:.9rem;font-weight:700;margin-left:.15rem}
+.ars-kpi-l{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);margin-top:.4rem;white-space:nowrap}
+html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
+
+/* Progress matrix */
+.ars-matrix{display:flex;flex-direction:column;gap:.55rem}
+.ars-row{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
+.ars-row>summary{list-style:none;cursor:pointer;padding:.7rem .9rem;display:block}
+.ars-row>summary::-webkit-details-marker{display:none}
+.ars-row-top{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;margin-bottom:.5rem}
+.ars-name{font-size:.86rem;font-weight:700;color:var(--tx);line-height:1.35}
+.ars-name .qty{color:var(--sub);font-weight:600;font-size:.78rem;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:.35rem}
+.ars-st{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:.18em .6em;border-radius:999px;white-space:nowrap;flex-shrink:0}
+.ars-st.completed {background:#123016;color:#5fce77}
+.ars-st.delivering{background:#2a2408;color:var(--y)}
+.ars-st.announced {background:#0d1d2e;color:#6aaee0}
+.ars-st.unknown   {background:var(--sur);color:var(--sub);border:1px solid var(--bdr)}
+.ars-st.cancelled {background:#2c1414;color:#e08585}
+.ars-bar{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--sur)}
+.ars-seg{height:100%}
+.ars-seg-d{background:var(--y)}
+.ars-seg-p{background:rgba(245,200,66,.26)}
+.ars-seg-c{flex:1;background:repeating-linear-gradient(45deg,#3a4448 0 5px,#222a2e 5px 10px)}
+.ars-caret{color:var(--sub);font-size:.72rem;margin-top:.5rem;display:inline-flex;align-items:center;gap:.3rem}
+.ars-row[open] .ars-caret .tri{transform:rotate(90deg)}
+.ars-caret .tri{transition:transform .15s;display:inline-block}
+.ars-detail{padding:0 .9rem .8rem;font-size:.8rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-detail{font-size:.84rem}
+.ars-detail .lbl{font-weight:700;color:var(--tx)}
+.ars-detail a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;word-break:break-all}
+.ars-detail a:hover{color:#fff}
+.ars-note{font-size:.72rem;color:var(--sub);line-height:1.6;margin-top:.75rem;opacity:.85}
+html[lang="zh-Hant"] .ars-note{font-size:.76rem}
+
+/* Annual chart */
+.ars-chart-wrap{background:#1e2224;border-radius:var(--rad);padding:12px 12px 8px}
+.ars-chart-canvas{position:relative;height:240px}
+
+/* Qualitative reads */
+.ars-reads{display:flex;flex-direction:column;gap:.7rem}
+.ars-point{background:var(--sur);border:1px solid var(--bdr);border-left:3px solid var(--y);
+  border-radius:0 var(--rad) var(--rad) 0;padding:.75rem 1rem}
+.ars-point h3{font-size:.9rem;font-weight:800;color:var(--tx);margin-bottom:.35rem;letter-spacing:.01em}
+.ars-point p{font-size:.83rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-point p{font-size:.87rem}
+.ars-point .caveat{color:var(--y);font-weight:600}
+.ars-src{font-size:.72rem;margin-top:.45rem}
+.ars-src a{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr);margin-right:.7rem;word-break:break-word}
+.ars-src a:hover{color:var(--y);border-bottom-color:var(--y)}
+
+/* Delay table + counter cards */
+.ars-counter{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.ars-counter .c{flex:1 1 240px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.7rem .9rem}
+.ars-counter .c .t{font-size:.82rem;font-weight:700;color:var(--grn)}
+.ars-counter .c p{font-size:.78rem;color:var(--sub);line-height:1.6;margin-top:.3rem}
+html[lang="zh-Hant"] .ars-counter .c p{font-size:.82rem}
+
+/* Category badge */
+.ars-cat{display:inline-block;padding:.15em .55em;border-radius:999px;font-size:.68rem;font-weight:700;white-space:nowrap}
+.ars-cat.aircraft   {background:#0d1d2e;color:#6aaee0}
+.ars-cat.missile    {background:#2c1414;color:#e08585}
+.ars-cat.ground     {background:#272008;color:var(--y)}
+.ars-cat.naval      {background:#07231f;color:#4fc7ad}
+.ars-cat.uas        {background:#20143a;color:#b898dc}
+.ars-cat.c4isr      {background:#08262b;color:#4fc2d0}
+.ars-cat.sustainment{background:var(--sur);color:var(--sub);border:1px solid var(--bdr)}
+
+/* All-cases: desktop table (mobile → cards) */
+.ars-cases .ars-cards{display:none}
+.ars-cases a.src{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr)}
+.ars-cases a.src:hover{color:var(--y);border-bottom-color:var(--y)}
+.ars-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;margin-bottom:.5rem}
+.ars-card>summary{list-style:none;cursor:pointer;padding:.7rem .9rem}
+.ars-card>summary::-webkit-details-marker{display:none}
+.ars-card-top{display:flex;justify-content:space-between;gap:.6rem;align-items:baseline}
+.ars-card-sys{font-size:.85rem;font-weight:700;color:var(--tx);line-height:1.3}
+.ars-card-meta{display:flex;flex-wrap:wrap;gap:.4rem .9rem;margin-top:.5rem;font-size:.74rem;color:var(--sub);
+  font-variant-numeric:tabular-nums;align-items:center}
+.ars-card-body{padding:0 .9rem .8rem;font-size:.8rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-card-body{font-size:.84rem}
+
+/* Scope note */
+.ars-scope{font-size:.72rem;color:var(--sub);line-height:1.75;margin-top:1rem;
+  padding:.85rem 1rem;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad)}
+html[lang="zh-Hant"] .ars-scope{font-size:.76rem}
+.ars-scope strong{color:var(--tx)}
+.ars-scope .st{display:block;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--sub);margin-bottom:.45rem}
+
+/* Homepage → arsenal diversion card */
+.ars-divert{display:block;text-decoration:none;background:var(--sur);border:1px solid var(--bdr);
+  border-left:3px solid var(--y);border-radius:0 var(--rad) var(--rad) 0;padding:.7rem 1rem;
+  margin:0 0 2rem;transition:border-color .15s,background .15s}
+.ars-divert:hover{background:#12201a;border-left-color:var(--y)}
+html[data-theme="light"] .ars-divert:hover{background:#f3f0e6}
+.ars-divert .row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.82rem}
+.ars-divert .lab{font-weight:800;color:var(--y);letter-spacing:.02em}
+.ars-divert .txt{color:var(--sub);line-height:1.5}
+.ars-divert .arr{color:var(--sub)}
+html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
@@ -794,6 +1135,8 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   nav{gap:.05rem;padding:.18rem;flex-wrap:nowrap}
   nav a{padding:.3em .5em;letter-spacing:.03em;font-size:.66rem}
   main{padding:.6rem 1rem 1rem}
+  /* en 導覽新增「Arms」後手機寬度超出 343px 預算 → 壓字級至 .62rem 保持單行 */
+  html[lang="en"] nav a{font-size:.62rem;letter-spacing:.02em;padding:.3em .42em}
   .alert{margin-bottom:1rem}
   .sitrep{padding:.55rem .9rem .6rem;margin-bottom:.55rem}
   .map-note{margin-top:.5rem}
@@ -807,6 +1150,14 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   .footer-hub{margin-left:0;flex-basis:100%}
   .prose-title{font-size:1.3rem}
   #activity-map{height:260px}
+  /* arsenal mobile */
+  .ars-kpis{grid-template-columns:repeat(2,1fr);gap:.5rem}
+  .ars-kpi-n{font-size:1.6rem}
+  .ars-h1{font-size:1.5rem}
+  html[lang="zh-Hant"] .ars-h1{font-size:1.55rem}
+  .ars-cases .ars-cards{display:block}
+  .ars-cases .ars-tbl-wrap{display:none}
+  .ars-chart-canvas{height:220px}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
@@ -854,6 +1205,23 @@ html[data-theme="light"] .map-lbl-sm{color:#5d7079;
 html[data-theme="light"] .map-info{background:rgba(255,255,255,0.9)}
 html[data-theme="light"] .map-ml-label{color:#5a7280}
 html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
+
+/* ── Arsenal 淺色覆蓋（僅顏色，不動版面尺寸）── */
+html[data-theme="light"] .ars-chart-wrap{background:#fbfaf6;box-shadow:inset 0 0 0 1px var(--bdr)}
+html[data-theme="light"] .ars-seg-p{background:rgba(154,117,0,.20)}
+html[data-theme="light"] .ars-seg-c{background:repeating-linear-gradient(45deg,#cfc9ba 0 5px,#e7e2d6 5px 10px)}
+html[data-theme="light"] .ars-st.completed {background:#dff0e0;color:#227a35}
+html[data-theme="light"] .ars-st.delivering{background:#f3ecc9;color:#7a5c00}
+html[data-theme="light"] .ars-st.announced {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .ars-st.cancelled {background:#f5dede;color:#b23a3a}
+html[data-theme="light"] .ars-cat.aircraft   {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .ars-cat.missile    {background:#f5dede;color:#b23a3a}
+html[data-theme="light"] .ars-cat.ground     {background:#f3ecc9;color:#8a6a00}
+html[data-theme="light"] .ars-cat.naval      {background:#d6efe8;color:#1f8a72}
+html[data-theme="light"] .ars-cat.uas        {background:#ece1f7;color:#7a4fb0}
+html[data-theme="light"] .ars-cat.c4isr      {background:#d8eef2;color:#1f8496}
+html[data-theme="light"] .ars-detail a{border-bottom-color:#d9c98a}
+html[data-theme="light"] .ars-point{border-left-color:var(--y)}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
@@ -895,6 +1263,22 @@ new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
 new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
   {type:'bar',data:SH,backgroundColor:SHbg,borderRadius:2}
 ]},options:baseOpts});
+})();"""
+
+# 軍購年度金額直條（單系列＝站內黃）；tooltip 附該年最大三案名稱。
+_CHART_JS_ARSENAL = """\
+(function(){
+var Y=__YEARS__,V=__VALS__,TOP=__TOPS__;
+var xA={grid:{display:false},ticks:{color:__TICK__,font:{size:11},maxRotation:0},border:{display:false}};
+var yA={grid:{color:function(c){return c.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:5,callback:function(v){return v;}},border:{display:false},beginAtZero:true};
+var opts={animation:{duration:700,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{
+    label:function(c){return __CURLABEL__+c.parsed.y.toFixed(1)+__UNIT__;},
+    afterBody:function(items){var i=items[0].dataIndex;return TOP[i]||[];}
+  }}},scales:{x:xA,y:yA}};
+new Chart(document.getElementById('__UID__'),{type:'bar',data:{labels:Y,datasets:[
+  {data:V,backgroundColor:__BAR__,hoverBackgroundColor:__BARH__,borderRadius:3,maxBarThickness:54}
+]},options:opts});
 })();"""
 
 
@@ -1138,23 +1522,28 @@ def map_section_html(ac_val, ml_val, sh_val, special, s):
 _VER = datetime.now().strftime('%Y%m%d%H%M')
 
 
-def make_head(lang, page_name, s, head_extra=''):
+def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=False):
     """Build complete <head> block for the given lang and page.
 
     head_extra: optional raw HTML (e.g. JSON-LD) injected just before </head>.
+    page_path:  override URL path (e.g. '/arsenal/' for nested pages); default
+                '/{page_name}.html'.
+    abs_assets: force absolute asset paths (needed for nested zh pages whose
+                relative refs would otherwise resolve into the subdirectory).
     """
     title    = s['page_titles'][page_name]
     html_lng = s['html_lang']
     desc     = s['meta_descs'][page_name]
 
     # Absolute URLs for canonical / hreflang / OG (full domain, per SEO best practice)
-    path     = f'/{page_name}.html'
+    path     = page_path if page_path else f'/{page_name}.html'
     canon_zh = f'{BASE_URL}{path}'
     canon_en = f'{BASE_URL}/en{path}'
     canonical = canon_en if lang == 'en' else canon_zh
 
-    # Asset paths: en/ pages use absolute paths to avoid subdirectory issues
-    if lang == 'en':
+    # Asset paths: en/ pages (and nested zh pages) use absolute paths to avoid
+    # subdirectory issues.
+    if lang == 'en' or abs_assets:
         css_href = f'/style.css?v={_VER}'
         fav_href = f'/favicon.svg?v={_VER}'
         ver_path = '/version.txt'
@@ -1261,19 +1650,25 @@ def dataset_jsonld(df, lang):
 
 
 def nav_html(active, lang, page_name, s):
-    """Navigation bar with language toggle."""
-    base   = '/en' if lang == 'en' else ''
-    toggle = f'/{page_name}.html' if lang == 'en' else f'/en/{page_name}.html'
+    """Navigation bar with language toggle. 'arsenal' is a nested page (/arsenal/)."""
+    base = '/en' if lang == 'en' else ''
+
+    # 語言切換連結：arsenal 為 /arsenal/ 目錄式路徑，其餘為 /{page}.html
+    if page_name == 'arsenal':
+        toggle = '/arsenal/' if lang == 'en' else '/en/arsenal/'
+    else:
+        toggle = f'/{page_name}.html' if lang == 'en' else f'/en/{page_name}.html'
 
     pages = [
-        ('index',   s['nav_index']),
-        ('records', s['nav_records']),
-        ('monthly', s['nav_monthly']),
-        ('about',   s['nav_about']),
+        ('index',   f'{base}/index.html',   s['nav_index']),
+        ('records', f'{base}/records.html', s['nav_records']),
+        ('monthly', f'{base}/monthly.html', s['nav_monthly']),
+        ('arsenal', f'{base}/arsenal/',     s['nav_arsenal']),
+        ('about',   f'{base}/about.html',   s['nav_about']),
     ]
     items = ''.join(
-        f'<a href="{base}/{p}.html"{"" if active != p else " class=active"}>{label}</a>'
-        for p, label in pages
+        f'<a href="{href}"{"" if active != p else " class=active"}>{label}</a>'
+        for p, href, label in pages
     )
     lang_link = f'<a href="{toggle}" class="lang-toggle">{s["nav_toggle"]}</a>'
     return f'<nav>{items}{lang_link}</nav>'
@@ -1381,7 +1776,7 @@ document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
 })();</script>"""
 
 
-def build_index(df, lang, out_dir, s):
+def build_index(df, lang, out_dir, s, df_ars=None):
     latest = df.iloc[-1]
     prev   = df.iloc[-2] if len(df) > 1 else latest
 
@@ -1489,6 +1884,8 @@ def build_index(df, lang, out_dir, s):
 
   {chart_section_html(s['chart_recent'], recent_html, split_ac, split_sh)}
   {chart_section_html(s['chart_ytd'], ytd_html, streak_ac, streak_sh)}
+
+  {arsenal_divert_html(df_ars, lang, s) if df_ars is not None else ''}
 
 </main>
 
@@ -1718,6 +2115,18 @@ def build_about(df, lang, out_dir, s):
         Chinese and English.</li>
     </ul>
 
+    <h2>Arms-procurement tracking method</h2>
+    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset from the daily
+      activity log. It follows US Foreign Military Sales (FMS) to Taiwan notified to Congress by the
+      Defense Security Cooperation Agency (DSCA) since 2019. Note that a DSCA notification is the
+      congressional-notification stage only — it is <strong>not</strong> a signed contract, and
+      neither is a delivery; the Letter of Offer and Acceptance (LOA) and delivery schedule come
+      later, and notified values are ceilings that signed amounts often fall below. Direct commercial
+      sales and US-forces transfers are excluded. Each case is compiled by hand from the official
+      DSCA notice (or a web-archive snapshot where the original page is offline), with delivery
+      progress cross-checked against CNA / MND / defense-trade press, and every case carries its own
+      source link.</p>
+
     <h2>Citation &amp; license</h2>
     <p>The underlying figures are public information from the MND. This site's compilation, field
       structure and charts are released under <a href="{CC}" target="_blank" rel="noopener">CC
@@ -1784,6 +2193,14 @@ def build_about(df, lang, out_dir, s):
       <li>通過驗證後才產生靜態網頁與圖表，中英雙語同步輸出。</li>
     </ul>
 
+    <h2>軍購追蹤資料方法</h2>
+    <p><a href="/arsenal/">軍購交付追蹤</a>是與每日動態獨立的另一組資料，追蹤自 2019 年起、
+      經美國國防安全合作署（DSCA）通知國會的對台軍售案（FMS）。須留意 DSCA 公告僅是「國會通知」
+      階段，<strong>並不等於已簽約，也不等於已交付</strong>；實際發價書（LOA）與交付時程另計，
+      且公告金額為上限，實際簽約金額常較低。本資料不含商售案與美軍自用移撥。每一案均逐案人工
+      整理自 DSCA 官方公告（原頁下架者引用網路檔案館快照），交付進度輔以中央社／國防部／專業
+      軍事媒體報導交叉查證，且每一案都附上各自的來源連結。</p>
+
     <h2>引用與授權</h2>
     <p>底層數字屬國防部公開資訊。本站的整理、欄位結構與圖表以
       <a href="{CC}" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎媒體與研究者引用，請註明：</p>
@@ -1818,6 +2235,498 @@ def build_about(df, lang, out_dir, s):
     print(f'[OK] {out_dir.name}/about.html' if out_dir != SITE_DIR else '[OK] about.html')
 
 
+# ── /arsenal/ 軍購交付追蹤儀表板 ──────────────────────────────────────────────
+
+# 國別中→英（質性判讀區與對比引用；未列者維持原字，validate 會抓 en 頁殘留中文）
+COUNTRY_EN = {
+    '台灣': 'Taiwan', '土耳其': 'Turkey', '摩洛哥': 'Morocco', '保加利亞': 'Bulgaria',
+    '巴林': 'Bahrain', '斯洛伐克': 'Slovakia', '約旦': 'Jordan', '印度': 'India',
+    '埃及': 'Egypt', '南韓': 'South Korea', '菲律賓': 'Philippines', '波蘭': 'Poland',
+    '澳洲': 'Australia', '羅馬尼亞': 'Romania', '阿聯': 'UAE', '烏克蘭': 'Ukraine',
+    '愛沙尼亞': 'Estonia', '拉脫維亞': 'Latvia', '立陶宛': 'Lithuania', '新加坡': 'Singapore',
+    '克羅埃西亞': 'Croatia', '德國': 'Germany', '沙烏地阿拉伯': 'Saudi Arabia', '英國': 'UK',
+    '突尼西亞': 'Tunisia', '加拿大': 'Canada', '日本': 'Japan', '比利時': 'Belgium',
+    '伊拉克': 'Iraq', '科威特': 'Kuwait',
+}
+UNIT_EN = {'架': 'aircraft', '枚': 'units', '套': 'systems', '輛': 'vehicles', '座': 'mounts'}
+_CJK = re.compile(r'[一-鿿]')
+
+
+def _ars_clean_en(v):
+    """把日期/期程欄的少量中文字（後/年/起）轉成 ASCII，殘留 CJK 則回空字串。"""
+    v = v.replace('後', '+').replace('年', '').replace('起', '+')
+    return '' if _CJK.search(v) else v
+
+
+def _ars_qty_label(qty, unit, lang):
+    if not qty:
+        return ''
+    try:
+        n = f'{int(float(qty)):,}'
+    except ValueError:
+        n = qty
+    if lang == 'en':
+        u = UNIT_EN.get(unit, '')
+        return f'{n} {u}'.strip()
+    return f'{n} {unit}'.strip()
+
+
+def _ars_status_badge(status, s):
+    zh, en, cls = ARSENAL_STATUS[status]
+    return f'<span class="ars-st {cls}">{en if s["html_lang"] == "en" else zh}</span>'
+
+
+def _ars_cat_badge(cat, s):
+    zh, en = ARSENAL_CATEGORIES[cat]
+    return f'<span class="ars-cat {cat}">{en if s["html_lang"] == "en" else zh}</span>'
+
+
+def _ars_bar(status):
+    if status == 'cancelled':
+        segs = '<span class="ars-seg ars-seg-c"></span>'
+    elif status == 'completed':
+        segs = '<span class="ars-seg ars-seg-d" style="flex:1"></span>'
+    elif status == 'delivering':
+        d = int(round(ARSENAL_FILL['delivering'] * 100))
+        segs = (f'<span class="ars-seg ars-seg-d" style="flex:{d}"></span>'
+                f'<span class="ars-seg ars-seg-p" style="flex:{100 - d}"></span>')
+    else:  # announced / unknown
+        segs = '<span class="ars-seg ars-seg-p" style="flex:1"></span>'
+    return f'<div class="ars-bar">{segs}</div>'
+
+
+def _ars_srcs(row, s):
+    a = s['ars']
+    out = []
+    if row['source_announce']:
+        out.append(f'<a href="{html.escape(row["source_announce"])}" target="_blank" '
+                   f'rel="noopener">{a["src_announce"]}</a>')
+    if row['source_delivery']:
+        out.append(f'<a href="{html.escape(row["source_delivery"])}" target="_blank" '
+                   f'rel="noopener">{a["src_delivery"]}</a>')
+    return ' · '.join(out)
+
+
+_DELAY_TAG = {
+    'official': ('官方說明', 'Official'),
+    'semi':     ('半官方／媒體', 'Semi-official'),
+    'none':     ('未見官方說明', 'No official statement'),
+}
+
+
+def _ars_delay_html(cid, lang):
+    """回傳某案的延宕理由 HTML（含 tag 與來源）；無登錄則回空字串。"""
+    if cid not in ARSENAL_DELAYS:
+        return ''
+    zh, en, src, tag = ARSENAL_DELAYS[cid]
+    txt = en if lang == 'en' else zh
+    tl = _DELAY_TAG[tag][1] if lang == 'en' else _DELAY_TAG[tag][0]
+    brk = f'[{tl}] ' if lang == 'en' else f'〔{tl}〕'
+    out = brk + html.escape(txt)
+    if src:
+        out += (f' <a href="{html.escape(src)}" target="_blank" rel="noopener">'
+                f'{"source" if lang == "en" else "來源"}</a>')
+    return out
+
+
+def _ars_matrix_detail(row, s, lang):
+    a = s['ars']
+    parts = []
+    if lang == 'en':
+        prog = []
+        fd = _ars_clean_en(row['first_delivery'])
+        ec = _ars_clean_en(row['expected_complete'])
+        if fd:
+            prog.append(f'first delivery {fd}')
+        if ec:
+            prog.append(f'expected complete {ec}')
+        if prog:
+            parts.append(f'<span class="lbl">{a["matrix_delay"]}</span>' + ', '.join(prog) + '.')
+    else:
+        if row['delivered_note']:
+            parts.append(f'<span class="lbl">{a["matrix_delay"]}</span>'
+                         + html.escape(row['delivered_note']))
+    delay = _ars_delay_html(row['case_id'], lang)
+    if delay:
+        parts.append(delay)
+    srcs = _ars_srcs(row, s)
+    if srcs:
+        parts.append(srcs)
+    return '<div class="ars-detail">' + '<br>'.join(parts) + '</div>'
+
+
+def _ars_key_ranking(df_peers, key):
+    """回傳 (台灣總量, 全部排名, FMS付費排名)；美援（notes 含『美援』）另計。"""
+    sub = df_peers[df_peers['system_key'] == key]
+    agg, aid = {}, set()
+    for _, r in sub.iterrows():
+        c = r['buyer_country']
+        agg[c] = agg.get(c, 0) + int(r['qty'])
+        # 美援標記＝「美援（」或「美援(」開頭句；避免誤中台灣列的「非美援」子字串
+        if '美援（' in r['notes'] or '美援(' in r['notes']:
+            aid.add(c)
+    tw = agg.get('台灣', 0)
+    all_sorted = sorted(agg.items(), key=lambda x: -x[1])
+    rank_all = [c for c, _ in all_sorted].index('台灣') + 1
+    fms_sorted = sorted([(c, q) for c, q in agg.items() if c not in aid], key=lambda x: -x[1])
+    rank_fms = [c for c, _ in fms_sorted].index('台灣') + 1
+    return tw, rank_all, rank_fms
+
+
+def _ars_peer_src(df_peers, key):
+    m = df_peers[(df_peers['system_key'] == key) & (df_peers['buyer_country'] == '台灣')]
+    return m.iloc[0]['source'] if len(m) else ''
+
+
+def arsenal_divert_html(df_ars, lang, s):
+    """首頁導流卡：待交付金額＋當期亮點，整卡連向 /arsenal/。數字全由 CSV 計算。"""
+    a = s['ars']
+    pend_m = df_ars[df_ars['delivery_status'].isin(['delivering', 'announced'])]['value_usd_m'].sum()
+    amt = fmt_money(pend_m, lang)
+    deliv = df_ars[(df_ars['delivery_status'] == 'delivering') & (df_ars['first_delivery'] != '')]
+    if len(deliv):
+        r = deliv.sort_values('first_delivery').iloc[-1]
+        name = r['system_en'] if lang == 'en' else r['system_zh']
+        fd = r['first_delivery']
+        hi = (f'{html.escape(name)} — first units delivered {html.escape(fd)}'
+              if lang == 'en' else f'{html.escape(name)}首批已於 {html.escape(fd)} 交付')
+    else:
+        r = df_ars.sort_values('announce_date').iloc[-1]
+        name = r['system_en'] if lang == 'en' else r['system_zh']
+        hi = (f'latest notice: {html.escape(name)}'
+              if lang == 'en' else f'最近公告：{html.escape(name)}')
+    if lang == 'en':
+        txt = f'{a["divert_pending"]} {amt} | {hi}'
+    else:
+        txt = f'{a["divert_pending"]} {amt}美元 ｜ {hi}'
+    href = '/en/arsenal/' if lang == 'en' else '/arsenal/'
+    return (f'<a class="ars-divert" href="{href}">'
+            f'<span class="row"><span class="lab">{a["divert_label"]}</span>'
+            f'<span class="arr">→</span><span class="txt">{txt}</span></span></a>')
+
+
+def _ars_reads_html(df_ars, df_peers, lang, s):
+    """質性判讀區塊（5 個論點，每個附來源）。數字取自 peers，敘事為策展文字。"""
+    f16_tw, f16_r, _ = _ars_key_ranking(df_peers, 'f16v')
+    hp_tw, hp_r, _   = _ars_key_ranking(df_peers, 'harpoon')
+    hm_tw, hm_r, _   = _ars_key_ranking(df_peers, 'himars')
+    jv_tw, _, jv_rf  = _ars_key_ranking(df_peers, 'javelin')
+    src_f16 = _ars_peer_src(df_peers, 'f16v')
+    src_hp  = _ars_peer_src(df_peers, 'harpoon')
+    src_hm  = _ars_peer_src(df_peers, 'himars')
+    src_jv  = _ars_peer_src(df_peers, 'javelin')
+    m26 = df_ars[df_ars['case_id'] == '26-01']
+    src_at = m26.iloc[0]['source_announce'] if len(m26) else src_hm
+
+    if lang == 'en':
+        pts = [
+            ('F-16V — the world’s largest single buyer',
+             f'Taiwan is buying {f16_tw} newly built F-16 Block 70/72 jets — the largest single buyer '
+             f'worldwide, ahead of Turkey (40), Morocco (25), Bulgaria and Bahrain (16 each). Selling the '
+             f'latest F-16 and letting Taiwan be the top buyer is itself a marker of capability and trust.',
+             '', src_f16),
+            ('Harpoon — an order no one else matches',
+             f'Taiwan’s {hp_tw} Harpoon missiles (400 coastal-defense in 100 launcher sets, plus 60 '
+             f'air-launched) dwarf every other buyer (India 43, Egypt 20, South Korea 19, Philippines 12) — '
+             f'the largest single Harpoon order in years, and the core weapon for anti-invasion defense.',
+             '', src_hp),
+            ('HIMARS — the world’s second-largest buyer',
+             f'Taiwan’s {hm_tw} HIMARS launchers rank second worldwide, behind only Poland (506) and ahead '
+             f'of Australia (90) and Romania (54). HIMARS proved the value of mobile precision fires in Ukraine.',
+             '', src_hm),
+            ('Javelin — second only to Poland among paying buyers',
+             f'Taiwan’s ~{jv_tw:,} Javelin missiles rank second among Foreign Military Sales buyers, behind '
+             f'Poland (2,506) and ahead of Australia (1,308); Ukraine’s 10,000+ are US military aid and counted separately.',
+             '', src_jv),
+            ('ATACMS — a marker of the trust tier',
+             'The December 2025 HIMARS package (case 26-01) includes 420 M57 ATACMS — deep-strike missiles with '
+             'roughly 300 km range. Willingness to sell a weapon that can strike deep across the strait signals a '
+             'higher tier of trust in Taiwan.',
+             'This reading is contextual inference and still needs a DoD/CRS-grade source before publication; '
+             'it currently cites only the DSCA notice.',
+             src_at),
+        ]
+    else:
+        pts = [
+            ('F-16V：全球最大單一買家',
+             f'台灣採購 {f16_tw} 架 F-16 Block 70/72 新造機，是全球最大的單一買家——超過土耳其（40）、'
+             f'摩洛哥（25）、保加利亞與巴林（各 16）。願意出售最新型 F-16 並讓台灣成為最大買家，'
+             f'本身即是能力與信任的指標。',
+             '', src_f16),
+            ('魚叉反艦飛彈：無人能及的訂單規模',
+             f'台灣岸置型 400 枚（100 套發射系統）加空射型 60 枚，合計 {hp_tw} 枚，遠超其他所有國際買家'
+             f'（印度 43、埃及 20、南韓 19、菲律賓 12），是近年最大的單一魚叉訂單，也是反登陸作戰的核心武器。',
+             '', src_hp),
+            ('HIMARS 多管火箭：全球第二大買家',
+             f'台灣累計 {hm_tw} 套 HIMARS，規模僅次於波蘭（506），高於澳洲（90）、羅馬尼亞（54）等'
+             f'北約與盟邦，位居全球第二。HIMARS 已在烏克蘭戰場證明機動精準火力的價值。',
+             '', src_hm),
+            ('標槍反裝甲飛彈：付費買家中僅次波蘭',
+             f'台灣累計約 {jv_tw:,} 枚標槍，在付費採購（FMS）買家中僅次於波蘭（2,506）、高於澳洲（1,308）；'
+             f'烏克蘭逾 10,000 枚屬美國軍援、另計。',
+             '', src_jv),
+            ('ATACMS 陸軍戰術飛彈：信任層級的指標',
+             '2025 年 12 月的 HIMARS 大案（案號 26-01）包含 420 枚 M57 ATACMS——射程約 300 公里的縱深'
+             '打擊武器。美國願意出售此級可打擊對岸縱深的武器，象徵對台信任層級的提升。',
+             '此判讀屬脈絡推論，上線前仍需補 DoD／CRS 級來源佐證，目前僅引 DSCA 公告。',
+             src_at),
+        ]
+
+    blocks = []
+    for title, body, caveat, src in pts:
+        cav = f' <span class="caveat">{html.escape(caveat)}</span>' if caveat else ''
+        srch = (f'<div class="ars-src"><a href="{html.escape(src)}" target="_blank" rel="noopener">'
+                f'{s["ars"]["src_announce"]}</a></div>') if src else ''
+        blocks.append(f'<div class="ars-point"><h3>{title}</h3><p>{body}{cav}</p>{srch}</div>')
+    return '<div class="ars-reads">' + ''.join(blocks) + '</div>'
+
+
+def _ars_delay_table_html(df_ars, lang, s):
+    a = s['ars']
+    id2name = {r['case_id']: (r['system_en'] if lang == 'en' else r['system_zh'])
+               for _, r in df_ars.iterrows()}
+    body = []
+    for cid in ARSENAL_DELAY_ORDER:
+        if cid not in df_ars['case_id'].values:
+            continue
+        zh, en, src, tag = ARSENAL_DELAYS[cid]
+        reason = html.escape(en if lang == 'en' else zh)
+        tl = _DELAY_TAG[tag][1] if lang == 'en' else _DELAY_TAG[tag][0]
+        srch = (f'<a class="src" href="{html.escape(src)}" target="_blank" rel="noopener">'
+                f'{a["src_announce"]}</a>') if src else '—'
+        body.append(
+            f'<tr><td>{html.escape(id2name.get(cid, cid))}</td>'
+            f'<td class="special-cell" style="max-width:none">〔{tl}〕{reason}</td>'
+            f'<td>{srch}</td></tr>' if lang != 'en' else
+            f'<tr><td>{html.escape(id2name.get(cid, cid))}</td>'
+            f'<td class="special-cell" style="max-width:none">[{tl}] {reason}</td>'
+            f'<td>{srch}</td></tr>')
+    # counter-examples
+    counters = []
+    for cid, czh, cen, src in ARSENAL_COUNTERS:
+        name = id2name.get(cid, cid)
+        txt = html.escape(cen if lang == 'en' else czh)
+        counters.append(
+            f'<div class="c"><div class="t">{html.escape(name)}</div><p>{txt} '
+            f'<a class="src" href="{html.escape(src)}" target="_blank" rel="noopener">'
+            f'{a["src_delivery"]}</a></p></div>')
+    return (
+        f'<div class="ars-tbl-wrap tbl-wrap"><table><thead><tr>'
+        f'<th>{a["delay_col_case"]}</th><th>{a["delay_col_reason"]}</th>'
+        f'<th>{a["delay_col_src"]}</th></tr></thead><tbody>'
+        + ''.join(body) + '</tbody></table></div>'
+        + f'<div class="ars-sec-title" style="margin-top:1.5rem;border:0;padding:0">'
+          f'{a["counter_title"]}</div>'
+        + '<div class="ars-counter">' + ''.join(counters) + '</div>')
+
+
+def _ars_chart_html(df_ars, lang, s):
+    a = s['ars']
+    df = df_ars.copy()
+    df['year'] = df['announce_date'].str[:4]
+    years = sorted(df['year'].unique())
+    divisor = 1000.0 if lang == 'en' else 100.0
+    vals, tops = [], []
+    for y in years:
+        yr = df[df['year'] == y]
+        vals.append(round(yr['value_usd_m'].sum() / divisor, 2))
+        top3 = yr.sort_values('value_usd_m', ascending=False).head(3)
+        labels = []
+        for _, r in top3.iterrows():
+            nm = r['system_en'] if lang == 'en' else r['system_zh']
+            labels.append(f'{nm} {fmt_money(r["value_usd_m"], lang)}')
+        tops.append(labels)
+    tc = _CHART_COLORS[THEME]
+    js = (_CHART_JS_ARSENAL
+          .replace('__YEARS__', json.dumps(years))
+          .replace('__VALS__',  json.dumps(vals))
+          .replace('__TOPS__',  json.dumps(tops, ensure_ascii=False))
+          .replace('__TICK__',  json.dumps(tc['tick']))
+          .replace('__ZERO__',  json.dumps(tc['zero']))
+          .replace('__BAR__',   json.dumps(tc['ac_today']))
+          .replace('__BARH__',  json.dumps(tc['ac_line']))
+          .replace('__CURLABEL__', json.dumps('US$' if lang == 'en' else ''))
+          .replace('__UNIT__',  json.dumps('B' if lang == 'en' else '億'))
+          .replace('__UID__',   'ars-year'))
+    return (f'<div class="ars-chart-wrap"><div class="ars-chart-canvas">'
+            f'<canvas id="ars-year"></canvas></div></div><script>{js}</script>')
+
+
+def _ars_cases_html(df_ars, lang, s):
+    a = s['ars']
+    df = df_ars.sort_values('announce_date', ascending=False)
+    # desktop table
+    rows = []
+    for _, r in df.iterrows():
+        name = html.escape(r['system_en'] if lang == 'en' else r['system_zh'])
+        rows.append(
+            f'<tr><td class="num">{html.escape(r["announce_date"])}</td>'
+            f'<td style="white-space:normal;max-width:280px">{name}</td>'
+            f'<td>{_ars_cat_badge(r["category"], s)}</td>'
+            f'<td class="num">{fmt_money(r["value_usd_m"], lang)}</td>'
+            f'<td>{_ars_status_badge(r["delivery_status"], s)}</td>'
+            f'<td>{_ars_srcs(r, s) or "—"}</td></tr>')
+    table = (f'<div class="ars-tbl-wrap tbl-wrap"><table><thead><tr>'
+             f'<th>{a["th_date"]}</th><th>{a["th_system"]}</th><th>{a["th_cat"]}</th>'
+             f'<th class="num">{a["th_value"]}</th><th>{a["th_status"]}</th>'
+             f'<th>{a["th_src"]}</th></tr></thead><tbody>'
+             + ''.join(rows) + '</tbody></table></div>')
+    # mobile cards
+    cards = []
+    for _, r in df.iterrows():
+        name = html.escape(r['system_en'] if lang == 'en' else r['system_zh'])
+        qtyl = _ars_qty_label(r['qty'], r['qty_unit'], lang)
+        meta = (f'<span>{html.escape(r["announce_date"])}</span>'
+                f'<span>{_ars_cat_badge(r["category"], s)}</span>'
+                f'<span>{fmt_money(r["value_usd_m"], lang)}</span>'
+                f'<span>{_ars_status_badge(r["delivery_status"], s)}</span>')
+        if lang == 'en':
+            body_parts = []
+            if qtyl:
+                body_parts.append(f'{a["card_qty"]}: {qtyl}')
+            fd = _ars_clean_en(r['first_delivery'])
+            ec = _ars_clean_en(r['expected_complete'])
+            if fd:
+                body_parts.append(f'first delivery {fd}')
+            if ec:
+                body_parts.append(f'expected {ec}')
+            body_parts.append(_ars_srcs(r, s))
+            body = ' · '.join(p for p in body_parts if p)
+        else:
+            note = html.escape(r['delivered_note'] or r['notes'].split('；')[0])
+            body = (f'{a["card_qty"]}：{qtyl}<br>' if qtyl else '') + note
+            srcs = _ars_srcs(r, s)
+            if srcs:
+                body += f'<br>{srcs}'
+        cards.append(
+            f'<details class="ars-card"><summary>'
+            f'<div class="ars-card-top"><span class="ars-card-sys">{name}</span></div>'
+            f'<div class="ars-card-meta">{meta}</div></summary>'
+            f'<div class="ars-card-body">{body}</div></details>')
+    return (f'<div class="ars-cases">{table}'
+            f'<div class="ars-cards">' + ''.join(cards) + '</div></div>')
+
+
+def build_arsenal(df_ars, df_peers, lang, out_dir, s):
+    """/arsenal/index.html（zh 於 SITE_DIR/arsenal，en 於 SITE_DIR/en/arsenal）。"""
+    a = s['ars']
+    total_m = df_ars['value_usd_m'].sum()
+    n_cases = len(df_ars)
+    n_deliver = int((df_ars['delivery_status'] == 'delivering').sum())
+    n_done    = int((df_ars['delivery_status'] == 'completed').sum())
+    n_cancel  = int((df_ars['delivery_status'] == 'cancelled').sum())
+    latest    = df_ars['announce_date'].max()
+    total_disp = f'{total_m / 100:.0f}' if lang != 'en' else fmt_money(total_m, lang)
+
+    # KPI 卡（2×3）
+    unit_case = a['kpi_unit_case']
+    kpis = [
+        (fmt_money(total_m, lang), a['kpi_value'], 'y'),
+        (f'{n_cases}<small>{unit_case}</small>' if unit_case else f'{n_cases}', a['kpi_cases'], ''),
+        (str(n_deliver), a['kpi_deliver'], 'y'),
+        (str(n_done), a['kpi_done'], ''),
+        (str(n_cancel), a['kpi_cancel'], ''),
+        (f'<span style="font-size:1.2rem">{latest}</span>', a['kpi_latest'], ''),
+    ]
+    kpi_html = ''.join(
+        f'<div class="ars-kpi"><div class="ars-kpi-n {cls}">{val}</div>'
+        f'<div class="ars-kpi-l">{lab}</div></div>'
+        for val, lab, cls in kpis)
+
+    # 進度矩陣：主要裝備（category≠sustainment 且 qty 非空），依交付進度排序
+    # （已完成→交付中→僅公告→未知→終止），同組內依案值由大到小
+    major = df_ars[(df_ars['category'] != 'sustainment') & (df_ars['qty'] != '')].copy()
+    _st_order = {'completed': 0, 'delivering': 1, 'announced': 2, 'unknown': 3, 'cancelled': 4}
+    major['_st'] = major['delivery_status'].map(_st_order).fillna(3)
+    major = major.sort_values(['_st', 'value_usd_m'], ascending=[True, False])
+    mrows = []
+    for _, r in major.iterrows():
+        name = html.escape(r['system_en'] if lang == 'en' else r['system_zh'])
+        qtyl = _ars_qty_label(r['qty'], r['qty_unit'], lang)
+        qspan = f'<span class="qty">{qtyl}</span>' if qtyl else ''
+        caret = ('▸ ' + a['matrix_expand'])
+        mrows.append(
+            f'<details class="ars-row"><summary>'
+            f'<div class="ars-row-top"><span class="ars-name">{name}{qspan}</span>'
+            f'{_ars_status_badge(r["delivery_status"], s)}</div>'
+            f'{_ars_bar(r["delivery_status"])}'
+            f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
+            f'</summary>{_ars_matrix_detail(r, s, lang)}</details>')
+    matrix_html = '<div class="ars-matrix">' + ''.join(mrows) + '</div>'
+
+    reads_html   = _ars_reads_html(df_ars, df_peers, lang, s)
+    delay_html   = _ars_delay_table_html(df_ars, lang, s)
+    chart_html   = _ars_chart_html(df_ars, lang, s)
+    cases_html   = _ars_cases_html(df_ars, lang, s)
+    divert_link  = '/en/arsenal/' if lang == 'en' else '/arsenal/'
+
+    today_label = fmt_date_display(df_ars['announce_date'].max(), lang)
+    head = make_head(lang, 'arsenal', s, page_path='/arsenal/', abs_assets=True)
+    html_doc = f"""{head}
+<body>
+<div class="top-bar">
+  <span>{a['topbar']}</span>
+  <span>2019 → {latest[:4]}</span>
+</div>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-brand">
+      <div class="site-title">{s['site_title']}</div>
+      <div class="site-sub">{s['site_sub']}</div>
+    </div>
+    {nav_html('arsenal', lang, 'arsenal', s)}
+  </div>
+</header>
+
+<main>
+  <div class="ars-hero anim-ready">
+    <h1 class="ars-h1">{a['h1']}</h1>
+    <p class="ars-sub">{a['sub'].format(n=n_cases, total=total_disp)}</p>
+  </div>
+
+  <div class="ars-kpis anim-ready">{kpi_html}</div>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['matrix_title']}</div>
+    {matrix_html}
+    <p class="ars-note">{a['matrix_note']}</p>
+  </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['chart_title']}<span class="sub">{a['chart_sub']}</span></div>
+    {chart_html}
+  </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['read_title']}</div>
+    <p class="ars-lead">{a['read_intro']}</p>
+    {reads_html}
+  </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['delay_title']}</div>
+    <p class="ars-lead">{a['delay_intro']}</p>
+    {delay_html}
+  </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['table_title']}<span class="sub">{a['table_sub'].format(n=n_cases)}</span></div>
+    {cases_html}
+  </section>
+
+  <div class="ars-scope"><span class="st">{a['scope_title']}</span>{a['scope_body']}</div>
+</main>
+
+{_ANIM_JS}
+{footer_html(today_label, s)}
+</body></html>"""
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / 'index.html').write_text(html_doc, encoding='utf-8')
+    rel = 'arsenal' if out_dir.parent == SITE_DIR else 'en/arsenal'
+    print(f'[OK] {rel}/index.html')
+
+
 # ── sitemap.xml / robots.txt ──────────────────────────────────────────────────
 
 def build_sitemap(df):
@@ -1846,6 +2755,22 @@ def build_sitemap(df):
                 f'    <xhtml:link rel="alternate" hreflang="x-default" href="{zh}"/>\n'
                 '  </url>'
             )
+
+    # /arsenal/（目錄式路徑，非 .html）：zh + en
+    ars_zh = f'{BASE_URL}/arsenal/'
+    ars_en = f'{BASE_URL}/en/arsenal/'
+    for loc in (ars_zh, ars_en):
+        blocks.append(
+            '  <url>\n'
+            f'    <loc>{loc}</loc>\n'
+            f'    <lastmod>{build_mod}</lastmod>\n'
+            '    <changefreq>weekly</changefreq>\n'
+            '    <priority>0.8</priority>\n'
+            f'    <xhtml:link rel="alternate" hreflang="zh-Hant" href="{ars_zh}"/>\n'
+            f'    <xhtml:link rel="alternate" hreflang="en" href="{ars_en}"/>\n'
+            f'    <xhtml:link rel="alternate" hreflang="x-default" href="{ars_zh}"/>\n'
+            '  </url>'
+        )
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
            '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
@@ -1867,6 +2792,8 @@ def build_robots():
 
 if __name__ == '__main__':
     df = load_df()
+    df_ars   = load_arsenal()
+    df_peers = load_peers()
     THEME = resolve_theme(df)   # 依當日資料決定全站主題（嚴重日 dark / 平常日 light）
     print(f'[OK] theme = {THEME}')
     build_css()
@@ -1875,14 +2802,17 @@ if __name__ == '__main__':
         s = STRINGS[lang]
         if lang == 'zh':
             out_dir = SITE_DIR
+            ars_dir = SITE_DIR / 'arsenal'
         else:
             out_dir = SITE_DIR / 'en'
             out_dir.mkdir(exist_ok=True)
+            ars_dir = SITE_DIR / 'en' / 'arsenal'
 
-        build_index(df, lang, out_dir, s)
+        build_index(df, lang, out_dir, s, df_ars=df_ars)
         build_records(df, lang, out_dir, s)
         build_monthly(df, lang, out_dir, s)
         build_about(df, lang, out_dir, s)
+        build_arsenal(df_ars, df_peers, lang, ars_dir, s)
 
     build_sitemap(df)
     build_robots()

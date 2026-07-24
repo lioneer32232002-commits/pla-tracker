@@ -19,6 +19,10 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='repla
 
 ROOT      = Path(__file__).parent.parent
 CSV_PATH  = ROOT / 'data' / 'records.csv'
+ARSENAL_CSV = ROOT / 'data' / 'arsenal.csv'
+PEERS_CSV   = ROOT / 'data' / 'arsenal_peers.csv'
+ARSENAL_HTML    = ROOT / 'arsenal' / 'index.html'
+EN_ARSENAL_HTML = ROOT / 'en' / 'arsenal' / 'index.html'
 INDEX_HTML = ROOT / 'index.html'
 RECORDS_HTML = ROOT / 'records.html'
 VERSION_TXT = ROOT / 'version.txt'
@@ -132,9 +136,83 @@ def validate_csv():
     return True
 
 
+# ── 軍購 CSV 驗證 ─────────────────────────────────────────────────────────────
+
+ARS_COLUMNS = ['case_id', 'announce_date', 'system_zh', 'system_en', 'category',
+               'value_usd_m', 'qty', 'qty_unit', 'delivery_status', 'first_delivery',
+               'expected_complete', 'delivered_note', 'source_announce',
+               'source_delivery', 'notes']
+ARS_CATEGORIES = {'aircraft', 'missile', 'ground', 'naval', 'uas', 'c4isr', 'sustainment'}
+ARS_STATUSES   = {'completed', 'delivering', 'announced', 'unknown', 'cancelled'}
+PEERS_KEYS     = {'f16v', 'harpoon', 'himars', 'javelin', 'm1a2', 'mq9b', 'patriot', 'stinger'}
+
+
+def validate_arsenal():
+    errors = []
+
+    # ── 主表 arsenal.csv ──
+    if not ARSENAL_CSV.exists():
+        print(f'[FAIL] 軍購主表不存在：{ARSENAL_CSV}')
+        return False
+    with open(ARSENAL_CSV, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        if reader.fieldnames != ARS_COLUMNS:
+            errors.append(f'arsenal.csv 欄位不符，應為 {ARS_COLUMNS}，實為 {reader.fieldnames}')
+        rows = list(reader)
+    seen_cases = set()
+    for i, row in enumerate(rows, start=2):
+        cid = row.get('case_id', '').strip()
+        if not cid:
+            errors.append(f'arsenal 第{i}行：case_id 空白')
+        elif cid in seen_cases:
+            errors.append(f'arsenal 第{i}行：case_id 重複「{cid}」')
+        else:
+            seen_cases.add(cid)
+        # ISO 日期
+        try:
+            datetime.strptime(row.get('announce_date', '').strip(), '%Y-%m-%d')
+        except ValueError:
+            errors.append(f'arsenal 第{i}行 {cid}：announce_date 非 ISO 日期「{row.get("announce_date")}」')
+        # category / status 列舉
+        if row.get('category', '').strip() not in ARS_CATEGORIES:
+            errors.append(f'arsenal 第{i}行 {cid}：category 不合法「{row.get("category")}」')
+        if row.get('delivery_status', '').strip() not in ARS_STATUSES:
+            errors.append(f'arsenal 第{i}行 {cid}：delivery_status 不合法「{row.get("delivery_status")}」')
+        # value_usd_m 數字
+        try:
+            float(row.get('value_usd_m', '').strip())
+        except ValueError:
+            errors.append(f'arsenal 第{i}行 {cid}：value_usd_m 非數字「{row.get("value_usd_m")}」')
+        # source_announce http 開頭
+        if not row.get('source_announce', '').strip().startswith('http'):
+            errors.append(f'arsenal 第{i}行 {cid}：source_announce 非 http 開頭')
+
+    # ── 對比表 arsenal_peers.csv ──
+    if not PEERS_CSV.exists():
+        print(f'[FAIL] 軍購對比表不存在：{PEERS_CSV}')
+        return False
+    with open(PEERS_CSV, newline='', encoding='utf-8') as f:
+        preader = csv.DictReader(f)
+        prows = list(preader)
+    for i, row in enumerate(prows, start=2):
+        key = row.get('system_key', '').strip()
+        if key not in PEERS_KEYS:
+            errors.append(f'peers 第{i}行：system_key 不合法「{key}」')
+        if not row.get('source', '').strip():
+            errors.append(f'peers 第{i}行：source 空白（{row.get("buyer_country")}）')
+
+    if errors:
+        print(f'[FAIL] 軍購 CSV 驗證發現 {len(errors)} 個問題：')
+        for e in errors:
+            print(f'  ✗ {e}')
+        return False
+    return True
+
+
 # ── HTML 驗證 ─────────────────────────────────────────────────────────────────
 
 def validate_html():
+    import re as _re0
     errors = []
 
     # 檔案存在且有內容
@@ -245,6 +323,43 @@ def validate_html():
             if marker not in about:
                 errors.append(f'about.html 缺少 {desc}（找不到「{marker}」）')
 
+    # ── /arsenal/ 軍購儀表板（zh + en）────────────────────────────────────────
+    for path, is_en in [(ARSENAL_HTML, False), (EN_ARSENAL_HTML, True)]:
+        label = 'en/arsenal/index.html' if is_en else 'arsenal/index.html'
+        if not path.exists():
+            errors.append(f'{label} 不存在（build 可能未產出軍購頁）')
+            continue
+        if path.stat().st_size < 10_000:
+            errors.append(f'{label} 檔案過小（{path.stat().st_size} bytes）')
+            continue
+        content = path.read_text(encoding='utf-8')
+        for marker, desc in [
+            ('class="ars-kpi', 'KPI 卡列'),
+            ('class="ars-matrix"', '交付進度矩陣'),
+            ('id="ars-year"', '年度金額圖'),
+            ('class="ars-reads"', '質性判讀區塊'),
+            ('class="ars-scope"', '口徑說明'),
+            ('rel="canonical"', 'canonical 連結'),
+            ('hreflang="zh-Hant"', 'hreflang zh'),
+            ('hreflang="en"', 'hreflang en'),
+            ('property="og:image"', 'OG 圖標籤'),
+        ]:
+            if marker not in content:
+                errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
+        # canonical 應指向 /arsenal/ 目錄式路徑
+        expect_canon = (f'{BASE_URL}/en/arsenal/' if is_en else f'{BASE_URL}/arsenal/')
+        if f'href="{expect_canon}"' not in content:
+            errors.append(f'{label} canonical 未指向 {expect_canon}')
+        if is_en:
+            if 'lang="en"' not in content:
+                errors.append('en/arsenal/index.html 缺少 <html lang="en">')
+            html_no_script = _re0.sub(r'<script[^>]*>.*?</script>', '', content, flags=_re0.DOTALL)
+            html_cleaned = html_no_script.replace('中文', '')
+            chinese_found = _re0.findall(r'[一-鿿]+', html_cleaned)
+            if chinese_found:
+                sample = '、'.join(sorted(set(chinese_found))[:5])
+                errors.append(f'en/arsenal/index.html 含有中文字元（翻譯規則可能遺漏）：{sample}')
+
     # ── sitemap.xml / robots.txt ─────────────────────────────────────────────
     if not SITEMAP.exists():
         errors.append('sitemap.xml 不存在')
@@ -255,6 +370,9 @@ def validate_html():
                 errors.append(f'sitemap.xml 缺少中文 {page} 頁')
             if f'{BASE_URL}/en/{page}.html' not in sm:
                 errors.append(f'sitemap.xml 缺少英文 {page} 頁')
+        for loc in [f'{BASE_URL}/arsenal/', f'{BASE_URL}/en/arsenal/']:
+            if loc not in sm:
+                errors.append(f'sitemap.xml 缺少 {loc}')
 
     if not ROBOTS.exists():
         errors.append('robots.txt 不存在')
@@ -287,6 +405,7 @@ def main():
 
     if mode in ('csv', 'all'):
         results.append(validate_csv())
+        results.append(validate_arsenal())
     if mode in ('html', 'all'):
         results.append(validate_html())
 

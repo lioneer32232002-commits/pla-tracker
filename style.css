@@ -191,6 +191,125 @@ html[lang="zh-Hant"] .site-sub{font-size:.72rem}
 html[lang="zh-Hant"] nav a{font-size:.82rem;letter-spacing:.06em}
 html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 
+/* ── Arsenal dashboard ── */
+.ars-hero{margin:.5rem 0 1.5rem}
+.ars-h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;color:var(--tx);line-height:1.15}
+html[lang="zh-Hant"] .ars-h1{font-size:1.85rem}
+.ars-sub{font-size:.9rem;color:var(--sub);line-height:1.6;margin-top:.5rem;max-width:640px}
+.ars-section{margin-bottom:2.25rem}
+.ars-sec-title{font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--sub);white-space:normal;padding-bottom:.5rem;margin-bottom:1rem;border-bottom:1px solid var(--bdr)}
+.ars-sec-title .sub{font-weight:600;letter-spacing:.04em;color:var(--sub);opacity:.75;margin-left:.6rem;text-transform:none}
+.ars-lead{font-size:.88rem;color:var(--sub);line-height:1.7;margin:-.3rem 0 1rem;max-width:680px}
+html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
+
+/* KPI grid */
+.ars-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:2rem}
+.ars-kpi{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.85rem 1rem}
+.ars-kpi-n{font-size:1.9rem;font-weight:800;line-height:1;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--tx)}
+.ars-kpi-n.y{color:var(--y)}
+.ars-kpi-n small{font-size:.9rem;font-weight:700;margin-left:.15rem}
+.ars-kpi-l{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);margin-top:.4rem;white-space:nowrap}
+html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
+
+/* Progress matrix */
+.ars-matrix{display:flex;flex-direction:column;gap:.55rem}
+.ars-row{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
+.ars-row>summary{list-style:none;cursor:pointer;padding:.7rem .9rem;display:block}
+.ars-row>summary::-webkit-details-marker{display:none}
+.ars-row-top{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;margin-bottom:.5rem}
+.ars-name{font-size:.86rem;font-weight:700;color:var(--tx);line-height:1.35}
+.ars-name .qty{color:var(--sub);font-weight:600;font-size:.78rem;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:.35rem}
+.ars-st{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:.18em .6em;border-radius:999px;white-space:nowrap;flex-shrink:0}
+.ars-st.completed {background:#123016;color:#5fce77}
+.ars-st.delivering{background:#2a2408;color:var(--y)}
+.ars-st.announced {background:#0d1d2e;color:#6aaee0}
+.ars-st.unknown   {background:var(--sur);color:var(--sub);border:1px solid var(--bdr)}
+.ars-st.cancelled {background:#2c1414;color:#e08585}
+.ars-bar{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--sur)}
+.ars-seg{height:100%}
+.ars-seg-d{background:var(--y)}
+.ars-seg-p{background:rgba(245,200,66,.26)}
+.ars-seg-c{flex:1;background:repeating-linear-gradient(45deg,#3a4448 0 5px,#222a2e 5px 10px)}
+.ars-caret{color:var(--sub);font-size:.72rem;margin-top:.5rem;display:inline-flex;align-items:center;gap:.3rem}
+.ars-row[open] .ars-caret .tri{transform:rotate(90deg)}
+.ars-caret .tri{transition:transform .15s;display:inline-block}
+.ars-detail{padding:0 .9rem .8rem;font-size:.8rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-detail{font-size:.84rem}
+.ars-detail .lbl{font-weight:700;color:var(--tx)}
+.ars-detail a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;word-break:break-all}
+.ars-detail a:hover{color:#fff}
+.ars-note{font-size:.72rem;color:var(--sub);line-height:1.6;margin-top:.75rem;opacity:.85}
+html[lang="zh-Hant"] .ars-note{font-size:.76rem}
+
+/* Annual chart */
+.ars-chart-wrap{background:#1e2224;border-radius:var(--rad);padding:12px 12px 8px}
+.ars-chart-canvas{position:relative;height:240px}
+
+/* Qualitative reads */
+.ars-reads{display:flex;flex-direction:column;gap:.7rem}
+.ars-point{background:var(--sur);border:1px solid var(--bdr);border-left:3px solid var(--y);
+  border-radius:0 var(--rad) var(--rad) 0;padding:.75rem 1rem}
+.ars-point h3{font-size:.9rem;font-weight:800;color:var(--tx);margin-bottom:.35rem;letter-spacing:.01em}
+.ars-point p{font-size:.83rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-point p{font-size:.87rem}
+.ars-point .caveat{color:var(--y);font-weight:600}
+.ars-src{font-size:.72rem;margin-top:.45rem}
+.ars-src a{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr);margin-right:.7rem;word-break:break-word}
+.ars-src a:hover{color:var(--y);border-bottom-color:var(--y)}
+
+/* Delay table + counter cards */
+.ars-counter{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.ars-counter .c{flex:1 1 240px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.7rem .9rem}
+.ars-counter .c .t{font-size:.82rem;font-weight:700;color:var(--grn)}
+.ars-counter .c p{font-size:.78rem;color:var(--sub);line-height:1.6;margin-top:.3rem}
+html[lang="zh-Hant"] .ars-counter .c p{font-size:.82rem}
+
+/* Category badge */
+.ars-cat{display:inline-block;padding:.15em .55em;border-radius:999px;font-size:.68rem;font-weight:700;white-space:nowrap}
+.ars-cat.aircraft   {background:#0d1d2e;color:#6aaee0}
+.ars-cat.missile    {background:#2c1414;color:#e08585}
+.ars-cat.ground     {background:#272008;color:var(--y)}
+.ars-cat.naval      {background:#07231f;color:#4fc7ad}
+.ars-cat.uas        {background:#20143a;color:#b898dc}
+.ars-cat.c4isr      {background:#08262b;color:#4fc2d0}
+.ars-cat.sustainment{background:var(--sur);color:var(--sub);border:1px solid var(--bdr)}
+
+/* All-cases: desktop table (mobile → cards) */
+.ars-cases .ars-cards{display:none}
+.ars-cases a.src{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr)}
+.ars-cases a.src:hover{color:var(--y);border-bottom-color:var(--y)}
+.ars-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;margin-bottom:.5rem}
+.ars-card>summary{list-style:none;cursor:pointer;padding:.7rem .9rem}
+.ars-card>summary::-webkit-details-marker{display:none}
+.ars-card-top{display:flex;justify-content:space-between;gap:.6rem;align-items:baseline}
+.ars-card-sys{font-size:.85rem;font-weight:700;color:var(--tx);line-height:1.3}
+.ars-card-meta{display:flex;flex-wrap:wrap;gap:.4rem .9rem;margin-top:.5rem;font-size:.74rem;color:var(--sub);
+  font-variant-numeric:tabular-nums;align-items:center}
+.ars-card-body{padding:0 .9rem .8rem;font-size:.8rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-card-body{font-size:.84rem}
+
+/* Scope note */
+.ars-scope{font-size:.72rem;color:var(--sub);line-height:1.75;margin-top:1rem;
+  padding:.85rem 1rem;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad)}
+html[lang="zh-Hant"] .ars-scope{font-size:.76rem}
+.ars-scope strong{color:var(--tx)}
+.ars-scope .st{display:block;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--sub);margin-bottom:.45rem}
+
+/* Homepage → arsenal diversion card */
+.ars-divert{display:block;text-decoration:none;background:var(--sur);border:1px solid var(--bdr);
+  border-left:3px solid var(--y);border-radius:0 var(--rad) var(--rad) 0;padding:.7rem 1rem;
+  margin:0 0 2rem;transition:border-color .15s,background .15s}
+.ars-divert:hover{background:#12201a;border-left-color:var(--y)}
+html[data-theme="light"] .ars-divert:hover{background:#f3f0e6}
+.ars-divert .row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.82rem}
+.ars-divert .lab{font-weight:800;color:var(--y);letter-spacing:.02em}
+.ars-divert .txt{color:var(--sub);line-height:1.5}
+.ars-divert .arr{color:var(--sub)}
+html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
@@ -199,6 +318,8 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   nav{gap:.05rem;padding:.18rem;flex-wrap:nowrap}
   nav a{padding:.3em .5em;letter-spacing:.03em;font-size:.66rem}
   main{padding:.6rem 1rem 1rem}
+  /* en 導覽新增「Arms」後手機寬度超出 343px 預算 → 壓字級至 .62rem 保持單行 */
+  html[lang="en"] nav a{font-size:.62rem;letter-spacing:.02em;padding:.3em .42em}
   .alert{margin-bottom:1rem}
   .sitrep{padding:.55rem .9rem .6rem;margin-bottom:.55rem}
   .map-note{margin-top:.5rem}
@@ -212,6 +333,14 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
   .footer-hub{margin-left:0;flex-basis:100%}
   .prose-title{font-size:1.3rem}
   #activity-map{height:260px}
+  /* arsenal mobile */
+  .ars-kpis{grid-template-columns:repeat(2,1fr);gap:.5rem}
+  .ars-kpi-n{font-size:1.6rem}
+  .ars-h1{font-size:1.5rem}
+  html[lang="zh-Hant"] .ars-h1{font-size:1.55rem}
+  .ars-cases .ars-cards{display:block}
+  .ars-cases .ars-tbl-wrap{display:none}
+  .ars-chart-canvas{height:220px}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
@@ -259,3 +388,20 @@ html[data-theme="light"] .map-lbl-sm{color:#5d7079;
 html[data-theme="light"] .map-info{background:rgba(255,255,255,0.9)}
 html[data-theme="light"] .map-ml-label{color:#5a7280}
 html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
+
+/* ── Arsenal 淺色覆蓋（僅顏色，不動版面尺寸）── */
+html[data-theme="light"] .ars-chart-wrap{background:#fbfaf6;box-shadow:inset 0 0 0 1px var(--bdr)}
+html[data-theme="light"] .ars-seg-p{background:rgba(154,117,0,.20)}
+html[data-theme="light"] .ars-seg-c{background:repeating-linear-gradient(45deg,#cfc9ba 0 5px,#e7e2d6 5px 10px)}
+html[data-theme="light"] .ars-st.completed {background:#dff0e0;color:#227a35}
+html[data-theme="light"] .ars-st.delivering{background:#f3ecc9;color:#7a5c00}
+html[data-theme="light"] .ars-st.announced {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .ars-st.cancelled {background:#f5dede;color:#b23a3a}
+html[data-theme="light"] .ars-cat.aircraft   {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .ars-cat.missile    {background:#f5dede;color:#b23a3a}
+html[data-theme="light"] .ars-cat.ground     {background:#f3ecc9;color:#8a6a00}
+html[data-theme="light"] .ars-cat.naval      {background:#d6efe8;color:#1f8a72}
+html[data-theme="light"] .ars-cat.uas        {background:#ece1f7;color:#7a4fb0}
+html[data-theme="light"] .ars-cat.c4isr      {background:#d8eef2;color:#1f8496}
+html[data-theme="light"] .ars-detail a{border-bottom-color:#d9c98a}
+html[data-theme="light"] .ars-point{border-left-color:var(--y)}
