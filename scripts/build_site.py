@@ -1265,8 +1265,9 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 html[lang="zh-Hant"] .ars-h1{font-size:1.85rem}
 .ars-sub{font-size:.9rem;color:var(--sub);line-height:1.6;margin-top:.5rem;max-width:640px}
 .ars-section{margin-bottom:2.25rem}
-.ars-sec-title{font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+.ars-sec-title{font-size:.8rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
   color:var(--sub);white-space:normal;padding-bottom:.5rem;margin-bottom:1rem;border-bottom:1px solid var(--bdr)}
+html[lang="zh-Hant"] .ars-sec-title{font-size:.95rem;letter-spacing:.12em}
 .ars-sec-title .sub{font-weight:600;letter-spacing:.04em;color:var(--sub);opacity:.75;margin-left:.6rem;text-transform:none}
 .ars-lead{font-size:.88rem;color:var(--sub);line-height:1.7;margin:-.3rem 0 1rem;max-width:680px}
 html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
@@ -1290,6 +1291,12 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .ars-scard-img{width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--bg);
   border-bottom:1px solid var(--bdr)}
 .ars-scard-img img{width:100%;height:100%;object-fit:cover;display:block}
+.ars-scard-band{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.35rem;background:var(--sur) repeating-linear-gradient(45deg,
+  transparent 0 14px,var(--bdr) 14px 15px)}
+.ars-scard-band .band-word{font-size:1.05rem;font-weight:800;letter-spacing:.35em;
+  color:var(--sub);opacity:.55;padding-left:.35em}
+.ars-scard-band .band-note{font-size:.62rem;letter-spacing:.08em;color:var(--sub);opacity:.5}
 .ars-scard-body{padding:.75rem .85rem;display:flex;flex-direction:column;flex:1;min-width:0}
 .ars-scard-head{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-between}
 .ars-scard-ph{width:40px;height:40px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);
@@ -2168,8 +2175,15 @@ if(ch){ch.reset();ch.update();}});
 el.querySelectorAll('[data-count]').forEach(function(s,i){
 var t=+s.dataset.count;
 if(!t)return;
-setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0.15});
+setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0});
+// threshold 0：任何一像素進入視野即觸發。0.15 會讓「高度超過視窗 6.7 倍」的長區塊
+// （如 21 張卡的卡片牆在手機上）永遠達不到門檻而永久隱形——2026-07-24 實際踩過。
 document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
+// 保險絲：無論 IntersectionObserver 是否正常（舊瀏覽器/省流模式/任何異常），
+// 2.5 秒後強制顯示所有尚未觸發的區塊。動畫是加分項，內容可見是底線。
+setTimeout(function(){
+document.querySelectorAll('.anim-ready:not(.visible)').forEach(function(el){el.classList.add('visible');});
+},2500);
 })();</script>"""
 
 
@@ -2690,6 +2704,15 @@ ARSENAL_CAT_GLYPH = {
     'aircraft': '機', 'missile': '彈', 'ground': '陸',
     'naval': '艦', 'uas': '無', 'c4isr': '訊', 'sustainment': '',
 }
+# 無圖卡的「設計化占位帶」用詞（與圖帶同高，類別大字＋斜紋底，取代單獨空白）。
+ARSENAL_CAT_WORD = {
+    'aircraft': '航空系統', 'missile': '飛彈系統', 'ground': '地面系統',
+    'naval': '艦載系統', 'uas': '無人系統', 'c4isr': '通訊指管',
+}
+ARSENAL_CAT_WORD_EN = {
+    'aircraft': 'AIRCRAFT', 'missile': 'MISSILE', 'ground': 'GROUND',
+    'naval': 'NAVAL', 'uas': 'UNMANNED', 'c4isr': 'C4ISR',
+}
 ARSENAL_CAT_GLYPH_EN = {
     'aircraft': 'AC', 'missile': 'MSL', 'ground': 'GRD',
     'naval': 'NAV', 'uas': 'UAS', 'c4isr': 'C4I', 'sustainment': '',
@@ -3175,11 +3198,14 @@ def _ars_syscards_html(df_ars, lang, s):
                          f'<span class="ars-scard-name">{name}{sub}</span></div>'
                          f'{agg_html}</div>')
         else:
-            img_html = ''
-            glyph_map = ARSENAL_CAT_GLYPH_EN if lang == 'en' else ARSENAL_CAT_GLYPH
-            glyph = glyph_map.get(first['category'], '')
+            # 設計化占位帶：與圖帶同高的斜紋底＋類別大字，避免無圖卡顯得殘缺
+            word_map = ARSENAL_CAT_WORD_EN if lang == 'en' else ARSENAL_CAT_WORD
+            word = word_map.get(first['category'], '')
+            noimg_note = 'No public-domain archive photo' if lang == 'en' else '暫無公開檔案照'
+            img_html = (f'<div class="ars-scard-img ars-scard-band" aria-hidden="true">'
+                        f'<span class="band-word">{word}</span>'
+                        f'<span class="band-note">{noimg_note}</span></div>')
             head_html = (f'<div class="ars-scard-head">'
-                         f'<div class="ars-scard-ph" aria-hidden="true">{glyph}</div>'
                          f'<div class="ars-scard-titles">'
                          f'<span class="ars-scard-name">{name}{sub}</span></div>'
                          f'{agg_html}</div>')

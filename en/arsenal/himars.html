@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="M142 HIMARS: Taiwan's procurement timeline, international buyer ranking, and combat record in Ukraine, Afghanistan and Syria — each entry sourced.">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/assets/arsenal/og-arsenal.jpg">
 <meta name="twitter:image:alt" content="PLA Activity Tracker — Taiwan Strait">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607241707">
-<link rel="stylesheet" href="/style.css?v=202607241707">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607241724">
+<link rel="stylesheet" href="/style.css?v=202607241724">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607241707')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607241724')location.reload(true);});</script>
 
 </head>
 <body>
@@ -132,8 +132,15 @@ if(ch){ch.reset();ch.update();}});
 el.querySelectorAll('[data-count]').forEach(function(s,i){
 var t=+s.dataset.count;
 if(!t)return;
-setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0.15});
+setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0});
+// threshold 0：任何一像素進入視野即觸發。0.15 會讓「高度超過視窗 6.7 倍」的長區塊
+// （如 21 張卡的卡片牆在手機上）永遠達不到門檻而永久隱形——2026-07-24 實際踩過。
 document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
+// 保險絲：無論 IntersectionObserver 是否正常（舊瀏覽器/省流模式/任何異常），
+// 2.5 秒後強制顯示所有尚未觸發的區塊。動畫是加分項，內容可見是底線。
+setTimeout(function(){
+document.querySelectorAll('.anim-ready:not(.visible)').forEach(function(el){el.classList.add('visible');});
+},2500);
 })();</script>
 <footer><span>Source: <a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">ROC Ministry of National Defense</a></span><span>By Adam Pan</span><span>Updated: Dec 17</span><span class="footer-hub"><a href="https://skyfaring.pages.dev/" rel="noopener">Made by Skyfaring</a></span></footer>
 </body></html>
