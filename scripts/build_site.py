@@ -22,7 +22,7 @@ SITE_DIR.mkdir(exist_ok=True)
 # 正式部署網域（canonical / OG / sitemap / robots 的絕對網址基準）
 BASE_URL = 'https://pla-tracker.pages.dev'
 # Skyfaring 作品集主站（頁尾回連）
-HUB_URL  = 'https://skyfaring.pages.dev/'
+HUB_URL  = 'https://skyfaring.net/'
 # 相關發布（部落格）
 BLOG_URL = 'https://yi-tienpan.blogspot.com'
 

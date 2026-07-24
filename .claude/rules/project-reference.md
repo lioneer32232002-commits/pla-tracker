@@ -8,7 +8,7 @@
 - **產品**：每日追蹤解放軍在台灣周邊軍事活動的靜態網站。資料來源＝中華民國國防部
   每日發布的航跡圖／公告文字。發布管道：https://pla-tracker.pages.dev（Cloudflare
   Pages，push 到 main 即自動部署）、Threads、部落格 https://yi-tienpan.blogspot.com。
-  屬 Skyfaring 作品集（hub: https://skyfaring.pages.dev/）。
+  屬 Skyfaring 作品集（hub: https://skyfaring.net/）。
 - **每日更新是全自動的**：GitHub Actions（`.github/workflows/daily_update.yml`）在
   台灣時間 12:00、14:00 抓取國防部公告，`scripts/fetch_and_update.py` 用 Claude API
   從圖片（無圖時退回公告文字）擷取數據 → 寫入 CSV → build → validate → commit →
