@@ -520,6 +520,7 @@ STRINGS = {
             'wcards_title':  '武器內頁 · 實戰檔案',
             'wcards_cta':    '看實戰檔案 →',
             'detail_back':   '← 軍購總覽',
+            'more_title':    '更多美製武器實戰檔案',
             'tl_title':      '採購時間軸',
             'combat_title':  '實戰紀錄',
             'combat_intro':  '每一條都附來源；查無權威來源佐證者不列入本頁。',
@@ -692,6 +693,7 @@ STRINGS = {
             'wcards_title':  'Weapon Files · Combat Record',
             'wcards_cta':    'View combat file →',
             'detail_back':   '← Arms overview',
+            'more_title':    'More US weapon files',
             'tl_title':      'Procurement Timeline',
             'combat_title':  'Combat Record',
             'combat_intro':  'Every entry is sourced; cases without authoritative sources are omitted.',
@@ -1927,6 +1929,7 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
     # 沿用上面已固定的 og:image:width/height，不需另外改。
     if page_name in ARSENAL_OG_PAGES:
         og_image = f'{BASE_URL}/{ARSENAL_OG_IMG}'
+    og_alt = title if page_name in ARSENAL_OG_PAGES else s['site_title']
 
     return f"""\
 <!DOCTYPE html>
@@ -1949,14 +1952,14 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
 <meta property="og:image" content="{og_image}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="{s['site_title']}">
+<meta property="og:image:alt" content="{og_alt}">
 <meta property="og:locale" content="{og_locale}">
 <meta property="og:locale:alternate" content="{og_locale_alt}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
 <meta name="twitter:image" content="{og_image}">
-<meta name="twitter:image:alt" content="{s['site_title']}">
+<meta name="twitter:image:alt" content="{og_alt}">
 <link rel="icon" type="image/svg+xml" href="{fav_href}">
 <link rel="stylesheet" href="{css_href}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
@@ -2019,6 +2022,63 @@ def dataset_jsonld(df, lang):
     }
     return ('\n<script type="application/ld+json">'
             + json.dumps(data, ensure_ascii=False) + '</script>')
+
+
+# ── /arsenal/ 結構化資料（BreadcrumbList；目錄頁另加 ItemList、內頁加 TechArticle）──
+
+ARS_PUBLISHED = '2026-07-23'   # /arsenal/ 內容區上線日（TechArticle datePublished）
+
+
+def arsenal_jsonld(lang, s, df_ars, weapon_key=None):
+    """arsenal 系列頁的 JSON-LD head_extra。"""
+    pfx  = '/en' if lang == 'en' else ''
+    home = f'{BASE_URL}{pfx}/index.html'
+    ars  = f'{BASE_URL}{pfx}/arsenal/'
+    ars_label = 'US Arms Deliveries to Taiwan' if lang == 'en' else '對美軍購交付追蹤'
+    crumbs = [
+        {"@type": "ListItem", "position": 1,
+         "name": 'Home' if lang == 'en' else '首頁', "item": home},
+        {"@type": "ListItem", "position": 2, "name": ars_label, "item": ars},
+    ]
+    # 內容更新日：與 /arsenal/ KPI 同源（arsenal_updated.txt，缺檔退回最新公告日）
+    upd_file = DATA_FILE.parent / 'arsenal_updated.txt'
+    upd = (upd_file.read_text(encoding='utf-8').strip() if upd_file.exists()
+           else str(df_ars['announce_date'].max()))
+
+    blocks = []
+    if weapon_key:
+        w    = ARSENAL_DETAIL[weapon_key]
+        name = w['name_en'] if lang == 'en' else w['name_zh']
+        url  = f'{BASE_URL}{pfx}/arsenal/{weapon_key}.html'
+        crumbs.append({"@type": "ListItem", "position": 3, "name": name, "item": url})
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            "headline": name,
+            "description": s['meta_descs'][f'ars_{weapon_key}'],
+            "mainEntityOfPage": url,
+            "image": f'{BASE_URL}/{ARSENAL_OG_IMG}',
+            "inLanguage": 'en' if lang == 'en' else 'zh-Hant',
+            "datePublished": ARS_PUBLISHED,
+            "dateModified": upd,
+            "author": {"@type": "Person", "name": "Adam Pan"},
+        })
+    else:
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": ars_label,
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1,
+                 "name": (d['name_en'] if lang == 'en' else d['name_zh']),
+                 "url": f'{BASE_URL}{pfx}/arsenal/{k}.html'}
+                for i, (k, d) in enumerate(ARSENAL_DETAIL.items())
+            ],
+        })
+    blocks.append({"@context": "https://schema.org", "@type": "BreadcrumbList",
+                   "itemListElement": crumbs})
+    return ''.join('\n<script type="application/ld+json">'
+                   + json.dumps(b, ensure_ascii=False) + '</script>' for b in blocks)
 
 
 def nav_html(active, lang, page_name, s):
@@ -3193,7 +3253,8 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     divert_link  = '/en/arsenal/' if lang == 'en' else '/arsenal/'
 
     today_label = fmt_date_display(df_ars['announce_date'].max(), lang)
-    head = make_head(lang, 'arsenal', s, page_path='/arsenal/', abs_assets=True)
+    head = make_head(lang, 'arsenal', s, head_extra=arsenal_jsonld(lang, s, df_ars),
+                     page_path='/arsenal/', abs_assets=True)
     html_doc = f"""{head}
 <body>
 <div class="top-bar">
@@ -3562,7 +3623,9 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
     w = ARSENAL_DETAIL[weapon_key]
     name = w['name_en'] if lang == 'en' else w['name_zh']
     page_name = f'ars_{weapon_key}'
-    head = make_head(lang, page_name, s, page_path=f'/arsenal/{weapon_key}.html', abs_assets=True)
+    head = make_head(lang, page_name, s,
+                     head_extra=arsenal_jsonld(lang, s, df_ars, weapon_key),
+                     page_path=f'/arsenal/{weapon_key}.html', abs_assets=True)
     back_href = '/en/arsenal/' if lang == 'en' else '/arsenal/'
 
     hero_img = _ars_detail_hero_img_html(weapon_key, name, lang)
@@ -3592,6 +3655,14 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
             f'{_ars_pac3_wall_html(df_peers, lang, s)}</section>')
 
     today_label = fmt_date_display(df_ars['announce_date'].max(), lang)
+
+    # 同系列內頁互連（SEO：內頁之間傳遞權重＋給爬蟲第二條入路）
+    sib_pfx = '/en/arsenal/' if lang == 'en' else '/arsenal/'
+    sib_links = ''.join(
+        f'<a class="ars-back" href="{sib_pfx}{k}.html" style="margin-right:1.2rem">'
+        f'{html.escape(ARSENAL_DETAIL[k]["name_en" if lang == "en" else "name_zh"])} →</a>'
+        for k in ARSENAL_DETAIL if k != weapon_key)
+
     html_doc = f"""{head}
 <body>
 <div class="top-bar">
@@ -3640,6 +3711,11 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
     <div class="ars-sec-title">{a['src_title']}</div>
     {srcs}
   </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['more_title']}</div>
+    <p>{sib_links}</p>
+  </section>
 </main>
 
 {_ANIM_JS}
@@ -3657,7 +3733,7 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
 def build_sitemap(df):
     """Generate sitemap.xml covering both languages, with hreflang alternates."""
     data_mod   = df['date'].max()                       # 資料頁用最新資料日期
-    build_mod  = f'{_VER[:4]}-{_VER[4:6]}-{_VER[6:]}'   # 靜態頁用 build 日期
+    build_mod  = f'{_VER[:4]}-{_VER[4:6]}-{_VER[6:8]}'  # 靜態頁用 build 日期（_VER 含時分，只取到日）
     pages = [
         ('index',   'daily',   '1.0', data_mod),
         ('records', 'daily',   '0.9', data_mod),
