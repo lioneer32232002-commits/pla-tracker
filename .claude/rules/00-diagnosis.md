@@ -64,6 +64,12 @@ HTML 長怎樣」。
 5. 改了 `build_site.py` 等腳本卻沒重新 build 就 commit HTML → 腳本與產物不同步。
    鐵律：改腳本 → `python -X utf8 scripts/build_site.py` → `python -X utf8 scripts/validate.py html`
    → 一次 commit 全部（腳本＋HTML＋version.txt）。
+6. [2026-07-24] 症狀：push 含 `.github/workflows/` 變更被拒（refusing… without
+   `workflow` scope）。根因：gh 的 OAuth token 缺 `workflow` scope（已於當日
+   `gh auth refresh -s workflow` 補上）。規則：再遇到就跑 `gh auth status` 查
+   scopes，缺就請使用者跑 `gh auth refresh -h github.com -s workflow` 走瀏覽器
+   授權；**絕不**請使用者把 token 貼進對話。另：使用者在 GitHub 網頁編輯 YAML
+   容易黏行，CI 檔改動後一律 `gh workflow run` 手動觸發一班驗證。
 
 ---
 
