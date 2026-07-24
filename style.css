@@ -368,6 +368,17 @@ html[data-theme="light"] .ars-wcard:hover{background:#f3f0e6}
 .ars-wcard-teaser{font-size:.8rem;color:var(--sub);line-height:1.65;margin:.55rem 0 .7rem;flex:1}
 html[lang="zh-Hant"] .ars-wcard-teaser{font-size:.84rem}
 .ars-wcard-cta{font-size:.72rem;font-weight:800;color:var(--y);letter-spacing:.03em}
+/* source chip (arsenal only — replaces default blue browser links).
+   selector uses a.src-chip so it wins over the earlier .ars-detail/.ars-src/
+   .ars-tl-body/.ars-srclist context link rules (same specificity, later in source). */
+a.src-chip{display:inline-flex;align-items:center;gap:.25em;font-size:.68rem;font-weight:600;
+  color:var(--sub);text-decoration:none;border:1px solid var(--bdr);border-radius:999px;
+  padding:.12em .6em;background:var(--sur);letter-spacing:.02em;white-space:nowrap;
+  transition:color .15s,border-color .15s;vertical-align:middle}
+a.src-chip:hover{color:var(--tx);border-color:var(--y)}
+a.src-chip::after{content:'\2197';font-size:.85em;opacity:.7}
+.ars-srclist li{display:flex;align-items:baseline;gap:.45rem;flex-wrap:wrap}
+.src-full{font-size:.7rem;color:var(--sub);opacity:.68;word-break:break-all;line-height:1.5}
 
 /* ── Mobile ── */
 @media(max-width:640px){

@@ -1433,6 +1433,17 @@ html[data-theme="light"] .ars-wcard:hover{background:#f3f0e6}
 .ars-wcard-teaser{font-size:.8rem;color:var(--sub);line-height:1.65;margin:.55rem 0 .7rem;flex:1}
 html[lang="zh-Hant"] .ars-wcard-teaser{font-size:.84rem}
 .ars-wcard-cta{font-size:.72rem;font-weight:800;color:var(--y);letter-spacing:.03em}
+/* source chip (arsenal only — replaces default blue browser links).
+   selector uses a.src-chip so it wins over the earlier .ars-detail/.ars-src/
+   .ars-tl-body/.ars-srclist context link rules (same specificity, later in source). */
+a.src-chip{display:inline-flex;align-items:center;gap:.25em;font-size:.68rem;font-weight:600;
+  color:var(--sub);text-decoration:none;border:1px solid var(--bdr);border-radius:999px;
+  padding:.12em .6em;background:var(--sur);letter-spacing:.02em;white-space:nowrap;
+  transition:color .15s,border-color .15s;vertical-align:middle}
+a.src-chip:hover{color:var(--tx);border-color:var(--y)}
+a.src-chip::after{content:'\\2197';font-size:.85em;opacity:.7}
+.ars-srclist li{display:flex;align-items:baseline;gap:.45rem;flex-wrap:wrap}
+.src-full{font-size:.7rem;color:var(--sub);opacity:.68;word-break:break-all;line-height:1.5}
 
 /* ── Mobile ── */
 @media(max-width:640px){
@@ -2647,15 +2658,13 @@ def _ars_bar(status):
 
 
 def _ars_srcs(row, s):
-    a = s['ars']
+    lang = 'en' if s['html_lang'] == 'en' else 'zh'
     out = []
     if row['source_announce']:
-        out.append(f'<a href="{html.escape(row["source_announce"])}" target="_blank" '
-                   f'rel="noopener">{a["src_announce"]}</a>')
+        out.append(_src_chip(row['source_announce'], lang))
     if row['source_delivery']:
-        out.append(f'<a href="{html.escape(row["source_delivery"])}" target="_blank" '
-                   f'rel="noopener">{a["src_delivery"]}</a>')
-    return ' · '.join(out)
+        out.append(_src_chip(row['source_delivery'], lang))
+    return ' '.join(out)
 
 
 _DELAY_TAG = {
@@ -2675,8 +2684,7 @@ def _ars_delay_html(cid, lang):
     brk = f'[{tl}] ' if lang == 'en' else f'〔{tl}〕'
     out = brk + html.escape(txt)
     if src:
-        out += (f' <a href="{html.escape(src)}" target="_blank" rel="noopener">'
-                f'{"source" if lang == "en" else "來源"}</a>')
+        out += ' ' + _src_chip(src, lang)
     return out
 
 
@@ -2826,8 +2834,7 @@ def _ars_reads_html(df_ars, df_peers, lang, s):
     blocks = []
     for title, body, caveat, src in pts:
         cav = f' <span class="caveat">{html.escape(caveat)}</span>' if caveat else ''
-        srch = (f'<div class="ars-src"><a href="{html.escape(src)}" target="_blank" rel="noopener">'
-                f'{s["ars"]["src_announce"]}</a></div>') if src else ''
+        srch = f'<div class="ars-src">{_src_chip(src, lang)}</div>' if src else ''
         blocks.append(f'<div class="ars-point"><h3>{title}</h3><p>{body}{cav}</p>{srch}</div>')
     return '<div class="ars-reads">' + ''.join(blocks) + '</div>'
 
@@ -2843,8 +2850,7 @@ def _ars_delay_table_html(df_ars, lang, s):
         zh, en, src, tag = ARSENAL_DELAYS[cid]
         reason = html.escape(en if lang == 'en' else zh)
         tl = _DELAY_TAG[tag][1] if lang == 'en' else _DELAY_TAG[tag][0]
-        srch = (f'<a class="src" href="{html.escape(src)}" target="_blank" rel="noopener">'
-                f'{a["src_announce"]}</a>') if src else '—'
+        srch = _src_chip(src, lang) if src else '—'
         body.append(
             f'<tr><td>{html.escape(id2name.get(cid, cid))}</td>'
             f'<td class="special-cell" style="max-width:none">〔{tl}〕{reason}</td>'
@@ -2859,8 +2865,7 @@ def _ars_delay_table_html(df_ars, lang, s):
         txt = html.escape(cen if lang == 'en' else czh)
         counters.append(
             f'<div class="c"><div class="t">{html.escape(name)}</div><p>{txt} '
-            f'<a class="src" href="{html.escape(src)}" target="_blank" rel="noopener">'
-            f'{a["src_delivery"]}</a></p></div>')
+            f'{_src_chip(src, lang)}</p></div>')
     return (
         f'<div class="ars-tbl-wrap tbl-wrap"><table><thead><tr>'
         f'<th>{a["delay_col_case"]}</th><th>{a["delay_col_reason"]}</th>'
@@ -3092,6 +3097,70 @@ def _domain(url):
     return d[4:] if d.startswith('www.') else d
 
 
+# 來源機構短名（chip 文字）：exact 網域對應優先，其餘取可註冊網域主標籤（如 flightglobal）。
+# 含中文短名者提供 (zh, en)，供 en 頁改用英文縮寫（en 頁不得含中文）。
+_SRC_LABEL_EXACT = {
+    'media.defense.gov': ('DSCA', 'DSCA'),
+    'dsca.mil':          ('DSCA', 'DSCA'),
+    'web.archive.org':   ('DSCA·檔案館', 'DSCA·Archive'),
+    'cna.com.tw':        ('中央社', 'CNA'),
+    'focustaiwan.tw':    ('Focus Taiwan', 'Focus Taiwan'),
+    'tsm.schar.gmu.edu': ('TSM', 'TSM'),
+    'gao.gov':           ('GAO', 'GAO'),
+    'news.usni.org':     ('USNI', 'USNI'),
+    'defense.gov':       ('DoD', 'DoD'),
+    'mnd.gov.tw':        ('國防部', 'MND'),
+    'cato.org':          ('Cato', 'Cato'),
+    'ltn.com.tw':        ('自由時報', 'LTN'),
+    'def.ltn.com.tw':    ('自由軍武', 'LTN Defense'),
+    'dvidshub.net':      ('DVIDS', 'DVIDS'),
+    'defensenews.com':   ('Defense News', 'Defense News'),
+    'flightglobal.com':  ('FlightGlobal', 'FlightGlobal'),
+    'breakingdefense.com': ('Breaking Defense', 'Breaking Defense'),
+    'armyrecognition.com': ('Army Recognition', 'Army Recognition'),
+    'taiwannews.com.tw': ('Taiwan News', 'Taiwan News'),
+    'rfa.org':           ('自由亞洲電台', 'RFA'),
+    'centcom.mil':       ('CENTCOM', 'CENTCOM'),
+    'crsreports.congress.gov': ('CRS', 'CRS'),
+    'everycrsreport.com': ('CRS', 'CRS'),
+    'armscontrol.org':   ('Arms Control Assn', 'Arms Control Assn'),
+    'thedefensepost.com': ('Defense Post', 'Defense Post'),
+    'scmp.com':          ('SCMP', 'SCMP'),
+    'navalpost.com':     ('Naval Post', 'Naval Post'),
+    'navalnews.com':     ('Naval News', 'Naval News'),
+    'congress.gov':      ('Congress.gov', 'Congress.gov'),
+    'army-technology.com': ('Army Technology', 'Army Technology'),
+    'globalsecurity.org': ('GlobalSecurity', 'GlobalSecurity'),
+}
+# 多段公共後綴：主標籤取 parts[-3]（如 taiwannews.com.tw → taiwannews）
+_MULTI_SUFFIX = {'com.tw', 'gov.tw', 'org.tw', 'net.tw', 'com.au', 'org.uk',
+                 'co.uk', 'gov.uk', 'com.ua'}
+
+
+def _src_label(url, lang='zh'):
+    """由網域回傳來源機構短名（chip 文字）。"""
+    host = _domain(url)                       # 已去 www.
+    parts = host.split('.')
+    # 依序試：完整 host → 尾三段 → 尾兩段（讓 news.ltn.com.tw 也命中 ltn.com.tw）
+    for cand in (host, '.'.join(parts[-3:]), '.'.join(parts[-2:])):
+        pair = _SRC_LABEL_EXACT.get(cand)
+        if pair:
+            return pair[1] if lang == 'en' else pair[0]
+    if len(parts) >= 3 and '.'.join(parts[-2:]) in _MULTI_SUFFIX:
+        return parts[-3]
+    if len(parts) >= 2:
+        return parts[-2]
+    return host
+
+
+def _src_chip(url, lang='zh'):
+    """來源徽章：機構短名＋外連箭頭（樣式見 .src-chip）。取代預設藍色超連結。"""
+    if not url:
+        return ''
+    return (f'<a class="src-chip" href="{html.escape(url)}" target="_blank" rel="noopener">'
+            f'{html.escape(_src_label(url, lang))}</a>')
+
+
 def _ars_alliance_tag(notes, lang):
     """由 peers.notes 判斷同盟標籤。先移除否定字串（『非美援』『非條約盟邦』），
     再依 MNNA→aid→treaty→nato→partner 順序判斷——避免『非條約盟邦』⊂『條約盟邦』、
@@ -3192,8 +3261,7 @@ def _ars_pac3_wall_html(df_peers, lang, s):
         vz, ve = _PAC3_VARIANT.get(cc, (r['variant_tier'], r['variant_tier']))
         variant = ve if lang == 'en' else vz
         qtyl = _ars_qty_label(r['qty'], '枚', lang)
-        srch = (f'<a class="src" href="{html.escape(r["source"])}" target="_blank" rel="noopener">'
-                f'{a["src_announce"]}</a>')
+        srch = _src_chip(r['source'], lang)
         cards.append(
             f'<div class="ars-usercard">'
             f'<div class="ars-uc-top"><span class="ars-uc-country">{html.escape(country)}</span>'
@@ -3221,8 +3289,7 @@ def _ars_timeline_html(weapon, lang, s):
     for dz, de, bz, be, src in weapon['timeline']:
         date = de if lang == 'en' else dz
         body = be if lang == 'en' else bz
-        srch = (f' <a href="{html.escape(src)}" target="_blank" rel="noopener">{a["src_announce"]}</a>'
-                if src else '')
+        srch = (' ' + _src_chip(src, lang)) if src else ''
         items.append(
             f'<div class="ars-tl-item"><div class="ars-tl-date">{html.escape(date)}</div>'
             f'<div class="ars-tl-body">{html.escape(body)}{srch}</div></div>')
@@ -3235,8 +3302,7 @@ def _ars_combat_html(weapon, lang, s):
     for tz, te, bz, be, src in weapon['combat']:
         title = te if lang == 'en' else tz
         body  = be if lang == 'en' else bz
-        srch = (f'<div class="ars-src"><a href="{html.escape(src)}" target="_blank" rel="noopener">'
-                f'{a["src_announce"]}</a></div>') if src else ''
+        srch = f'<div class="ars-src">{_src_chip(src, lang)}</div>' if src else ''
         blocks.append(f'<div class="ars-point"><h3>{html.escape(title)}</h3>'
                       f'<p>{html.escape(body)}</p>{srch}</div>')
     note = weapon.get('combat_note_en' if lang == 'en' else 'combat_note_zh')
@@ -3270,8 +3336,9 @@ def _ars_srclist_html(weapon, df_peers, lang):
         if u in seen:
             continue
         seen.add(u)
-        items.append(f'<li><a href="{html.escape(u)}" target="_blank" rel="noopener">'
-                     f'{html.escape(_domain(u))}</a></li>')
+        desc = u.split('://', 1)[-1]
+        items.append(f'<li>{_src_chip(u, lang)} '
+                     f'<span class="src-full">{html.escape(desc)}</span></li>')
     return '<ul class="ars-srclist">' + ''.join(items) + '</ul>'
 
 
