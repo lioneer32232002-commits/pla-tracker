@@ -140,19 +140,8 @@ ARSENAL_DELAYS = {
               'none'),
 }
 # 延宕對照表列出順序（依裝備重要性／案值）
-ARSENAL_DELAY_ORDER = ['19-50', '20-68', '19-21', '22-70', '21-44', '20-07', '20-87']
 
 # 準時／如期交付的反例（案 → 說明 → 來源；來源取自 arsenal.csv 的 source_delivery）
-ARSENAL_COUNTERS = [
-    ('20-77',
-     '轟雷專案首批 11 套 HIMARS 於 2024-11 完成全數交付。',
-     'The first batch of 11 HIMARS launchers was fully delivered in November 2024.',
-     'https://www.cato.org/blog/taiwan-arms-backlog-november-2024-update-himars-delivery-second-trump-administration'),
-    ('20-74',
-     'MQ-9B 海上衛士無人機首批 2 架如期於 2026-03 交運抵台並展開組裝測試。',
-     'The first two MQ-9B SeaGuardian drones arrived in Taiwan on schedule in March 2026 and began assembly and testing.',
-     'https://news.usni.org/2026/03/23/taiwan-receives-first-u-s-mq-9-skyguardian-drones'),
-]
 
 # ── 武器內頁（drill-down）內容 ────────────────────────────────────────────────
 # 三個系統的深度頁：採購時間軸／實戰紀錄／國際買家排名／台海角色／來源。
@@ -495,7 +484,7 @@ STRINGS = {
             'kpi_deliver': '交付中',
             'kpi_done':    '已完成',
             'kpi_cancel':  '已終止',
-            'kpi_latest':  '最近公告',
+            'kpi_latest':  '資料更新',
             'kpi_unit_case': '案',
             'matrix_title':  '主要裝備交付進度',
             'matrix_note':   '每張卡為一個武器系統，卡內每列對應一筆採購案（同系統多案已歸併）；進度條為交付狀態示意（已交付／待交付／終止），交付中案以名目比例呈現「已展開交付」。精確批次數量與延宕理由請點卡展開，以官方與媒體來源為準。',
@@ -506,12 +495,6 @@ STRINGS = {
             'chart_top':     '當年最大三案：',
             'read_title':    '這些軍售說明什麼',
             'read_intro':    '把台灣放進「美國賣給誰、賣多少」的國際脈絡裡，可以看出美國願意把哪一級的武器交給台灣。以下每個判讀都附國際買家對比資料的來源。',
-            'delay_title':   '延宕與它的官方理由',
-            'delay_intro':   '交付延宕是事實，但每一筆都有可查證的官方或半官方理由；沒有查到官方說明的，我們誠實標註「未見官方說明」，不臆測。',
-            'delay_col_case':   '案件',
-            'delay_col_reason': '延宕的官方／半官方理由',
-            'delay_col_src':    '來源',
-            'counter_title': '準時與如期的反例',
             'table_title':   '全部軍售案',
             'table_sub':     '{n} 案 · 2019 → 今',
             'th_date':   '公告日',
@@ -669,7 +652,7 @@ STRINGS = {
             'kpi_deliver': 'Delivering',
             'kpi_done':    'Completed',
             'kpi_cancel':  'Cancelled',
-            'kpi_latest':  'Latest notice',
+            'kpi_latest':  'Data updated',
             'kpi_unit_case': '',
             'matrix_title':  'Major Systems — Delivery Progress',
             'matrix_note':   'Each card is one weapon system; every row within it is a procurement case (multiple cases of the same system are consolidated). Bars indicate delivery status (delivered / pending / cancelled); in-progress cases use a nominal fill to show delivery has begun. For exact batch quantities and delay reasons, expand each card — official and press sources govern.',
@@ -680,12 +663,6 @@ STRINGS = {
             'chart_top':     'Top 3 cases: ',
             'read_title':    'What These Sales Tell Us',
             'read_intro':    'Placing Taiwan in the international context of who the US sells to, and how much, shows what tier of weapon the US is willing to hand Taiwan. Each reading below cites the peer-buyer comparison data.',
-            'delay_title':   'Delays and Their Official Reasons',
-            'delay_intro':   'Delivery delays are real, but each has a verifiable official or semi-official reason. Where no official explanation was found, we honestly mark it "no official statement" rather than speculate.',
-            'delay_col_case':   'Case',
-            'delay_col_reason': 'Official / semi-official reason',
-            'delay_col_src':    'Source',
-            'counter_title': 'On-Time Counter-Examples',
             'table_title':   'All Arms Sales Cases',
             'table_sub':     '{n} cases · 2019 → now',
             'th_date':   'Date',
@@ -1355,11 +1332,6 @@ html[lang="zh-Hant"] .ars-point p{font-size:.87rem}
 .ars-src a:hover{color:var(--y);border-bottom-color:var(--y)}
 
 /* Delay table + counter cards */
-.ars-counter{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
-.ars-counter .c{flex:1 1 240px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.7rem .9rem}
-.ars-counter .c .t{font-size:.82rem;font-weight:700;color:var(--grn)}
-.ars-counter .c p{font-size:.78rem;color:var(--sub);line-height:1.6;margin-top:.3rem}
-html[lang="zh-Hant"] .ars-counter .c p{font-size:.82rem}
 
 /* Category badge */
 .ars-cat{display:inline-block;padding:.15em .55em;border-radius:999px;font-size:.68rem;font-weight:700;white-space:nowrap}
@@ -2976,43 +2948,6 @@ def _ars_reads_html(df_ars, df_peers, lang, s):
     return '<div class="ars-reads">' + ''.join(blocks) + '</div>'
 
 
-def _ars_delay_table_html(df_ars, lang, s):
-    a = s['ars']
-    id2name = {r['case_id']: (r['system_en'] if lang == 'en' else r['system_zh'])
-               for _, r in df_ars.iterrows()}
-    body = []
-    for cid in ARSENAL_DELAY_ORDER:
-        if cid not in df_ars['case_id'].values:
-            continue
-        zh, en, src, tag = ARSENAL_DELAYS[cid]
-        reason = html.escape(en if lang == 'en' else zh)
-        tl = _DELAY_TAG[tag][1] if lang == 'en' else _DELAY_TAG[tag][0]
-        srch = _src_chip(src, lang) if src else '—'
-        body.append(
-            f'<tr><td>{html.escape(id2name.get(cid, cid))}</td>'
-            f'<td class="special-cell" style="max-width:none">〔{tl}〕{reason}</td>'
-            f'<td>{srch}</td></tr>' if lang != 'en' else
-            f'<tr><td>{html.escape(id2name.get(cid, cid))}</td>'
-            f'<td class="special-cell" style="max-width:none">[{tl}] {reason}</td>'
-            f'<td>{srch}</td></tr>')
-    # counter-examples
-    counters = []
-    for cid, czh, cen, src in ARSENAL_COUNTERS:
-        name = id2name.get(cid, cid)
-        txt = html.escape(cen if lang == 'en' else czh)
-        counters.append(
-            f'<div class="c"><div class="t">{html.escape(name)}</div><p>{txt} '
-            f'{_src_chip(src, lang)}</p></div>')
-    return (
-        f'<div class="ars-tbl-wrap tbl-wrap"><table><thead><tr>'
-        f'<th>{a["delay_col_case"]}</th><th>{a["delay_col_reason"]}</th>'
-        f'<th>{a["delay_col_src"]}</th></tr></thead><tbody>'
-        + ''.join(body) + '</tbody></table></div>'
-        + f'<div class="ars-sec-title" style="margin-top:1.5rem;border:0;padding:0">'
-          f'{a["counter_title"]}</div>'
-        + '<div class="ars-counter">' + ''.join(counters) + '</div>')
-
-
 def _ars_chart_html(df_ars, lang, s):
     a = s['ars']
     df = df_ars.copy()
@@ -3226,6 +3161,10 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     n_cancel  = int((df_ars['delivery_status'] == 'cancelled').sum())
     latest    = df_ars['announce_date'].max()
     total_disp = f'{total_m / 100:.0f}' if lang != 'en' else fmt_money(total_m, lang)
+    # 資料更新日：讀 data/arsenal_updated.txt——只在軍購資料實際調整時由編修流程
+    # 更新該檔（見 project-reference「軍購資料更新流程」），每日 CI 重建不會動它。
+    upd_file = DATA_FILE.parent / 'arsenal_updated.txt'
+    data_updated = upd_file.read_text(encoding='utf-8').strip() if upd_file.exists() else latest
 
     # KPI 卡（2×3）
     unit_case = a['kpi_unit_case']
@@ -3235,7 +3174,7 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
         (str(n_deliver), a['kpi_deliver'], 'y'),
         (str(n_done), a['kpi_done'], ''),
         (str(n_cancel), a['kpi_cancel'], ''),
-        (f'<span style="font-size:1.2rem">{latest}</span>', a['kpi_latest'], ''),
+        (f'<span style="font-size:1.2rem">{data_updated}</span>', a['kpi_latest'], ''),
     ]
     kpi_html = ''.join(
         f'<div class="ars-kpi"><div class="ars-kpi-n {cls}">{val}</div>'
@@ -3246,7 +3185,8 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     matrix_html = _ars_syscards_html(df_ars, lang, s)
 
     reads_html   = _ars_reads_html(df_ars, df_peers, lang, s)
-    delay_html   = _ars_delay_table_html(df_ars, lang, s)
+    # 延宕對照表已移除（2026-07-24 使用者裁定）：與系統卡展開內容重複；
+    # _ars_delay_table_html 一併移除，延宕資訊唯一入口＝卡片展開區。
     chart_html   = _ars_chart_html(df_ars, lang, s)
     cases_html   = _ars_cases_html(df_ars, lang, s)
     wcards_html  = _ars_weapon_cards_html(lang, s)
@@ -3293,12 +3233,6 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     <div class="ars-sec-title">{a['read_title']}</div>
     <p class="ars-lead">{a['read_intro']}</p>
     {reads_html}
-  </section>
-
-  <section class="ars-section anim-ready">
-    <div class="ars-sec-title">{a['delay_title']}</div>
-    <p class="ars-lead">{a['delay_intro']}</p>
-    {delay_html}
   </section>
 
   <section class="ars-section anim-ready">

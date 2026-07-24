@@ -287,11 +287,6 @@ html[lang="zh-Hant"] .ars-point p{font-size:.87rem}
 .ars-src a:hover{color:var(--y);border-bottom-color:var(--y)}
 
 /* Delay table + counter cards */
-.ars-counter{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
-.ars-counter .c{flex:1 1 240px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.7rem .9rem}
-.ars-counter .c .t{font-size:.82rem;font-weight:700;color:var(--grn)}
-.ars-counter .c p{font-size:.78rem;color:var(--sub);line-height:1.6;margin-top:.3rem}
-html[lang="zh-Hant"] .ars-counter .c p{font-size:.82rem}
 
 /* Category badge */
 .ars-cat{display:inline-block;padding:.15em .55em;border-radius:999px;font-size:.68rem;font-weight:700;white-space:nowrap}

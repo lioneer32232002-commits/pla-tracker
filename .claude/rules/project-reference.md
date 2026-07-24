@@ -75,6 +75,14 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
    `en/` 已涵蓋其下所有英文頁）
 4. build → validate → commit 全部檔案 → push
 
+## 軍購資料更新流程（改 data/arsenal*.csv 時）
+
+1. 逐案查證來源後編修 `data/arsenal.csv` / `data/arsenal_peers.csv`
+2. **同步把 `data/arsenal_updated.txt` 改成當天日期**（ISO）——/arsenal/ 的
+   「資料更新」KPI 讀這個檔；每日 CI 重建不會動它，只有真的改了資料才變
+3. build → validate → commit 全部 → push（延宕理由寫進 CSV notes，
+   顯示入口＝系統卡展開區；獨立延宕對照表已於 2026-07-24 移除勿復活）
+
 ## 已知歷史事件（查問題時的線索）
 
 - 2026-06-18 前：零架次且無航跡圖的日子，fetcher 誤判為「未發布」而漏資料
