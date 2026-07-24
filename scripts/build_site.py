@@ -498,7 +498,7 @@ STRINGS = {
             'kpi_latest':  '最近公告',
             'kpi_unit_case': '案',
             'matrix_title':  '主要裝備交付進度',
-            'matrix_note':   '進度條為交付狀態示意（已交付／待交付／終止），交付中案以名目比例呈現「已展開交付」；精確批次數量請點各案展開，以官方與媒體來源為準。',
+            'matrix_note':   '每張卡為一個武器系統，卡內每列對應一筆採購案（同系統多案已歸併）；進度條為交付狀態示意（已交付／待交付／終止），交付中案以名目比例呈現「已展開交付」。精確批次數量與延宕理由請點卡展開，以官方與媒體來源為準。',
             'matrix_expand': '展開延宕理由與來源',
             'matrix_delay':  '延宕／進度：',
             'chart_title':   '歷年軍售公告金額',
@@ -672,7 +672,7 @@ STRINGS = {
             'kpi_latest':  'Latest notice',
             'kpi_unit_case': '',
             'matrix_title':  'Major Systems — Delivery Progress',
-            'matrix_note':   'Bars indicate delivery status (delivered / pending / cancelled); in-progress cases use a nominal fill to show delivery has begun. For exact batch quantities, expand each case — official and press sources govern.',
+            'matrix_note':   'Each card is one weapon system; every row within it is a procurement case (multiple cases of the same system are consolidated). Bars indicate delivery status (delivered / pending / cancelled); in-progress cases use a nominal fill to show delivery has begun. For exact batch quantities and delay reasons, expand each card — official and press sources govern.',
             'matrix_expand': 'Delay reason & sources',
             'matrix_delay':  'Delay / progress: ',
             'chart_title':   'Arms Sales by Year',
@@ -1281,36 +1281,49 @@ html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
 .ars-kpi-l{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);margin-top:.4rem;white-space:nowrap}
 html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 
-/* Progress matrix */
-.ars-matrix{display:flex;flex-direction:column;gap:.55rem}
-.ars-row{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
-.ars-row>summary{list-style:none;cursor:pointer;padding:.7rem .9rem;display:block}
-.ars-row>summary::-webkit-details-marker{display:none}
-.ars-row-flex{display:flex;align-items:center;gap:.65rem}
-.ars-row-main{flex:1;min-width:0}
-.ars-row-thumb{width:56px;height:56px;border-radius:8px;border:1px solid var(--bdr);
-  object-fit:cover;flex-shrink:0}
-.ars-row-thumb-ph{background:var(--sur);display:flex;align-items:center;justify-content:center;
-  color:var(--sub);font-size:.7rem;font-weight:700}
-.ars-row-top{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;margin-bottom:.5rem}
-.ars-name{font-size:.86rem;font-weight:700;color:var(--tx);line-height:1.35}
-.ars-name .qty{color:var(--sub);font-weight:600;font-size:.78rem;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:.35rem}
-.ars-st{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  padding:.18em .6em;border-radius:999px;white-space:nowrap;flex-shrink:0}
+/* System card wall (裝備系統卡片牆) */
+.ars-syscards{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.ars-syscard{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;
+  display:flex;flex-direction:column}
+.ars-syscard>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column}
+.ars-syscard>summary::-webkit-details-marker{display:none}
+.ars-scard-img{width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--bg);
+  border-bottom:1px solid var(--bdr)}
+.ars-scard-img img{width:100%;height:100%;object-fit:cover;display:block}
+.ars-scard-body{padding:.75rem .85rem;display:flex;flex-direction:column;flex:1;min-width:0}
+.ars-scard-head{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-between}
+.ars-scard-ph{width:40px;height:40px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);
+  display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:.72rem;font-weight:700;flex-shrink:0}
+.ars-scard-titles{min-width:0;flex:1}
+.ars-scard-name{font-size:.9rem;font-weight:800;color:var(--tx);line-height:1.3}
+.ars-scard-name .en{display:block;font-size:.7rem;font-weight:600;color:var(--sub);margin-top:.15rem;letter-spacing:.01em;line-height:1.35}
+.ars-scard-agg{font-size:.78rem;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums;
+  white-space:nowrap;text-align:right;flex-shrink:0;line-height:1.3}
+.ars-scard-agg .brk{display:block;font-size:.66rem;font-weight:600;color:var(--sub);opacity:.9;white-space:normal;margin-top:.15rem}
+.ars-scard-rows{display:flex;flex-direction:column;gap:.55rem;margin-top:.7rem}
+.ars-scard-row-top{display:flex;align-items:center;gap:.45rem;margin-bottom:.32rem}
+.ars-scard-case{font-size:.64rem;font-weight:700;color:var(--sub);font-variant-numeric:tabular-nums;
+  background:var(--bg);border:1px solid var(--bdr);border-radius:4px;padding:.1em .4em;flex-shrink:0}
+.ars-scard-qty{font-size:.74rem;color:var(--tx);font-variant-numeric:tabular-nums;flex:1;min-width:0;font-weight:600}
+.ars-st{font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  padding:.16em .55em;border-radius:999px;white-space:nowrap;flex-shrink:0}
 .ars-st.completed {background:#123016;color:#5fce77}
 .ars-st.delivering{background:#2a2408;color:var(--y)}
 .ars-st.announced {background:#0d1d2e;color:#6aaee0}
 .ars-st.unknown   {background:var(--sur);color:var(--sub);border:1px solid var(--bdr)}
 .ars-st.cancelled {background:#2c1414;color:#e08585}
-.ars-bar{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--sur)}
+.ars-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--bg)}
 .ars-seg{height:100%}
 .ars-seg-d{background:var(--y)}
 .ars-seg-p{background:rgba(245,200,66,.26)}
 .ars-seg-c{flex:1;background:repeating-linear-gradient(45deg,#3a4448 0 5px,#222a2e 5px 10px)}
-.ars-caret{color:var(--sub);font-size:.72rem;margin-top:.5rem;display:inline-flex;align-items:center;gap:.3rem}
-.ars-row[open] .ars-caret .tri{transform:rotate(90deg)}
+.ars-caret{color:var(--sub);font-size:.7rem;margin-top:.7rem;display:inline-flex;align-items:center;gap:.3rem}
+.ars-syscard[open] .ars-caret .tri{transform:rotate(90deg)}
 .ars-caret .tri{transition:transform .15s;display:inline-block}
-.ars-detail{padding:0 .9rem .8rem;font-size:.8rem;color:var(--sub);line-height:1.7}
+.ars-scard-detail{padding:0 .85rem .8rem}
+.ars-scard-seg{margin-top:.6rem}
+.ars-scard-seg-h{font-size:.72rem;font-weight:700;color:var(--tx);margin-bottom:.2rem;font-variant-numeric:tabular-nums}
+.ars-detail{padding:0;font-size:.8rem;color:var(--sub);line-height:1.7}
 html[lang="zh-Hant"] .ars-detail{font-size:.84rem}
 .ars-detail .lbl{font-weight:700;color:var(--tx)}
 .ars-detail a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;word-break:break-all}
@@ -1494,7 +1507,7 @@ a.src-chip::after{content:'\\2197';font-size:.85em;opacity:.7}
   .ars-chart-canvas{height:220px}
   .ars-wcards{grid-template-columns:1fr}
   .ars-userwall{grid-template-columns:1fr}
-  .ars-row-thumb{width:44px;height:44px}
+  .ars-syscards{grid-template-columns:1fr}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
@@ -2650,26 +2663,26 @@ ARSENAL_OG_IMG     = 'assets/arsenal/og-arsenal.jpg'   # 相對路徑；make_hea
 # 呼叫時傳入的值一致（build_arsenal 用 'arsenal'，build_arsenal_detail 用 'ars_{key}'）
 ARSENAL_OG_PAGES = {'arsenal', 'ars_harpoon', 'ars_patriot', 'ars_himars'}
 
-# 進度矩陣 case_id → 縮圖檔名。同一系統多案共用同圖（例：26-01 與 20-77 同為
-# HIMARS）。不在此表中的案（qty 非空但無對應圖）一律顯示占位磚。
-ARSENAL_CASE_THUMB = {
-    '19-21': 'thumb-stinger.jpg',
-    '19-22': 'thumb-m1a2.jpg',
-    '19-50': 'thumb-f16v.jpg',
-    '20-07': 'thumb-mk48.jpg',
-    '20-69': 'thumb-slamer.jpg',
-    '20-77': 'thumb-himars.jpg',
-    '20-74': 'thumb-mq9b.jpg',
-    '21-44': 'thumb-m109a6.jpg',
-    '22-45': 'thumb-harpoon_air.jpg',
-    '22-46': 'thumb-aim9x.jpg',
-    '22-70': 'thumb-volcano.jpg',
-    '25-01': 'thumb-mk75.jpg',
-    '25-108': 'thumb-m109a7.jpg',
-    '26-01': 'thumb-himars.jpg',
-    '26-02': 'thumb-tow.jpg',
-    '26-06': 'thumb-javelin.jpg',
-    '26-09': 'thumb-altius700.jpg',
+# 系統卡片牆：主要裝備矩陣（category≠sustainment 且 qty 非空，共 23 案）歸併為
+# 「武器系統」卡。case_id → system_card_key；同一系統多案共用一張卡，卡圖為
+# assets/arsenal/card-{key}.jpg（條件式渲染：檔案存在才掛圖，否則退無圖版）。
+# 目前定義的合併：HIMARS（20-77 已交付＋26-01 已公告）、魚叉（20-68 岸置＋22-45
+# 空射）；其餘一案一卡。約 21 張卡。
+ARSENAL_SYSCARD = {
+    '19-21': 'stinger',   '19-22': 'm1a2',     '19-50': 'f16v',
+    '20-07': 'mk48',      '20-69': 'slamer',   '20-75': 'ms110',
+    '20-77': 'himars',    '26-01': 'himars',
+    '20-68': 'harpoon',   '22-45': 'harpoon',
+    '20-74': 'mq9b',      '21-44': 'm109a6',   '22-46': 'aim9x',
+    '22-70': 'volcano',   '24-47': 'switchblade', '24-56': 'altius600',
+    '24-48': 'nasams',    '25-01': 'mk75',     '25-04': 'c4mod',
+    '25-108': 'm109a7',   '26-02': 'tow',      '26-06': 'javelin',
+    '26-09': 'altius700',
+}
+# 合併卡的顯示名稱（key → (zh, en)）；未列出的單案卡沿用該案 system_zh/system_en。
+ARSENAL_SYSCARD_NAME = {
+    'himars':  ('海馬斯多管火箭系統', 'M142 HIMARS Rocket System'),
+    'harpoon': ('魚叉飛彈（岸置＋空射）', 'Harpoon Missiles (Coastal + Air-launched)'),
 }
 # 無圖案的類別占位單字。zh 頁用單字，en 頁需避免殘留中文（validate.py 的 en 頁
 # 中文檢查會攔到），改用對應類別代碼。
@@ -3064,6 +3077,119 @@ def _ars_cases_html(df_ars, lang, s):
             f'<div class="ars-cards">' + ''.join(cards) + '</div></div>')
 
 
+_ARS_ST_ORDER = {'completed': 0, 'delivering': 1, 'announced': 2, 'unknown': 3, 'cancelled': 4}
+
+
+def _ars_base_unit(u):
+    """去掉單位的括號附注（『套(發射系統)』→『套』），供合併卡判斷單位是否一致。"""
+    for sep in ('(', '（'):
+        if sep in u:
+            u = u.split(sep)[0]
+    return u.strip()
+
+
+def _ars_agg_label(cases, lang):
+    """回傳 (主數字標, 括號分項)。單案＝該案數量標，無分項；多案且單位一致＝加總＋
+    按案分項（含狀態）；單位不一致＝並列各案數量，無分項。"""
+    if len(cases) == 1:
+        r = cases[0]
+        return _ars_qty_label(r['qty'], r['qty_unit'], lang), ''
+    units = {_ars_base_unit(r['qty_unit']) for r in cases}
+    join = ' + ' if lang == 'en' else '＋'
+    if len(units) == 1:
+        total = sum(int(float(r['qty'])) for r in cases)
+        main = _ars_qty_label(str(total), _ars_base_unit(cases[0]['qty_unit']), lang)
+        parts = []
+        for r in cases:
+            zh, en, _ = ARSENAL_STATUS[r['delivery_status']]
+            lbl = en if lang == 'en' else zh
+            parts.append(f'{int(float(r["qty"])):,} {lbl}')
+        brk = ('(' + join.join(parts) + ')') if lang == 'en' else '（' + join.join(parts) + '）'
+        return main, brk
+    main = join.join(_ars_qty_label(r['qty'], r['qty_unit'], lang) for r in cases)
+    return main, ''
+
+
+def _ars_syscards_html(df_ars, lang, s):
+    """系統卡片牆：主要裝備（category≠sustainment 且 qty 非空）依 ARSENAL_SYSCARD
+    歸併為系統卡。有 card-{key}.jpg 掛 16:9 圖帶，否則退無圖緊湊版（類別占位磚）。
+    卡片依系統內最高進度排序，同組依系統合計案值由大到小。"""
+    a = s['ars']
+    major = df_ars[(df_ars['category'] != 'sustainment') & (df_ars['qty'] != '')]
+    # 依 ARSENAL_SYSCARD 分組，保留每案原始 dict
+    groups = {}
+    for _, r in major.iterrows():
+        key = ARSENAL_SYSCARD.get(r['case_id'], r['case_id'])
+        groups.setdefault(key, []).append(r)
+    cards = []
+    for key, rows in groups.items():
+        rows = sorted(rows, key=lambda r: (_ARS_ST_ORDER.get(r['delivery_status'], 3),
+                                           -float(r['value_usd_m'])))
+        top_st = min(_ARS_ST_ORDER.get(r['delivery_status'], 3) for r in rows)
+        tot_val = sum(float(r['value_usd_m']) for r in rows)
+        cards.append((top_st, -tot_val, key, rows))
+    cards.sort(key=lambda c: (c[0], c[1]))
+
+    out = []
+    for _, _, key, rows in cards:
+        first = rows[0]
+        if key in ARSENAL_SYSCARD_NAME:
+            name_zh, name_en = ARSENAL_SYSCARD_NAME[key]
+        else:
+            name_zh, name_en = first['system_zh'], first['system_en']
+        name = html.escape(name_en if lang == 'en' else name_zh)
+        # zh 頁附 en 副標；en 頁主名已是英文，不重複
+        sub = f'<span class="en">{html.escape(name_en)}</span>' if lang != 'en' else ''
+        main_agg, brk = _ars_agg_label(rows, lang)
+        agg_html = (f'<span class="ars-scard-agg">{html.escape(main_agg)}'
+                    + (f'<span class="brk">{html.escape(brk)}</span>' if brk else '')
+                    + '</span>')
+        # 進度列（每案一條）
+        prows = []
+        for r in rows:
+            qtyl = _ars_qty_label(r['qty'], r['qty_unit'], lang)
+            prows.append(
+                f'<div class="ars-scard-row">'
+                f'<div class="ars-scard-row-top">'
+                f'<span class="ars-scard-case">{html.escape(r["case_id"])}</span>'
+                f'<span class="ars-scard-qty">{html.escape(qtyl)}</span>'
+                f'{_ars_status_badge(r["delivery_status"], s)}</div>'
+                f'{_ars_bar(r["delivery_status"])}</div>')
+        rows_html = '<div class="ars-scard-rows">' + ''.join(prows) + '</div>'
+        # 展開內容：按案分段（案號＋名稱＋既有延宕/來源明細）
+        segs = []
+        for r in rows:
+            seg_name = html.escape(r['system_en'] if lang == 'en' else r['system_zh'])
+            segs.append(f'<div class="ars-scard-seg">'
+                        f'<div class="ars-scard-seg-h">{html.escape(r["case_id"])} · {seg_name}</div>'
+                        f'{_ars_matrix_detail(r, s, lang)}</div>')
+        detail_html = '<div class="ars-scard-detail">' + ''.join(segs) + '</div>'
+        caret = f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
+        # 圖帶條件式渲染
+        card_file = f'card-{key}.jpg'
+        if (ARSENAL_ASSET_DIR / card_file).exists():
+            img_html = (f'<div class="ars-scard-img">'
+                        f'<img src="/assets/arsenal/{card_file}" alt="{name}" loading="lazy"></div>')
+            head_html = (f'<div class="ars-scard-head">'
+                         f'<div class="ars-scard-titles">'
+                         f'<span class="ars-scard-name">{name}{sub}</span></div>'
+                         f'{agg_html}</div>')
+        else:
+            img_html = ''
+            glyph_map = ARSENAL_CAT_GLYPH_EN if lang == 'en' else ARSENAL_CAT_GLYPH
+            glyph = glyph_map.get(first['category'], '')
+            head_html = (f'<div class="ars-scard-head">'
+                         f'<div class="ars-scard-ph" aria-hidden="true">{glyph}</div>'
+                         f'<div class="ars-scard-titles">'
+                         f'<span class="ars-scard-name">{name}{sub}</span></div>'
+                         f'{agg_html}</div>')
+        out.append(
+            f'<details class="ars-syscard"><summary>{img_html}'
+            f'<div class="ars-scard-body">{head_html}{rows_html}{caret}</div>'
+            f'</summary>{detail_html}</details>')
+    return '<div class="ars-syscards">' + ''.join(out) + '</div>'
+
+
 def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     """/arsenal/index.html（zh 於 SITE_DIR/arsenal，en 於 SITE_DIR/en/arsenal）。"""
     a = s['ars']
@@ -3090,35 +3216,8 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
         f'<div class="ars-kpi-l">{lab}</div></div>'
         for val, lab, cls in kpis)
 
-    # 進度矩陣：主要裝備（category≠sustainment 且 qty 非空），依交付進度排序
-    # （已完成→交付中→僅公告→未知→終止），同組內依案值由大到小
-    major = df_ars[(df_ars['category'] != 'sustainment') & (df_ars['qty'] != '')].copy()
-    _st_order = {'completed': 0, 'delivering': 1, 'announced': 2, 'unknown': 3, 'cancelled': 4}
-    major['_st'] = major['delivery_status'].map(_st_order).fillna(3)
-    major = major.sort_values(['_st', 'value_usd_m'], ascending=[True, False])
-    mrows = []
-    for _, r in major.iterrows():
-        name = html.escape(r['system_en'] if lang == 'en' else r['system_zh'])
-        qtyl = _ars_qty_label(r['qty'], r['qty_unit'], lang)
-        qspan = f'<span class="qty">{qtyl}</span>' if qtyl else ''
-        caret = ('▸ ' + a['matrix_expand'])
-        thumb_file = ARSENAL_CASE_THUMB.get(r['case_id'])
-        if thumb_file:
-            thumb_html = (f'<img class="ars-row-thumb" src="/assets/arsenal/{thumb_file}" '
-                          f'alt="{name}" loading="lazy">')
-        else:
-            glyph_map = ARSENAL_CAT_GLYPH_EN if lang == 'en' else ARSENAL_CAT_GLYPH
-            glyph = glyph_map.get(r['category'], '')
-            thumb_html = f'<div class="ars-row-thumb ars-row-thumb-ph" aria-hidden="true">{glyph}</div>'
-        mrows.append(
-            f'<details class="ars-row"><summary>'
-            f'<div class="ars-row-flex">{thumb_html}<div class="ars-row-main">'
-            f'<div class="ars-row-top"><span class="ars-name">{name}{qspan}</span>'
-            f'{_ars_status_badge(r["delivery_status"], s)}</div>'
-            f'{_ars_bar(r["delivery_status"])}</div></div>'
-            f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
-            f'</summary>{_ars_matrix_detail(r, s, lang)}</details>')
-    matrix_html = '<div class="ars-matrix">' + ''.join(mrows) + '</div>'
+    # 主要裝備系統卡片牆（category≠sustainment 且 qty 非空 → 歸併為系統卡）
+    matrix_html = _ars_syscards_html(df_ars, lang, s)
 
     reads_html   = _ars_reads_html(df_ars, df_peers, lang, s)
     delay_html   = _ars_delay_table_html(df_ars, lang, s)

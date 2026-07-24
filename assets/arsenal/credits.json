@@ -118,5 +118,107 @@
     "photographer": "Maj. Christina Judd",
     "unit": "Commander, U.S. 3rd Fleet",
     "note": "發射艦為荷蘭海軍 Tromp 號（HNLMS Tromp, F803），示意圖：RIMPAC 2024 期間發射 Harpoon 反艦飛彈，非台灣籍艦艇或美軍艦，僅作 Harpoon 飛彈視覺代表。"
+  },
+  "card-stinger.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/9210690/marines-launch-stinger-missile-target-aircraft-during-live-fire-exercise-twentynine-palms",
+    "photographer": "Lance Cpl. Manuel Valdez",
+    "unit": "3rd Low Altitude Air Defense Battalion, U.S. Marine Corps",
+    "note": ""
+  },
+  "card-m1a2.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/6745913/m1a2-abrams-live-fire",
+    "photographer": "Staff Sgt. Austin Berner",
+    "unit": "3rd Squadron, 16th Cavalry Regiment, U.S. Army Reserve",
+    "note": "美軍通用 M1A2 SEP V2，非台灣專屬 M1A2T 塗裝，僅供型號視覺代表。"
+  },
+  "card-f16v.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/8511173/morris-angb-receives-initial-delivery-slovak-f-16-block-70-aircraft",
+    "photographer": "Senior Airman Guadalupe Beltran",
+    "unit": "162nd Wing, Arizona Air National Guard",
+    "note": "斯洛伐克籍 F-16 Block 70 交機畫面，非台灣專屬塗裝（台灣機尚未交機）。"
+  },
+  "card-mk48.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/8380753/uss-frank-cable-sailors-assist-weapons-load-mark-48-torpedoes-uss-annapolis",
+    "photographer": "Mass Communication Specialist 1st Class Nikita Custer",
+    "unit": "USS Frank Cable (AS 40) / USS Annapolis (SSN 760), U.S. Navy",
+    "note": ""
+  },
+  "card-slamer.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/7707420/vmfa-115-loads-slam-er-hot-loads-harpoons",
+    "photographer": "Cpl. Tyler Harmon",
+    "unit": "VMFA-115, 1st Marine Aircraft Wing, U.S. Marine Corps",
+    "note": ""
+  },
+  "card-himars.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/9644594/balikatan-2026-us-army-conducts-himars-launch-exercise",
+    "photographer": "Staff Sgt. Yesenia Carrero Jimenez",
+    "unit": "7th Infantry Division (Multi-Domain Command - Pacific)",
+    "note": "Balikatan 2026 演習（菲律賓巴拉望）HIMARS 發射車就位畫面，非台灣專屬車輛。"
+  },
+  "card-mq9b.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/9551424/mq-9-takes-off-over-holloman",
+    "photographer": "Airman 1st Class Ryan Witkop",
+    "unit": "29th Attack Squadron, 49th Wing, Holloman AFB",
+    "note": "通用 MQ-9A Reaper，非確認為海事型 MQ-9B SeaGuardian 構型，示意用。"
+  },
+  "card-m109a6.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/1853828/several-m109a6-paladin-self-propelled-howitzers-conduct-test-fire",
+    "photographer": "Spc. Nicole R. Paese",
+    "unit": "7th Army Joint Multinational Training Command, Grafenwoehr, Germany",
+    "note": "此採購案已於 2022-05 確認終止未交運，收錄僅供型號參考。"
+  },
+  "card-harpoon.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/8543404/hnlms-tromp-fires-harpoon-missile-during-rimpac-2024",
+    "photographer": "Maj. Christina Judd",
+    "unit": "Commander, U.S. 3rd Fleet",
+    "note": "發射艦為荷蘭海軍 Tromp 號（HNLMS Tromp, F803），示意圖：RIMPAC 2024 期間發射 Harpoon 反艦飛彈，非台灣籍艦艇或美軍艦。此卡代表岸置（RGM-84L-4）＋空射（AGM-84L-1）合併的魚叉系統卡，僅作視覺代表。"
+  },
+  "card-aim9x.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/5392749/loading-aim-9x-missile-f-16",
+    "photographer": "Tech. Sgt. John Raven",
+    "unit": "40th Flight Test Squadron, Holloman AFB",
+    "note": ""
+  },
+  "card-volcano.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/9352050/pm-ccs-demonstrates-m139-volcano",
+    "photographer": "Spc. Hector Blanco",
+    "unit": "1st Cavalry Division",
+    "note": "M139 Volcano 布雷罐體＋控制盒特寫（INERT 訓練彈）。"
+  },
+  "card-mk75.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/8714752/coast-guard-cutter-mohawk-last-its-class-fire-mk-75-mm-gun-prior-service-life-extension",
+    "photographer": "Ensign Brian Morel",
+    "unit": "U.S. Coast Guard Cutter Mohawk (WMEC 613)",
+    "note": "攝影單位為美國海岸防衛隊（USCG，屬國土安全部），非傳統陸海空軍/陸戰隊/DoD；畫面因擊發瞬間煙霧遮擋，裁切聚焦右側砲身/艦艏可見部分，避開左側大面積煙霧。"
+  },
+  "card-m109a7.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/9417170/us-soldiers-fire-m109a7-paladin-self-propelled-howitzer",
+    "photographer": "Pfc. Gabriel Martinez",
+    "unit": "Bravo Battery, 2nd Battalion, 82nd Field Artillery Regiment",
+    "note": ""
+  },
+  "card-tow.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/8730661/tow-missile-training-fort-mccoy",
+    "photographer": "Amanda Clark",
+    "unit": "Fort McCoy (支援 1st Battalion, 128th Infantry, Wisconsin National Guard)",
+    "note": "通用 TOW 發射器/彈體，未確認為 CSV 案內指定的 2B 彈頭型號。"
+  },
+  "card-javelin.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/7111641/javelin-idaho-army-national-guard",
+    "photographer": "Thomas Alvarez",
+    "unit": "Charlie Company, 2-116th Combined Arms Battalion, Idaho Army National Guard",
+    "note": "通用 Javelin 彈體，未逐一確認是否為 CSV 案內指定的 FGM-148F 型號。"
+  },
+  "card-altius700.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/8178544/altius-700-air-vehicle-flight",
+    "photographer": "David Hylton",
+    "unit": "Capability Program Executive Aviation (U.S. Army)",
+    "note": "ALTIUS 700 基礎型飛行畫面，非確認為 CSV 案內「700M」衍生變體。"
+  },
+  "card-patriot.jpg": {
+    "dvids_page_url": "https://www.dvidshub.net/image/7275187/patriot-missile-launches-during-palau-live-fire-exercise",
+    "photographer": "Maj. Nicholas Chopp",
+    "unit": "94th Army Air and Missile Defense Command",
+    "note": "Valiant Shield 22 演習、帛琉 PAC-2 Patriot 攔截彈實彈發射畫面，非台灣專屬批次或塗裝。愛國者 20-24 案屬 sustainment 性質、不在卡片牆常駐清單，先產卡備用（成本低）。"
   }
 }

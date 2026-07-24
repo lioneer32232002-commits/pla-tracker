@@ -337,7 +337,8 @@ def validate_html():
         content = path.read_text(encoding='utf-8')
         for marker, desc in [
             ('class="ars-kpi', 'KPI 卡列'),
-            ('class="ars-matrix"', '交付進度矩陣'),
+            ('class="ars-syscards"', '系統卡片牆'),
+            ('class="ars-syscard"', '系統卡'),
             ('id="ars-year"', '年度金額圖'),
             ('class="ars-reads"', '質性判讀區塊'),
             ('class="ars-scope"', '口徑說明'),

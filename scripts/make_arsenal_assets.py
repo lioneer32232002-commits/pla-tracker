@@ -39,6 +39,8 @@ HERO_WIDTH = 1600
 OG_MAX_KB = 250
 THUMB_MAX_KB = 45
 HERO_MAX_KB = 120
+CARD_SIZE = (960, 540)  # 16:9 系統卡片牆用（2026-07-24 新增，取代 480x480 縮圖）
+CARD_MAX_KB = 100
 
 
 def save_with_budget(img, path, max_kb, start_quality):
@@ -238,6 +240,142 @@ HERO_MANIFEST = [
     ),
 ]
 
+# ---------------------------------------------------------------------------
+# 系統卡片牆（2026-07-24 新增，取代 480x480 縮圖——使用者反映舊縮圖「太小、
+# 有些沒裁到重點」）。960x540（16:9），crop_box 一律矩形、比例盡量貼近
+# 16:9，resize 到固定 CARD_SIZE 時才不會明顯變形。每一項的 crop_box 都經過
+# 目視覈對 output/og_assets/raw/ 原圖後手動選定，重點：主體（發射車/飛彈/
+# 艦體/砲塔）落在畫面重心、不切頭切尾、天空/地面比例合理。
+# harpoon 用 hero_harpoon_src（Tromp 號發射照）代表岸置＋空射合併的魚叉
+# 系統卡；harpoon_air 因此不另外產卡（見腳本說明與回報）。
+# ---------------------------------------------------------------------------
+CARD_MANIFEST = [
+    dict(
+        key='stinger', src='stinger.jpg', crop_box=(0, 90, 1999, 1214),
+        page_url='https://www.dvidshub.net/image/9210690/marines-launch-stinger-missile-target-aircraft-during-live-fire-exercise-twentynine-palms',
+        photographer='Lance Cpl. Manuel Valdez',
+        unit='3rd Low Altitude Air Defense Battalion, U.S. Marine Corps',
+        note='',
+    ),
+    dict(
+        key='m1a2', src='m1a2.jpg', crop_box=(0, 175, 2000, 1300),
+        page_url='https://www.dvidshub.net/image/6745913/m1a2-abrams-live-fire',
+        photographer='Staff Sgt. Austin Berner',
+        unit='3rd Squadron, 16th Cavalry Regiment, U.S. Army Reserve',
+        note='美軍通用 M1A2 SEP V2，非台灣專屬 M1A2T 塗裝，僅供型號視覺代表。',
+    ),
+    dict(
+        key='f16v', src='f16v.jpg', crop_box=(0, 190, 2000, 1315),
+        page_url='https://www.dvidshub.net/image/8511173/morris-angb-receives-initial-delivery-slovak-f-16-block-70-aircraft',
+        photographer='Senior Airman Guadalupe Beltran',
+        unit='162nd Wing, Arizona Air National Guard',
+        note='斯洛伐克籍 F-16 Block 70 交機畫面，非台灣專屬塗裝（台灣機尚未交機）。',
+    ),
+    dict(
+        key='mk48', src='mk48.jpg', crop_box=(0, 200, 2000, 1325),
+        page_url='https://www.dvidshub.net/image/8380753/uss-frank-cable-sailors-assist-weapons-load-mark-48-torpedoes-uss-annapolis',
+        photographer='Mass Communication Specialist 1st Class Nikita Custer',
+        unit='USS Frank Cable (AS 40) / USS Annapolis (SSN 760), U.S. Navy',
+        note='',
+    ),
+    dict(
+        key='slamer', src='slamer.jpg', crop_box=(0, 150, 1999, 1274),
+        page_url='https://www.dvidshub.net/image/7707420/vmfa-115-loads-slam-er-hot-loads-harpoons',
+        photographer='Cpl. Tyler Harmon',
+        unit='VMFA-115, 1st Marine Aircraft Wing, U.S. Marine Corps',
+        note='',
+    ),
+    dict(
+        key='himars', src='hero_himars_src.jpg', crop_box=(680, 660, 1480, 1110),
+        page_url='https://www.dvidshub.net/image/9644594/balikatan-2026-us-army-conducts-himars-launch-exercise',
+        photographer='Staff Sgt. Yesenia Carrero Jimenez',
+        unit='7th Infantry Division (Multi-Domain Command - Pacific)',
+        note='Balikatan 2026 演習（菲律賓巴拉望）HIMARS 發射車就位畫面，非台灣專屬車輛。',
+    ),
+    dict(
+        key='mq9b', src='mq9b.jpg', crop_box=(192, 0, 1748, 875),
+        page_url='https://www.dvidshub.net/image/9551424/mq-9-takes-off-over-holloman',
+        photographer='Airman 1st Class Ryan Witkop',
+        unit='29th Attack Squadron, 49th Wing, Holloman AFB',
+        note='通用 MQ-9A Reaper，非確認為海事型 MQ-9B SeaGuardian 構型，示意用。',
+    ),
+    dict(
+        key='m109a6', src='m109a6.jpg', crop_box=(0, 40, 2000, 1165),
+        page_url='https://www.dvidshub.net/image/1853828/several-m109a6-paladin-self-propelled-howitzers-conduct-test-fire',
+        photographer='Spc. Nicole R. Paese',
+        unit='7th Army Joint Multinational Training Command, Grafenwoehr, Germany',
+        note='此採購案已於 2022-05 確認終止未交運，收錄僅供型號參考。',
+    ),
+    dict(
+        key='harpoon', src='hero_harpoon_src.jpg', crop_box=(0, 100, 2000, 1225),
+        page_url='https://www.dvidshub.net/image/8543404/hnlms-tromp-fires-harpoon-missile-during-rimpac-2024',
+        photographer='Maj. Christina Judd',
+        unit='Commander, U.S. 3rd Fleet',
+        note='發射艦為荷蘭海軍 Tromp 號（HNLMS Tromp, F803），示意圖：RIMPAC 2024 期間'
+             '發射 Harpoon 反艦飛彈，非台灣籍艦艇或美軍艦。此卡代表岸置（RGM-84L-4）＋'
+             '空射（AGM-84L-1）合併的魚叉系統卡，僅作視覺代表。',
+    ),
+    dict(
+        key='aim9x', src='aim9x.jpg', crop_box=(0, 120, 2000, 1245),
+        page_url='https://www.dvidshub.net/image/5392749/loading-aim-9x-missile-f-16',
+        photographer='Tech. Sgt. John Raven',
+        unit='40th Flight Test Squadron, Holloman AFB',
+        note='',
+    ),
+    dict(
+        key='volcano', src='volcano.jpg', crop_box=(0, 200, 2000, 1325),
+        page_url='https://www.dvidshub.net/image/9352050/pm-ccs-demonstrates-m139-volcano',
+        photographer='Spc. Hector Blanco',
+        unit='1st Cavalry Division',
+        note='M139 Volcano 布雷罐體＋控制盒特寫（INERT 訓練彈）。',
+    ),
+    dict(
+        key='mk75', src='mk75.jpg', crop_box=(800, 460, 1750, 994),
+        page_url='https://www.dvidshub.net/image/8714752/coast-guard-cutter-mohawk-last-its-class-fire-mk-75-mm-gun-prior-service-life-extension',
+        photographer='Ensign Brian Morel',
+        unit='U.S. Coast Guard Cutter Mohawk (WMEC 613)',
+        note='攝影單位為美國海岸防衛隊（USCG，屬國土安全部），非傳統陸海空軍/陸戰隊/DoD；'
+             '畫面因擊發瞬間煙霧遮擋，裁切聚焦右側砲身/艦艏可見部分，避開左側大面積煙霧。',
+    ),
+    dict(
+        key='m109a7', src='m109a7.jpg', crop_box=(0, 140, 2000, 1265),
+        page_url='https://www.dvidshub.net/image/9417170/us-soldiers-fire-m109a7-paladin-self-propelled-howitzer',
+        photographer='Pfc. Gabriel Martinez',
+        unit='Bravo Battery, 2nd Battalion, 82nd Field Artillery Regiment',
+        note='',
+    ),
+    dict(
+        key='tow', src='tow.jpg', crop_box=(0, 190, 1999, 1315),
+        page_url='https://www.dvidshub.net/image/8730661/tow-missile-training-fort-mccoy',
+        photographer='Amanda Clark',
+        unit='Fort McCoy (支援 1st Battalion, 128th Infantry, Wisconsin National Guard)',
+        note='通用 TOW 發射器/彈體，未確認為 CSV 案內指定的 2B 彈頭型號。',
+    ),
+    dict(
+        key='javelin', src='javelin.jpg', crop_box=(0, 100, 1999, 1224),
+        page_url='https://www.dvidshub.net/image/7111641/javelin-idaho-army-national-guard',
+        photographer='Thomas Alvarez',
+        unit='Charlie Company, 2-116th Combined Arms Battalion, Idaho Army National Guard',
+        note='通用 Javelin 彈體，未逐一確認是否為 CSV 案內指定的 FGM-148F 型號。',
+    ),
+    dict(
+        key='altius700', src='altius700.jpg', crop_box=(0, 100, 2000, 1225),
+        page_url='https://www.dvidshub.net/image/8178544/altius-700-air-vehicle-flight',
+        photographer='David Hylton',
+        unit='Capability Program Executive Aviation (U.S. Army)',
+        note='ALTIUS 700 基礎型飛行畫面，非確認為 CSV 案內「700M」衍生變體。',
+    ),
+    dict(
+        key='patriot', src='hero_patriot_src.jpg', crop_box=(0, 209, 1999, 1333),
+        page_url='https://www.dvidshub.net/image/7275187/patriot-missile-launches-during-palau-live-fire-exercise',
+        photographer='Maj. Nicholas Chopp',
+        unit='94th Army Air and Missile Defense Command',
+        note='Valiant Shield 22 演習、帛琉 PAC-2 Patriot 攔截彈實彈發射畫面，非台灣'
+             '專屬批次或塗裝。愛國者 20-24 案屬 sustainment 性質、不在卡片牆常駐清單，'
+             '先產卡備用（成本低）。',
+    ),
+]
+
 # 查無、本次不產縮圖的系統（已窮盡合理關鍵字組合，寧缺勿錯，詳見
 # scratchpad/arsenal_thumbs_candidates.md）：
 SKIPPED = [
@@ -295,6 +433,25 @@ def main():
         resized = cropped.resize((HERO_WIDTH, item['height']), Image.LANCZOS)
         out_path = OUT / f"hero-{item['key']}.jpg"
         kb, q = save_with_budget(resized, out_path, HERO_MAX_KB, start_quality=82)
+        report.append((out_path.name, resized.size, kb, q))
+        credits[out_path.name] = {
+            'dvids_page_url': item['page_url'],
+            'photographer': item['photographer'],
+            'unit': item['unit'],
+            'note': item['note'],
+        }
+
+    # --- 系統卡片牆（16:9）---
+    for item in CARD_MANIFEST:
+        src_path = RAW / item['src']
+        if not src_path.exists():
+            report.append((f"card-{item['key']}.jpg", None, None, None))
+            continue
+        im = Image.open(src_path).convert('RGB')
+        cropped = im.crop(item['crop_box'])
+        resized = cropped.resize(CARD_SIZE, Image.LANCZOS)
+        out_path = OUT / f"card-{item['key']}.jpg"
+        kb, q = save_with_budget(resized, out_path, CARD_MAX_KB, start_quality=80)
         report.append((out_path.name, resized.size, kb, q))
         credits[out_path.name] = {
             'dvids_page_url': item['page_url'],
