@@ -23,6 +23,7 @@ ARSENAL_CSV = ROOT / 'data' / 'arsenal.csv'
 PEERS_CSV   = ROOT / 'data' / 'arsenal_peers.csv'
 ARSENAL_HTML    = ROOT / 'arsenal' / 'index.html'
 EN_ARSENAL_HTML = ROOT / 'en' / 'arsenal' / 'index.html'
+ARS_DETAIL_KEYS = ['harpoon', 'patriot', 'himars']
 INDEX_HTML = ROOT / 'index.html'
 RECORDS_HTML = ROOT / 'records.html'
 VERSION_TXT = ROOT / 'version.txt'
@@ -360,6 +361,46 @@ def validate_html():
                 sample = '、'.join(sorted(set(chinese_found))[:5])
                 errors.append(f'en/arsenal/index.html 含有中文字元（翻譯規則可能遺漏）：{sample}')
 
+    # ── /arsenal/{harpoon,patriot,himars}.html 武器內頁（zh + en）───────────────
+    for wkey in ARS_DETAIL_KEYS:
+        for is_en in (False, True):
+            path = (ROOT / 'en' / 'arsenal' / f'{wkey}.html') if is_en else (ROOT / 'arsenal' / f'{wkey}.html')
+            label = f'{"en/" if is_en else ""}arsenal/{wkey}.html'
+            if not path.exists():
+                errors.append(f'{label} 不存在（build 可能未產出武器內頁）')
+                continue
+            if path.stat().st_size < 6_000:
+                errors.append(f'{label} 檔案過小（{path.stat().st_size} bytes）')
+                continue
+            content = path.read_text(encoding='utf-8')
+            markers = [
+                ('class="ars-tl"', '採購時間軸'),
+                ('class="ars-reads"', '實戰紀錄'),
+                ('class="ars-role"', '台海角色'),
+                ('class="ars-srclist"', '來源清單'),
+                ('rel="canonical"', 'canonical 連結'),
+                ('hreflang="zh-Hant"', 'hreflang zh'),
+                ('hreflang="en"', 'hreflang en'),
+            ]
+            # 愛國者頁用使用國卡片牆取代排名圖；其餘頁有排名圖 canvas
+            markers.append(('class="ars-userwall"', 'PAC-3 使用國卡片牆') if wkey == 'patriot'
+                           else ('id="ars-rank"', '排名圖'))
+            for marker, desc in markers:
+                if marker not in content:
+                    errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
+            expect_canon = (f'{BASE_URL}/en/arsenal/{wkey}.html' if is_en
+                            else f'{BASE_URL}/arsenal/{wkey}.html')
+            if f'href="{expect_canon}"' not in content:
+                errors.append(f'{label} canonical 未指向 {expect_canon}')
+            if is_en:
+                if 'lang="en"' not in content:
+                    errors.append(f'{label} 缺少 <html lang="en">')
+                hns = _re0.sub(r'<script[^>]*>.*?</script>', '', content, flags=_re0.DOTALL)
+                cf = _re0.findall(r'[一-鿿]+', hns.replace('中文', ''))
+                if cf:
+                    sample = '、'.join(sorted(set(cf))[:5])
+                    errors.append(f'{label} 含有中文字元（翻譯規則可能遺漏）：{sample}')
+
     # ── sitemap.xml / robots.txt ─────────────────────────────────────────────
     if not SITEMAP.exists():
         errors.append('sitemap.xml 不存在')
@@ -373,6 +414,10 @@ def validate_html():
         for loc in [f'{BASE_URL}/arsenal/', f'{BASE_URL}/en/arsenal/']:
             if loc not in sm:
                 errors.append(f'sitemap.xml 缺少 {loc}')
+        for wkey in ARS_DETAIL_KEYS:
+            for loc in [f'{BASE_URL}/arsenal/{wkey}.html', f'{BASE_URL}/en/arsenal/{wkey}.html']:
+                if loc not in sm:
+                    errors.append(f'sitemap.xml 缺少 {loc}')
 
     if not ROBOTS.exists():
         errors.append('robots.txt 不存在')

@@ -310,6 +310,65 @@ html[data-theme="light"] .ars-divert:hover{background:#f3f0e6}
 .ars-divert .arr{color:var(--sub)}
 html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
 
+/* ── Arsenal weapon detail pages ── */
+.ars-back{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;
+  color:var(--sub);text-decoration:none;margin-bottom:.55rem}
+.ars-back:hover{color:var(--y)}
+/* vertical procurement timeline */
+.ars-tl{position:relative;margin-left:.4rem;padding-left:1.1rem;border-left:2px solid var(--bdr)}
+.ars-tl-item{position:relative;padding:0 0 1.05rem}
+.ars-tl-item:last-child{padding-bottom:0}
+.ars-tl-item::before{content:'';position:absolute;left:calc(-1.1rem - 5px);top:.3rem;
+  width:9px;height:9px;border-radius:50%;background:var(--y);border:2px solid var(--bg)}
+.ars-tl-date{font-size:.74rem;font-weight:800;letter-spacing:.04em;color:var(--y);
+  font-variant-numeric:tabular-nums;margin-bottom:.18rem}
+.ars-tl-body{font-size:.84rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-tl-body{font-size:.88rem}
+.ars-tl-body a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;
+  font-size:.72rem;margin-left:.25rem;white-space:nowrap}
+.ars-tl-body a:hover{color:#fff}
+/* ranking chart wrap (variable height set inline) */
+.ars-rank-canvas{position:relative;width:100%}
+/* PAC-3 user wall */
+.ars-userwall{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem}
+.ars-usercard{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.75rem .9rem}
+.ars-uc-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.32rem}
+.ars-uc-country{font-size:.9rem;font-weight:800;color:var(--tx)}
+.ars-uc-var{font-size:.76rem;color:var(--y);font-weight:600;margin-bottom:.3rem}
+.ars-uc-meta{font-size:.72rem;color:var(--sub);line-height:1.5;font-variant-numeric:tabular-nums}
+.ars-uc-meta a.src{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr)}
+.ars-uc-meta a.src:hover{color:var(--y);border-bottom-color:var(--y)}
+/* alliance tag chip (text label, not color-only) */
+.ars-atag{display:inline-block;padding:.12em .5em;border-radius:999px;font-size:.62rem;
+  font-weight:800;letter-spacing:.03em;white-space:nowrap}
+.ars-atag.treaty {background:#123016;color:#5fce77}
+.ars-atag.nato   {background:#0d1d2e;color:#6aaee0}
+.ars-atag.mnna   {background:#20143a;color:#b898dc}
+.ars-atag.partner{background:#2a2408;color:var(--y)}
+.ars-atag.aid    {background:#2c1414;color:#e08585}
+/* Taiwan-defense role list */
+.ars-role{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.ars-role li{position:relative;padding-left:1.1rem;font-size:.86rem;color:var(--sub);line-height:1.75}
+html[lang="zh-Hant"] .ars-role li{font-size:.9rem}
+.ars-role li::before{content:'\25b8';position:absolute;left:0;top:0;color:var(--y);font-weight:800}
+/* source list */
+.ars-srclist{list-style:none;display:flex;flex-direction:column;gap:.35rem}
+.ars-srclist li{font-size:.76rem;line-height:1.5}
+.ars-srclist a{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr);word-break:break-all}
+.ars-srclist a:hover{color:var(--y);border-bottom-color:var(--y)}
+/* weapon internal-page cards (on arsenal index) */
+.ars-wcards{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+.ars-wcard{display:flex;flex-direction:column;background:var(--sur);border:1px solid var(--bdr);
+  border-radius:var(--rad);padding:.9rem 1rem;text-decoration:none;border-top:3px solid var(--y);
+  transition:background .15s,transform .15s}
+.ars-wcard:hover{background:#12201a;transform:translateY(-2px)}
+html[data-theme="light"] .ars-wcard:hover{background:#f3f0e6}
+.ars-wcard-name{font-size:.95rem;font-weight:800;color:var(--tx);line-height:1.25}
+.ars-wcard-var{font-size:.68rem;color:var(--sub);margin-top:.2rem;letter-spacing:.02em}
+.ars-wcard-teaser{font-size:.8rem;color:var(--sub);line-height:1.65;margin:.55rem 0 .7rem;flex:1}
+html[lang="zh-Hant"] .ars-wcard-teaser{font-size:.84rem}
+.ars-wcard-cta{font-size:.72rem;font-weight:800;color:var(--y);letter-spacing:.03em}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
@@ -341,6 +400,8 @@ html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
   .ars-cases .ars-cards{display:block}
   .ars-cases .ars-tbl-wrap{display:none}
   .ars-chart-canvas{height:220px}
+  .ars-wcards{grid-template-columns:1fr}
+  .ars-userwall{grid-template-columns:1fr}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
@@ -405,3 +466,9 @@ html[data-theme="light"] .ars-cat.uas        {background:#ece1f7;color:#7a4fb0}
 html[data-theme="light"] .ars-cat.c4isr      {background:#d8eef2;color:#1f8496}
 html[data-theme="light"] .ars-detail a{border-bottom-color:#d9c98a}
 html[data-theme="light"] .ars-point{border-left-color:var(--y)}
+html[data-theme="light"] .ars-tl-body a{border-bottom-color:#d9c98a}
+html[data-theme="light"] .ars-atag.treaty {background:#dff0e0;color:#227a35}
+html[data-theme="light"] .ars-atag.nato   {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .ars-atag.mnna   {background:#ece1f7;color:#7a4fb0}
+html[data-theme="light"] .ars-atag.partner{background:#f3ecc9;color:#7a5c00}
+html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}

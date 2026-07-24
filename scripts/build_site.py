@@ -154,6 +154,210 @@ ARSENAL_COUNTERS = [
      'https://news.usni.org/2026/03/23/taiwan-receives-first-u-s-mq-9-skyguardian-drones'),
 ]
 
+# ── 武器內頁（drill-down）內容 ────────────────────────────────────────────────
+# 三個系統的深度頁：採購時間軸／實戰紀錄／國際買家排名／台海角色／來源。
+# 內容取自已審核研究稿 output/research_2026-07-23/arsenal_{harpoon,patriot,himars}.md，
+# 內容紀律：研究稿中標「查無權威來源」「建議人工核實」「非官方直接證實」者不上頁面
+# （被排除的內容清單見該 session 回報）。每條實戰紀錄與時間軸節點皆附來源 URL。
+ARS_DETAIL_PAGES = ['harpoon', 'patriot', 'himars']
+
+# 同盟標籤：notes 關鍵字 → (zh, en, css)。判斷順序見 _ars_alliance_tag（先 MNNA 後北約，
+# 因「主要非北約盟友」含「北約」子字串——避免 judgment.md 記載的子字串誤判坑）。
+_ALLIANCE_TAG = {
+    'treaty':  ('條約盟邦', 'Treaty ally', 'treaty'),
+    'nato':    ('北約',     'NATO',        'nato'),
+    'mnna':    ('MNNA',     'MNNA',        'mnna'),
+    'partner': ('夥伴',     'Partner',     'partner'),
+    'aid':     ('美援',     'US aid',      'aid'),
+}
+
+ARSENAL_DETAIL = {
+    'harpoon': {
+        'name_zh': '魚叉反艦飛彈', 'name_en': 'Harpoon Anti-Ship Missile',
+        'variant': 'RGM-84L-4 / AGM-84L-1 Harpoon Block II',
+        'has_rank': True, 'rank_key': 'harpoon',
+        'teaser_zh': '1988 年螳螂行動，美軍以魚叉飛彈重創並擊沉伊朗巡防艦 Sahand——這型反艦飛彈有真實擊沉軍艦的戰史。',
+        'teaser_en': 'In Operation Praying Mantis (1988) US Harpoons helped sink the Iranian frigate Sahand — a missile with a real record of sinking warships.',
+        'hero': [
+            ('台灣採購量', 'Taiwan quantity', '460 枚 ＋ 100 套發射系統', '460 missiles + 100 launcher sets'),
+            ('案值', 'Value', '約 27.3 億美元', 'US$2.73B'),
+            ('交付狀態', 'Delivery', '交付中', 'Delivering'),
+        ],
+        'timeline': [
+            ('2020-10-26', '2020-10-26',
+             'DSCA 通知國會：最多 100 套岸置防禦系統、400 枚 RGM-84L-4 Harpoon Block II 陸射飛彈，案值約 23.7 億美元，主承包商 Boeing。',
+             'DSCA notifies Congress: up to 100 coastal-defense systems and 400 RGM-84L-4 Harpoon Block II land-launched missiles, ~US$2.37B, prime contractor Boeing.',
+             'https://news.usni.org/2020/10/26/state-department-authorizes-2-37b-harpoon-missile-sale-to-taiwan'),
+            ('2022-09-02', '2022-09-02',
+             'DSCA 另核准空射型：60 枚 AGM-84L-1 Harpoon Block II，供 F-16V 使用，案值約 3.55 億美元（與岸置案不同案號）。',
+             'DSCA approves an air-launched batch: 60 AGM-84L-1 Harpoon Block II for the F-16V, ~US$355M (a separate case from the coastal system).',
+             'https://media.defense.gov/2024/Dec/18/2003615445/-1/-1/0/PRESS%20RELEASE%20-%20TECRO%2022-45%20CN.PDF'),
+            ('2024 下半年', 'Late 2024',
+             '首批裝備（發射車、搜索雷達車）運抵台灣，由海軍海鋒大隊接裝訓練。',
+             'The first equipment (launch vehicles, search-radar vehicles) arrives in Taiwan; the Navy’s Hai Feng group begins fielding.',
+             'https://theaviationist.com/2024/10/02/taiwan-receives-harpoon-block-ii/'),
+            ('2025 起', 'From 2025',
+             '岸置系統分批交付，規劃 2026 年底前取得 32 套、2028 年完成全數 400 枚飛彈交付，供新編濱海作戰指揮部使用。',
+             'Coastal systems are delivered in batches; the plan calls for 32 systems by end-2026 and all 400 missiles by 2028, for the new Littoral Combat Command.',
+             'https://focustaiwan.tw/politics/202510200015'),
+        ],
+        'combat': [
+            ('1986 錫德拉灣 — 魚叉首次實戰', '1986 Gulf of Sidra — the Harpoon’s combat debut',
+             '1986 年 3 月 24 日錫德拉灣航行自由行動（Attain Document III）中，美國海軍 A-6E 攻擊機以 AGM-84 魚叉飛彈擊中利比亞飛彈快艇 Waheed，該艇最終沉沒——這是魚叉飛彈史上首次實戰使用。',
+             'On 24 March 1986, during freedom-of-navigation operations in the Gulf of Sidra, US Navy A-6E aircraft struck the Libyan missile boat Waheed with an AGM-84 Harpoon; the boat later sank — the Harpoon’s first combat use.',
+             'https://theaviationist.com/2024/09/21/a-6-agm-84/'),
+            ('1988 螳螂行動 — 擊沉伊朗巡防艦', '1988 Operation Praying Mantis — sinking an Iranian frigate',
+             '1988 年 4 月 18 日螳螂行動中，美軍對伊朗海軍展開報復打擊；伊朗巡防艦 Sahand 遭包含 3 枚魚叉飛彈在內的多枚飛彈與炸彈命中，甲板大火引發彈藥殉爆而沉沒，是美國海軍二戰以來最大規模水面戰之一。（同役伊朗快艇 Joshan 主要為標準飛彈 SM-1 擊沉，非魚叉。）',
+             'During Operation Praying Mantis on 18 April 1988, the Iranian frigate Sahand was hit by multiple weapons including three Harpoon missiles and sank after its magazines detonated — one of the US Navy’s largest surface actions since WWII. (In the same action the boat Joshan was sunk mainly by Standard SM-1 missiles, not Harpoon.)',
+             'https://navyhistory.au/operation-praying-mantis/'),
+        ],
+        'combat_note_zh': '綜合多家專業軍事媒體的戰史回顧，魚叉飛彈有權威來源記載的美軍實戰使用僅 1986、1988 兩次；查無權威來源佐證的其他戰例不列入本頁。',
+        'combat_note_en': 'Reviews by multiple defense outlets record only two authoritatively sourced US combat uses of the Harpoon (1986 and 1988); cases lacking authoritative sources are not listed here.',
+        'role_zh': [
+            '魚叉是美軍現役反艦飛彈中少數有真實戰史的型號，1986、1988 兩次行動已證明其擊沉軍艦的能力。',
+            '台灣自 2020 年起採購 100 套、400 枚陸射型岸置系統，加上 60 枚空射型，案值合計逾 27 億美元。',
+            '這批岸基機動飛彈與國造雄風二、三型整合後，是反登陸作戰中攔截共軍艦艇的核心一環。',
+            '目前仍處分批交機與部隊整編階段（規劃 2028 年前完成全數交付），屬「戰場實績已驗證、在台仍在部署」的系統。',
+        ],
+        'role_en': [
+            'The Harpoon is one of the few in-service US anti-ship missiles with a real combat record; the 1986 and 1988 actions proved it can sink warships.',
+            'Since 2020 Taiwan has bought 100 coastal systems with 400 land-launched missiles, plus 60 air-launched rounds — over US$2.7B combined.',
+            'Integrated with the indigenous Hsiung Feng II/III, these mobile coastal missiles are a core element for intercepting PLA ships in an anti-invasion fight.',
+            'Fielding and unit reorganization are still under way (full delivery planned by 2028) — a system whose battlefield record is proven while its Taiwan deployment is still in progress.',
+        ],
+    },
+    'patriot': {
+        'name_zh': '愛國者防空飛彈系統', 'name_en': 'Patriot Air-Defense System',
+        'variant': 'MIM-104 Patriot · PAC-2 GEM / PAC-3 / PAC-3 MSE',
+        'has_rank': False, 'rank_key': 'patriot',
+        'teaser_zh': '2023 年 5 月，烏克蘭以愛國者擊落俄軍號稱「無法攔截」的匕首極音速飛彈，五角大廈正式證實。',
+        'teaser_en': 'In May 2023 Ukraine used a Patriot to down Russia’s “uninterceptable” Kinzhal hypersonic missile — confirmed by the Pentagon.',
+        'hero': [
+            ('台灣採購量', 'Taiwan quantity', 'PAC-3 330 枚（2008）＋ MSE 增購中', '330 PAC-3 (2008) + MSE on order'),
+            ('案值', 'Value', '部分未公開', 'Partly undisclosed'),
+            ('交付狀態', 'Delivery', '服役／持續增購', 'In service / expanding'),
+        ],
+        'timeline': [
+            ('2008-10-03', '2008-10-03',
+             '布希政府對台軍售包裹含 330 枚 PAC-3 飛彈（整體包裹約 64 億美元）。',
+             'The 2008 Bush-administration arms package to Taiwan included 330 PAC-3 missiles (overall package ~US$6.4B).',
+             'https://www.armscontrol.org/act/2008-11/long-delayed-arms-sales-taiwan-announced'),
+            ('2010-01-29', '2010-01-29',
+             'DSCA 通知國會：114 枚 PAC-3 飛彈與 3 套火力單位，約 28.1 億美元。',
+             'DSCA notifies Congress of 114 PAC-3 missiles and 3 fire units, ~US$2.81B.',
+             'https://www.everycrsreport.com/files/20150105_RL30957_02fd3b35f8b5350b67bd637e2e9421cb108c1f9b.html'),
+            ('2020-07-09', '2020-07-09',
+             'DSCA 通知國會：PAC-3 飛彈維修暨延壽認證，約 6.2 億美元。',
+             'DSCA notifies Congress of PAC-3 missile refurbishment and recertification, ~US$620M.',
+             'https://www.govconwire.com/articles/taiwan-requests-lockheed-pac-3-missile-recertification-via-potential-620m-fms-deal'),
+            ('2019 起', 'From 2019',
+             '台美確定增購愛三增程型（PAC-3 MSE），射程與攔截高度提升，規劃 2025–2026 年分批交運部署。',
+             'Taiwan confirms procurement of PAC-3 MSE (greater range and intercept altitude), with phased delivery planned for 2025–2026.',
+             'https://www.cna.com.tw/news/firstnews/202103310114.aspx'),
+            ('2025-10', '2025-10',
+             '首批 PAC-3 MSE 預計年底前交運，第 4 個愛國者營籌組中（部署細節官方列為機密）。',
+             'The first PAC-3 MSE deliveries are expected by year-end; a fourth Patriot battalion is forming (deployment details withheld as classified).',
+             'https://www.cna.com.tw/news/aipl/202510040208.aspx'),
+        ],
+        'combat': [
+            ('1991 波灣戰爭 — 宣稱與檢討的落差', '1991 Gulf War — claims vs. review',
+             '波灣戰爭是愛國者「宣傳成功率」與「官方事後檢討」落差最大的案例。美國政府審計署（GAO）1992 年提交國會的證詞指出，陸軍宣稱愛國者「成功攔截 70% 飛毛腿飛彈」的說法「未獲支持」。',
+             'The Gulf War is where Patriot’s publicized success rate diverged most from later official review: 1992 GAO testimony to Congress found the Army’s claim of intercepting 70% of Scuds “not supported.”',
+             'https://www.gao.gov/assets/t-nsiad-92-27.pdf'),
+            ('達蘭慘劇 — 軟體缺陷致 28 死', 'Dhahran — a software flaw kills 28',
+             '1991 年 2 月 25 日，一套連續運作逾 100 小時的愛國者因系統時脈換算累積誤差未能攔截一枚飛毛腿，該彈命中達蘭美軍營房，28 名美軍陣亡；修正軟體事發隔日才送達。這是後續美軍全面檢討系統可靠度的直接導火線。',
+             'On 25 Feb 1991 a Patriot running over 100 hours failed — due to a clock-conversion rounding error — to intercept a Scud that hit a US barracks in Dhahran, killing 28; the fix arrived the next day. It directly triggered a full US review of the system’s reliability.',
+             'https://www.gao.gov/products/imtec-92-26'),
+            ('2003 伊拉克戰爭 — 攔截成功但友軍誤擊', '2003 Iraq War — intercepts, but fratricide',
+             '2003 年愛國者成功攔截敵方彈道飛彈，但也誤擊落一架英國龍捲風戰機與一架美國 F/A-18，3 名飛行員陣亡；美方檢討歸因於系統高度自動化與敵我識別可靠度不足（國防科學委員會完整報告為機密，此處引公開摘要）。',
+             'In 2003 Patriot intercepted enemy ballistic missiles but also shot down a British Tornado and a US F/A-18 in fratricide, killing three aircrew; reviews cited heavy automation and poor IFF reliability (the full Defense Science Board report is classified; a public summary is cited here).',
+             'https://spacenews.com/report-cites-patriot-autonomy-factor-friendly-fire-incidents/'),
+            ('2022 阿聯 — 美軍官方確認', '2022 UAE — confirmed by US forces',
+             '2022 年 1 月，美軍中央司令部證實在阿聯阿爾達夫拉基地以愛國者攔截兩枚來襲飛彈，無美軍傷亡——這是美軍自 2003 年以來首次實戰發射愛國者。',
+             'In January 2022 US CENTCOM confirmed Patriots intercepted two incoming missiles at Al Dhafra Air Base, UAE, with no US casualties — the first US combat firing of Patriot since 2003.',
+             'https://www.centcom.mil/MEDIA/PRESS-RELEASES/Press-Release-View/Article/2909334/us-central-command-statement-on-use-of-patriots-to-defend-us-forces/'),
+            ('2023 烏克蘭 — 首次證實攔截極音速飛彈', '2023 Ukraine — first confirmed hypersonic intercept',
+             '2023 年 5 月，烏克蘭以愛國者於基輔近郊擊落一枚俄羅斯「匕首」（Kinzhal）極音速飛彈，五角大廈發言人於 5 月 9 日正式證實——這是俄方長期宣稱「無法攔截」的該型飛彈首次被證實擊落。',
+             'In May 2023 Ukraine downed a Russian Kh-47 “Kinzhal” hypersonic missile with a Patriot near Kyiv; a Pentagon spokesman confirmed it on 9 May — the first confirmed intercept of a missile Russia had long called “uninterceptable.”',
+             'https://theaviationist.com/2023/05/10/kinzhal-vs-patriot/'),
+        ],
+        'combat_note_zh': '沙烏地阿拉伯長期的高攔截率宣稱主要來自廠商公關與零星媒體回報，缺乏官方逐案證實，本頁不列為已證實戰果。',
+        'combat_note_en': 'Saudi Arabia’s long-running high-interception claims come mainly from manufacturer PR and scattered media reports, without case-by-case official confirmation, and are not listed here as verified results.',
+        'role_zh': [
+            '愛國者三型（PAC-3）依公開報導部署於大台北、台中、雲嘉南高、屏東等地，估計涵蓋全台約七成人口，是台灣多層次防空反飛彈架構的核心，與國造天弓系統互補。',
+            '實戰史上唯一被美國政府正式證實攔截極音速威脅的紀錄，是 2023 年烏克蘭擊落俄軍匕首飛彈一案，對評估愛國者因應解放軍精準彈道飛彈有參考價值，但戰場條件與台海未必對應。',
+            '波灣戰爭的教訓提醒：任何單一武器系統的「保護傘」效果，應同時參考官方事後檢討，而非僅憑初期宣傳數字。',
+            '台灣自 2019 年起增購 PAC-3 MSE，射程與攔截高度提升，顯示政府持續投資、更新這套服役逾 25 年的系統。',
+        ],
+        'role_en': [
+            'PAC-3 units are reportedly deployed across Greater Taipei, Taichung, the Yunlin-Chiayi-Tainan-Kaohsiung belt and Pingtung, covering an estimated 70% of the population — the core of Taiwan’s layered air-and-missile defense, complementing the indigenous Tien Kung.',
+            'The only combat record of a US-confirmed hypersonic intercept is Ukraine’s 2023 downing of a Russian Kinzhal — a useful reference for gauging Patriot against PLA precision ballistic missiles, though battlefield conditions differ from the Strait.',
+            'The Gulf War is a caution: the “umbrella” effect of any single system should be judged against official after-action reviews, not early publicity figures.',
+            'Taiwan has been adding PAC-3 MSE since 2019, with greater range and intercept altitude — a sign of continued investment in a system now more than 25 years in service.',
+        ],
+    },
+    'himars': {
+        'name_zh': '海馬斯多管火箭系統', 'name_en': 'HIMARS Rocket Artillery',
+        'variant': 'M142 HIMARS · ATACMS / GMLRS',
+        'has_rank': True, 'rank_key': 'himars',
+        'teaser_zh': '美方官員稱 HIMARS 對俄軍後勤的打擊「等同於一次空襲」——烏克蘭戰場驗證的機動精準火力。',
+        'teaser_en': 'US officials called HIMARS strikes on Russian logistics “the equivalent of an airstrike” — mobile precision fires proven in Ukraine.',
+        'hero': [
+            ('台灣採購量', 'Taiwan quantity', '111 套發射系統（分三批）', '111 launcher systems (three batches)'),
+            ('案值', 'Value', '約 44.9 億美元', 'US$4.49B'),
+            ('交付狀態', 'Delivery', '交付中', 'Delivering'),
+        ],
+        'timeline': [
+            ('2020-10-21', '2020-10-21',
+             'DSCA 通知國會首批：11 套 M142 HIMARS 發射器與 64 枚 ATACMS 等，約 4.361 億美元。',
+             'First DSCA notice: 11 M142 HIMARS launchers plus 64 ATACMS and related gear, ~US$436M.',
+             'https://www.cato.org/blog/taiwan-arms-backlog-november-2024-update-himars-delivery-second-trump-administration'),
+            ('2024-11', '2024-11',
+             '首批 11 套 HIMARS 全數運抵台灣，由陸軍第 58 砲兵指揮部接裝訓練；同批含射程約 300 公里的 ATACMS。',
+             'The first 11 HIMARS arrive in Taiwan; the Army’s 58th Artillery Command begins fielding, with ~300 km-range ATACMS in the same batch.',
+             'https://www.cna.com.tw/news/aipl/202411040036.aspx'),
+            ('第二批 18 套', 'Second batch: 18',
+             '台灣追加 18 套，規劃 2027 年交運完成（總量達 29 套）。',
+             'Taiwan adds 18 more launchers, planned for delivery by 2027 (bringing the total to 29).',
+             'https://def.ltn.com.tw/article/breakingnews/4292058'),
+            ('2025-12-17', '2025-12-17',
+             'DSCA 通知第三批：82 套 HIMARS 發射器、420 枚 ATACMS、逾千套 GMLRS 火箭，約 40.5 億美元，規劃自 2030 年起交運。',
+             'Third batch (17 Dec 2025): 82 HIMARS launchers, 420 ATACMS and 1,000+ GMLRS rockets, ~US$4.05B, deliveries from 2030.',
+             'https://media.defense.gov/2025/Dec/17/2003844312/-1/-1/0/PRESS%20RELEASE%20-%20TECRO%2026-01%20CN.PDF'),
+        ],
+        'combat': [
+            ('烏克蘭（2022 起）— 美方評價', 'Ukraine (from 2022) — the US assessment',
+             '2022 年 6 月美國國防部宣布提供烏克蘭 HIMARS，官員稱其 GPS 導引精準火箭對俄軍後勤節點的打擊「等同於一次空襲」、效果顯著；截至 2024 年美方累計提供逾 40 套。烏方宣稱的具體殲敵／摧毀數字未經美方逐項證實，本頁以美方評價為準。',
+             'In June 2022 the US began supplying HIMARS to Ukraine; officials called its GPS-guided precision strikes on Russian logistics “the equivalent of an airstrike,” with 40+ systems provided by 2024. Ukraine’s specific destruction claims are not itemized-confirmed by the US, so this page relies on the US assessment.',
+             'https://www.defensenews.com/pentagon/2022/06/01/us-will-send-himars-precision-rockets-to-ukraine/'),
+            ('阿富汗（2017）— 美軍官方確認', 'Afghanistan (2017) — confirmed by US forces',
+             '2017 年美國海軍陸戰隊將 HIMARS 部署至阿富汗赫爾曼德省，執行十餘次任務支援阿富汗部隊，摧毀塔利班戰鬥人員、簡易爆炸裝置製造設施與毒品加工廠。',
+             'In 2017 US Marines deployed HIMARS to Helmand, Afghanistan, flying a dozen-plus missions supporting Afghan forces that destroyed Taliban fighters, IED facilities and drug labs.',
+             'https://www.dvidshub.net/news/259043/himars-providing-vital-fire-support-afghan-forces-helmand'),
+            ('敘利亞打擊 ISIS（2016 及 2025–26）— 美軍官方確認', 'Syria vs. ISIS (2016 & 2025–26) — confirmed by US forces',
+             '2016 年美軍首次在敘利亞境內以 HIMARS 打擊 ISIS；2025 年 12 月的 Operation Hawkeye Strike，CENTCOM 明確以 HIMARS 動用逾百枚精準彈藥打擊 ISIS 通訊與後勤設施。',
+             'The US first fired HIMARS in Syria against ISIS in 2016; in Operation Hawkeye Strike (Dec 2025) CENTCOM explicitly used HIMARS among 100+ precision munitions against ISIS comms and logistics nodes.',
+             'https://www.dvidshub.net/video/991472/operation-hawkeye-strike-centcom-launches-operation-against-isis-syria'),
+        ],
+        'combat_note_zh': '2017 年拉卡戰役著名的「五個月 35,000 發」砲擊使用的是 M777 榴彈砲、非 HIMARS，已排除以免誤植戰果。',
+        'combat_note_en': 'The famous “35,000 rounds in five months” at Raqqa (2017) used M777 howitzers, not HIMARS, and is excluded to avoid misattribution.',
+        'role_zh': [
+            'HIMARS 核心價值在「射後即走」：發射車兩分鐘內完成射擊並轉移陣地，配合輪型高機動底盤，降低共軍反砲兵偵蒐與飽和打擊的命中機率。',
+            '台灣採購的 ATACMS 射程約 300 公里，可涵蓋部分中國東南沿海機場與後勤集結地，形成學者所稱「源頭打擊」能力的一環。',
+            '在反登陸想定中，GMLRS 精準火箭可對灘岸集結區、臨時碼頭等目標實施精準壓制，是不對稱戰力中負責縱深打擊的一塊。',
+            '分批交運意味這項能力要到 2027、2030 年後才全面到位，短期仍需與現役火砲、既有多管火箭協同運用。',
+            '烏克蘭經驗顯示 HIMARS 戰力高度依賴即時目獲與情報鏈，台灣本身的偵蒐、指管能否跟得上同樣關鍵。',
+        ],
+        'role_en': [
+            'HIMARS’ core value is “shoot-and-scoot”: a launcher can fire and displace within two minutes, and its wheeled mobility lowers the odds of PLA counter-battery detection and saturation strikes.',
+            'Taiwan’s ATACMS reach ~300 km, covering some airfields and logistics hubs along China’s southeast coast — part of what analysts call a “left-of-launch” deep-strike capability.',
+            'In an anti-landing fight, GMLRS precision rockets can suppress beachhead assembly areas and temporary piers — the deep-strike piece of an asymmetric, porcupine strategy.',
+            'Batched deliveries mean the capability is not fully in place until after 2027 and 2030; near-term it must work alongside existing tube and rocket artillery.',
+            'Ukraine shows HIMARS depends heavily on timely targeting and an intelligence chain — whether Taiwan’s own ISR and command systems keep pace is just as decisive.',
+        ],
+    },
+}
+
 # 全站主題（'dark' | 'light'）；由 __main__ 依當日資料呼叫 resolve_theme() 設定。
 THEME = 'dark'
 
@@ -182,6 +386,9 @@ STRINGS = {
             'monthly': '月統計 — 中國擾台趨勢數據分析',
             'about':   '方法論與資料來源 — 中國擾台趨勢數據分析',
             'arsenal': '台灣對美軍購交付追蹤 — 中國擾台趨勢數據分析',
+            'ars_harpoon': '魚叉反艦飛彈：台灣採購與實戰檔案 — 中國擾台趨勢數據分析',
+            'ars_patriot': '愛國者防空飛彈：台灣採購與實戰檔案 — 中國擾台趨勢數據分析',
+            'ars_himars':  '海馬斯多管火箭：台灣採購與實戰檔案 — 中國擾台趨勢數據分析',
         },
         'meta_descs': {
             'index':   '每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。',
@@ -189,6 +396,9 @@ STRINGS = {
             'monthly': '解放軍擾台月統計：每月共機總架次、逾越中線數、越線率與共艦日均。資料來源：國防部。',
             'about':   '本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。',
             'arsenal': '2019 年以來台灣對美軍購交付追蹤：49 案、逐案案值、交付進度、延宕與官方理由，每一筆都可溯源到美國國防安全合作署（DSCA）官方公告。',
+            'ars_harpoon': '魚叉反艦飛彈（Harpoon Block II）台灣採購時間軸、國際買家排名，與 1986、1988 兩次美軍實戰紀錄，逐條附來源。',
+            'ars_patriot': '愛國者防空飛彈（PAC-3／MSE）台灣採購脈絡、PAC-3 使用國，以及波灣、伊拉克、烏克蘭實戰與爭議史，誠實附來源。',
+            'ars_himars':  '海馬斯多管火箭（M142 HIMARS）台灣採購時間軸、國際買家排名，與烏克蘭、阿富汗、敘利亞實戰紀錄，逐條附來源。',
         },
         'site_title': '中國擾台趨勢數據分析',
         'site_sub': 'PLA Activity Around Taiwan',
@@ -323,6 +533,22 @@ STRINGS = {
             'divert_label': '軍購交付追蹤',
             'divert_pending': '待交付',
             'divert_yi': '億美元',
+            'wcards_title':  '武器內頁 · 實戰檔案',
+            'wcards_cta':    '看實戰檔案 →',
+            'detail_back':   '← 軍購總覽',
+            'tl_title':      '採購時間軸',
+            'combat_title':  '實戰紀錄',
+            'combat_intro':  '每一條都附來源；查無權威來源佐證者不列入本頁。',
+            'rank_title':    '國際買家排名',
+            'rank_intro':    '同一系統，美國賣給誰、賣多少。台灣以站內黃強調，同盟關係以文字標籤標示，不靠顏色。',
+            'rank_note':     '烏克蘭為美國軍援（非付費軍售 FMS），以虛線框另計。',
+            'rank_q':        '數量 ',
+            'rank_year':     '訂購年：',
+            'rank_src':      '來源：',
+            'users_title':   'PAC-3 使用國',
+            'users_intro':   'PAC-3 有 CRI、MSE 等不同世代，各國採購口徑不一，數量不宜直接排名；以下列出主要使用國與其型號。',
+            'role_title':    '台海防衛角色',
+            'src_title':     '來源清單',
         },
     },
     'en': {
@@ -333,6 +559,9 @@ STRINGS = {
             'monthly': 'Monthly Stats — PLA Activity Tracker',
             'about':   'Methodology & Data Sources — PLA Activity Tracker',
             'arsenal': 'Taiwan–US Arms Delivery Tracker — PLA Activity Tracker',
+            'ars_harpoon': 'Harpoon Missile: Taiwan Procurement & Combat Record — PLA Activity Tracker',
+            'ars_patriot': 'Patriot Air-Defense: Taiwan Procurement & Combat Record — PLA Activity Tracker',
+            'ars_himars':  'HIMARS: Taiwan Procurement & Combat Record — PLA Activity Tracker',
         },
         'meta_descs': {
             'index':   'Daily tracking of PLA military activity around Taiwan: aircraft sorties, Taiwan Strait median-line crossings, naval vessels and trends. Source: ROC Ministry of National Defense daily releases.',
@@ -340,6 +569,9 @@ STRINGS = {
             'monthly': 'Monthly PLA activity statistics for the Taiwan Strait: total sorties, median-line crossings, crossing rate and average vessels per day. Source: ROC MND.',
             'about':   'Methodology: data source (ROC MND daily releases), update frequency, the difference between the Taiwan Strait median line and the 12 NM territorial sea, data compilation and citation/licensing.',
             'arsenal': 'Tracking Taiwan\'s US arms procurement since 2019: 49 cases, per-case value, delivery progress, delays and their official reasons — every entry traceable to an official US DSCA notification.',
+            'ars_harpoon': 'Harpoon Block II: Taiwan\'s procurement timeline, international buyer ranking, and the two US combat uses (1986, 1988) — each entry sourced.',
+            'ars_patriot': 'Patriot (PAC-3/MSE): Taiwan procurement, PAC-3 user nations, and combat and controversy history from the Gulf War to Ukraine — honestly sourced.',
+            'ars_himars':  'M142 HIMARS: Taiwan\'s procurement timeline, international buyer ranking, and combat record in Ukraine, Afghanistan and Syria — each entry sourced.',
         },
         'site_title': 'PLA Activity Tracker — Taiwan Strait',
         'site_sub': 'Daily data from ROC MND public releases',
@@ -477,6 +709,22 @@ STRINGS = {
             'divert_label': 'Arms Delivery Tracker',
             'divert_pending': 'Pending',
             'divert_yi': '',
+            'wcards_title':  'Weapon Files · Combat Record',
+            'wcards_cta':    'View combat file →',
+            'detail_back':   '← Arms overview',
+            'tl_title':      'Procurement Timeline',
+            'combat_title':  'Combat Record',
+            'combat_intro':  'Every entry is sourced; cases without authoritative sources are omitted.',
+            'rank_title':    'International Buyers',
+            'rank_intro':    'For the same system, who the US sells to and how much. Taiwan is highlighted; alliance ties are shown as text tags, not by color.',
+            'rank_note':     'Ukraine is US military aid (not paid FMS) and is shown separately with a dashed outline.',
+            'rank_q':        'Qty ',
+            'rank_year':     'Order year: ',
+            'rank_src':      'Source: ',
+            'users_title':   'PAC-3 User Nations',
+            'users_intro':   'PAC-3 spans generations (CRI, MSE) with non-comparable procurement scopes, so a straight quantity ranking is misleading; below are the major user nations and their variants.',
+            'role_title':    'Role in Taiwan’s Defense',
+            'src_title':     'Sources',
         },
     },
 }
@@ -1127,6 +1375,65 @@ html[data-theme="light"] .ars-divert:hover{background:#f3f0e6}
 .ars-divert .arr{color:var(--sub)}
 html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
 
+/* ── Arsenal weapon detail pages ── */
+.ars-back{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;
+  color:var(--sub);text-decoration:none;margin-bottom:.55rem}
+.ars-back:hover{color:var(--y)}
+/* vertical procurement timeline */
+.ars-tl{position:relative;margin-left:.4rem;padding-left:1.1rem;border-left:2px solid var(--bdr)}
+.ars-tl-item{position:relative;padding:0 0 1.05rem}
+.ars-tl-item:last-child{padding-bottom:0}
+.ars-tl-item::before{content:'';position:absolute;left:calc(-1.1rem - 5px);top:.3rem;
+  width:9px;height:9px;border-radius:50%;background:var(--y);border:2px solid var(--bg)}
+.ars-tl-date{font-size:.74rem;font-weight:800;letter-spacing:.04em;color:var(--y);
+  font-variant-numeric:tabular-nums;margin-bottom:.18rem}
+.ars-tl-body{font-size:.84rem;color:var(--sub);line-height:1.7}
+html[lang="zh-Hant"] .ars-tl-body{font-size:.88rem}
+.ars-tl-body a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;
+  font-size:.72rem;margin-left:.25rem;white-space:nowrap}
+.ars-tl-body a:hover{color:#fff}
+/* ranking chart wrap (variable height set inline) */
+.ars-rank-canvas{position:relative;width:100%}
+/* PAC-3 user wall */
+.ars-userwall{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem}
+.ars-usercard{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.75rem .9rem}
+.ars-uc-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.32rem}
+.ars-uc-country{font-size:.9rem;font-weight:800;color:var(--tx)}
+.ars-uc-var{font-size:.76rem;color:var(--y);font-weight:600;margin-bottom:.3rem}
+.ars-uc-meta{font-size:.72rem;color:var(--sub);line-height:1.5;font-variant-numeric:tabular-nums}
+.ars-uc-meta a.src{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr)}
+.ars-uc-meta a.src:hover{color:var(--y);border-bottom-color:var(--y)}
+/* alliance tag chip (text label, not color-only) */
+.ars-atag{display:inline-block;padding:.12em .5em;border-radius:999px;font-size:.62rem;
+  font-weight:800;letter-spacing:.03em;white-space:nowrap}
+.ars-atag.treaty {background:#123016;color:#5fce77}
+.ars-atag.nato   {background:#0d1d2e;color:#6aaee0}
+.ars-atag.mnna   {background:#20143a;color:#b898dc}
+.ars-atag.partner{background:#2a2408;color:var(--y)}
+.ars-atag.aid    {background:#2c1414;color:#e08585}
+/* Taiwan-defense role list */
+.ars-role{list-style:none;display:flex;flex-direction:column;gap:.55rem}
+.ars-role li{position:relative;padding-left:1.1rem;font-size:.86rem;color:var(--sub);line-height:1.75}
+html[lang="zh-Hant"] .ars-role li{font-size:.9rem}
+.ars-role li::before{content:'\\25b8';position:absolute;left:0;top:0;color:var(--y);font-weight:800}
+/* source list */
+.ars-srclist{list-style:none;display:flex;flex-direction:column;gap:.35rem}
+.ars-srclist li{font-size:.76rem;line-height:1.5}
+.ars-srclist a{color:var(--sub);text-decoration:none;border-bottom:1px solid var(--bdr);word-break:break-all}
+.ars-srclist a:hover{color:var(--y);border-bottom-color:var(--y)}
+/* weapon internal-page cards (on arsenal index) */
+.ars-wcards{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+.ars-wcard{display:flex;flex-direction:column;background:var(--sur);border:1px solid var(--bdr);
+  border-radius:var(--rad);padding:.9rem 1rem;text-decoration:none;border-top:3px solid var(--y);
+  transition:background .15s,transform .15s}
+.ars-wcard:hover{background:#12201a;transform:translateY(-2px)}
+html[data-theme="light"] .ars-wcard:hover{background:#f3f0e6}
+.ars-wcard-name{font-size:.95rem;font-weight:800;color:var(--tx);line-height:1.25}
+.ars-wcard-var{font-size:.68rem;color:var(--sub);margin-top:.2rem;letter-spacing:.02em}
+.ars-wcard-teaser{font-size:.8rem;color:var(--sub);line-height:1.65;margin:.55rem 0 .7rem;flex:1}
+html[lang="zh-Hant"] .ars-wcard-teaser{font-size:.84rem}
+.ars-wcard-cta{font-size:.72rem;font-weight:800;color:var(--y);letter-spacing:.03em}
+
 /* ── Mobile ── */
 @media(max-width:640px){
   .top-bar{display:none}
@@ -1158,6 +1465,8 @@ html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
   .ars-cases .ars-cards{display:block}
   .ars-cases .ars-tbl-wrap{display:none}
   .ars-chart-canvas{height:220px}
+  .ars-wcards{grid-template-columns:1fr}
+  .ars-userwall{grid-template-columns:1fr}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
@@ -1222,6 +1531,12 @@ html[data-theme="light"] .ars-cat.uas        {background:#ece1f7;color:#7a4fb0}
 html[data-theme="light"] .ars-cat.c4isr      {background:#d8eef2;color:#1f8496}
 html[data-theme="light"] .ars-detail a{border-bottom-color:#d9c98a}
 html[data-theme="light"] .ars-point{border-left-color:var(--y)}
+html[data-theme="light"] .ars-tl-body a{border-bottom-color:#d9c98a}
+html[data-theme="light"] .ars-atag.treaty {background:#dff0e0;color:#227a35}
+html[data-theme="light"] .ars-atag.nato   {background:#dbeaf6;color:#1f6fa8}
+html[data-theme="light"] .ars-atag.mnna   {background:#ece1f7;color:#7a4fb0}
+html[data-theme="light"] .ars-atag.partner{background:#f3ecc9;color:#7a5c00}
+html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
@@ -1279,6 +1594,38 @@ var opts={animation:{duration:700,easing:'easeOutQuart'},responsive:true,maintai
 new Chart(document.getElementById('__UID__'),{type:'bar',data:{labels:Y,datasets:[
   {data:V,backgroundColor:__BAR__,hoverBackgroundColor:__BARH__,borderRadius:3,maxBarThickness:54}
 ]},options:opts});
+})();"""
+
+# 國際買家排名（橫條，同色相強調）：台灣＝accent、美援＝虛線框、其他＝暗階。
+# 直接標籤：y 軸 tick＝國名＋同盟標籤；bar 端＝數量（自訂 plugin 繪製，右緣自動內縮）。
+# tooltip＝訂購年＋來源網域。國家數×34px 高度由 wrap 內嵌 style 控制。
+_CHART_JS_RANK = """\
+(function(){
+var C=__COUNTRIES__,V=__VALS__,COL=__COLORS__,INFO=__INFO__,TW=__TWIDX__,AID=__AIDIDX__;
+var lbl={id:'arslbl',afterDatasetsDraw:function(ch){
+  var ctx=ch.ctx,a=ch.chartArea,m=ch.getDatasetMeta(0);
+  ctx.save();ctx.font='700 11px "Noto Sans TC",sans-serif';ctx.textBaseline='middle';
+  m.data.forEach(function(b,i){
+    var t=V[i].toLocaleString(),x=b.x+6;ctx.textAlign='left';
+    if(x+ctx.measureText(t).width>a.right){x=b.x-6;ctx.textAlign='right';}
+    ctx.fillStyle=__LBLCOL__;ctx.fillText(t,x,b.y);
+  });
+  if(AID>=0){var bar=m.data[AID],h=bar.height,x0=Math.min(bar.base,bar.x),w=Math.abs(bar.x-bar.base);
+    ctx.strokeStyle=__AIDCOL__;ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.strokeRect(x0+0.75,bar.y-h/2+0.75,Math.max(w-1.5,1),h-1.5);}
+  ctx.restore();
+}};
+var xA={grid:{color:function(c){return c.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:5},border:{display:false},beginAtZero:true,grace:'12%'};
+var yA={grid:{display:false},ticks:{color:function(c){return c.index===TW?__ACCENT__:__TICK__;},font:{size:11},autoSkip:false,crossAlign:'far'},border:{display:false}};
+var opts={indexAxis:'y',animation:{duration:700,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{
+    title:function(it){return C[it[0].dataIndex];},
+    label:function(c){return __QLABEL__+c.parsed.x.toLocaleString();},
+    afterBody:function(it){return INFO[it[0].dataIndex]||[];}
+  }}},scales:{x:xA,y:yA}};
+new Chart(document.getElementById('__UID__'),{type:'bar',data:{labels:C,datasets:[
+  {data:V,backgroundColor:COL,borderRadius:3,maxBarThickness:30}
+]},options:opts,plugins:[lbl]});
 })();"""
 
 
@@ -1653,9 +2000,13 @@ def nav_html(active, lang, page_name, s):
     """Navigation bar with language toggle. 'arsenal' is a nested page (/arsenal/)."""
     base = '/en' if lang == 'en' else ''
 
-    # 語言切換連結：arsenal 為 /arsenal/ 目錄式路徑，其餘為 /{page}.html
+    # 語言切換連結：arsenal 為 /arsenal/ 目錄式路徑；武器內頁為 /arsenal/{w}.html；
+    # 其餘為 /{page}.html。
     if page_name == 'arsenal':
         toggle = '/arsenal/' if lang == 'en' else '/en/arsenal/'
+    elif page_name.startswith('ars_'):
+        w = page_name[4:]
+        toggle = f'/arsenal/{w}.html' if lang == 'en' else f'/en/arsenal/{w}.html'
     else:
         toggle = f'/{page_name}.html' if lang == 'en' else f'/en/{page_name}.html'
 
@@ -2658,6 +3009,7 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     delay_html   = _ars_delay_table_html(df_ars, lang, s)
     chart_html   = _ars_chart_html(df_ars, lang, s)
     cases_html   = _ars_cases_html(df_ars, lang, s)
+    wcards_html  = _ars_weapon_cards_html(lang, s)
     divert_link  = '/en/arsenal/' if lang == 'en' else '/arsenal/'
 
     today_label = fmt_date_display(df_ars['announce_date'].max(), lang)
@@ -2714,6 +3066,11 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     {cases_html}
   </section>
 
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['wcards_title']}</div>
+    {wcards_html}
+  </section>
+
   <div class="ars-scope"><span class="st">{a['scope_title']}</span>{a['scope_body']}</div>
 </main>
 
@@ -2725,6 +3082,306 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     (out_dir / 'index.html').write_text(html_doc, encoding='utf-8')
     rel = 'arsenal' if out_dir.parent == SITE_DIR else 'en/arsenal'
     print(f'[OK] {rel}/index.html')
+
+
+# ── /arsenal/{harpoon,patriot,himars}.html 武器內頁 ──────────────────────────
+
+def _domain(url):
+    m = re.match(r'https?://([^/]+)', url or '')
+    d = m.group(1) if m else ''
+    return d[4:] if d.startswith('www.') else d
+
+
+def _ars_alliance_tag(notes, lang):
+    """由 peers.notes 判斷同盟標籤。先移除否定字串（『非美援』『非條約盟邦』），
+    再依 MNNA→aid→treaty→nato→partner 順序判斷——避免『非條約盟邦』⊂『條約盟邦』、
+    『非美援』⊂『美援』、『主要非北約盟友』⊂『北約』等子字串誤判（judgment.md 記載坑）。"""
+    n = (notes.replace('非美援', '').replace('非條約盟邦', '')
+              .replace('非北約盟友', '').replace('非MNNA', '').replace('非NATO', ''))
+    if 'MNNA' in n or '主要非北約盟友' in notes:
+        k = 'mnna'
+    elif '美援' in n:
+        k = 'aid'
+    elif '條約盟邦' in n:
+        k = 'treaty'
+    elif '北約' in n:
+        k = 'nato'
+    else:
+        k = 'partner'
+    zh, en, cls = _ALLIANCE_TAG[k]
+    return (en if lang == 'en' else zh), cls, k
+
+
+def _ars_rank_data(df_peers, key, lang):
+    """依 qty 由大到小的買家列表（同國多列彙總）。每列含國名、數量、同盟標籤、訂購年、來源。"""
+    sub = df_peers[df_peers['system_key'] == key]
+    agg = {}
+    for _, r in sub.iterrows():
+        c = r['buyer_country']
+        e = agg.setdefault(c, {'qty': 0, 'notes': '', 'year': '', 'src': ''})
+        e['qty'] += int(r['qty'])
+        e['notes'] += ' ' + r['notes']
+        if not e['src']:
+            e['src'] = r['source']
+        if not e['year']:
+            e['year'] = r['order_year']
+    rows = []
+    for c, e in agg.items():
+        disp = COUNTRY_EN.get(c, c) if lang == 'en' else c
+        tag, cls, k = _ars_alliance_tag(e['notes'], lang)
+        rows.append({'country': disp, 'qty': e['qty'], 'tag': tag, 'tagcls': cls,
+                     'is_tw': c == '台灣', 'is_aid': k == 'aid',
+                     'year': e['year'], 'src': e['src']})
+    rows.sort(key=lambda x: -x['qty'])
+    return rows
+
+
+def _ars_rank_chart_html(df_peers, key, lang, s):
+    """國際買家橫條排名圖（同色相強調）。y tick＝國名＋同盟；bar 端＝數量；tooltip＝年＋來源。"""
+    a = s['ars']
+    rows = _ars_rank_data(df_peers, key, lang)
+    tc = _CHART_COLORS[THEME]
+    accent, dark = tc['ac_today'], tc['ac_other']
+    countries = [(f"{r['country']} [{r['tag']}]" if lang == 'en' else f"{r['country']} 〔{r['tag']}〕")
+                 for r in rows]
+    vals   = [r['qty'] for r in rows]
+    colors = [accent if r['is_tw'] else dark for r in rows]
+    tw_idx  = next((i for i, r in enumerate(rows) if r['is_tw']), -1)
+    aid_idx = next((i for i, r in enumerate(rows) if r['is_aid']), -1)
+    info = [[f"{a['rank_year']}{r['year']}", f"{a['rank_src']}{_domain(r['src'])}"] for r in rows]
+    height = max(len(rows) * 34, 170)
+    js = (_CHART_JS_RANK
+          .replace('__COUNTRIES__', json.dumps(countries, ensure_ascii=False))
+          .replace('__VALS__',   json.dumps(vals))
+          .replace('__COLORS__', json.dumps(colors))
+          .replace('__INFO__',   json.dumps(info, ensure_ascii=False))
+          .replace('__TWIDX__',  json.dumps(tw_idx))
+          .replace('__AIDIDX__', json.dumps(aid_idx))
+          .replace('__TICK__',   json.dumps(tc['tick']))
+          .replace('__ZERO__',   json.dumps(tc['zero']))
+          .replace('__ACCENT__', json.dumps(accent))
+          .replace('__LBLCOL__', json.dumps(tc['tick']))
+          .replace('__AIDCOL__', json.dumps(tc['sh_line']))
+          .replace('__QLABEL__', json.dumps(a['rank_q']))
+          .replace('__UID__',    'ars-rank'))
+    return (f'<div class="ars-chart-wrap"><div class="ars-rank-canvas" style="height:{height}px">'
+            f'<canvas id="ars-rank"></canvas></div></div><script>{js}</script>')
+
+
+# PAC-3 使用國型號（世代不可比，故不做排名圖；zh 用全形＋、en 用半形 +）
+_PAC3_VARIANT = {
+    '台灣':         ('PAC-3 CRI', 'PAC-3 CRI'),
+    '德國':         ('PAC-3 MSE', 'PAC-3 MSE'),
+    '沙烏地阿拉伯': ('PAC-3 MSE', 'PAC-3 MSE'),
+    '波蘭':         ('PAC-3 MSE', 'PAC-3 MSE'),
+    '羅馬尼亞':     ('PAC-3 MSE ＋ PAC-2 GEM-T', 'PAC-3 MSE + PAC-2 GEM-T'),
+    '阿聯':         ('PAC-3 ＋ PAC-2 GEM-T', 'PAC-3 + PAC-2 GEM-T'),
+}
+
+
+def _ars_pac3_wall_html(df_peers, lang, s):
+    """PAC-3 使用國卡片牆（愛國者頁專用，取代排名圖）。每卡：國名＋型號＋數量＋同盟＋來源。"""
+    a = s['ars']
+    sub = df_peers[df_peers['system_key'] == 'patriot'].copy()
+    sub = sub.sort_values('qty', ascending=False)
+    cards = []
+    for _, r in sub.iterrows():
+        cc = r['buyer_country']
+        country = COUNTRY_EN.get(cc, cc) if lang == 'en' else cc
+        tag, cls, _k = _ars_alliance_tag(r['notes'], lang)
+        vz, ve = _PAC3_VARIANT.get(cc, (r['variant_tier'], r['variant_tier']))
+        variant = ve if lang == 'en' else vz
+        qtyl = _ars_qty_label(r['qty'], '枚', lang)
+        srch = (f'<a class="src" href="{html.escape(r["source"])}" target="_blank" rel="noopener">'
+                f'{a["src_announce"]}</a>')
+        cards.append(
+            f'<div class="ars-usercard">'
+            f'<div class="ars-uc-top"><span class="ars-uc-country">{html.escape(country)}</span>'
+            f'<span class="ars-atag {cls}">{html.escape(tag)}</span></div>'
+            f'<div class="ars-uc-var">{html.escape(variant)}</div>'
+            f'<div class="ars-uc-meta">{html.escape(qtyl)} · {html.escape(r["order_year"])} · {srch}</div>'
+            f'</div>')
+    return '<div class="ars-userwall">' + ''.join(cards) + '</div>'
+
+
+def _ars_hero_stats_html(weapon, lang):
+    cells = []
+    for lz, le, vz, ve in weapon['hero']:
+        lab = le if lang == 'en' else lz
+        val = ve if lang == 'en' else vz
+        cells.append(
+            f'<div class="ars-kpi"><div class="ars-kpi-n y" style="font-size:1.1rem;line-height:1.25">'
+            f'{html.escape(val)}</div><div class="ars-kpi-l">{html.escape(lab)}</div></div>')
+    return '<div class="ars-kpis">' + ''.join(cells) + '</div>'
+
+
+def _ars_timeline_html(weapon, lang, s):
+    a = s['ars']
+    items = []
+    for dz, de, bz, be, src in weapon['timeline']:
+        date = de if lang == 'en' else dz
+        body = be if lang == 'en' else bz
+        srch = (f' <a href="{html.escape(src)}" target="_blank" rel="noopener">{a["src_announce"]}</a>'
+                if src else '')
+        items.append(
+            f'<div class="ars-tl-item"><div class="ars-tl-date">{html.escape(date)}</div>'
+            f'<div class="ars-tl-body">{html.escape(body)}{srch}</div></div>')
+    return '<div class="ars-tl">' + ''.join(items) + '</div>'
+
+
+def _ars_combat_html(weapon, lang, s):
+    a = s['ars']
+    blocks = []
+    for tz, te, bz, be, src in weapon['combat']:
+        title = te if lang == 'en' else tz
+        body  = be if lang == 'en' else bz
+        srch = (f'<div class="ars-src"><a href="{html.escape(src)}" target="_blank" rel="noopener">'
+                f'{a["src_announce"]}</a></div>') if src else ''
+        blocks.append(f'<div class="ars-point"><h3>{html.escape(title)}</h3>'
+                      f'<p>{html.escape(body)}</p>{srch}</div>')
+    note = weapon.get('combat_note_en' if lang == 'en' else 'combat_note_zh')
+    note_html = f'<p class="ars-note">{html.escape(note)}</p>' if note else ''
+    return '<div class="ars-reads">' + ''.join(blocks) + '</div>' + note_html
+
+
+def _ars_role_html(weapon, lang):
+    items = weapon['role_en' if lang == 'en' else 'role_zh']
+    return '<ul class="ars-role">' + ''.join(f'<li>{html.escape(t)}</li>' for t in items) + '</ul>'
+
+
+def _ars_srclist_html(weapon, df_peers, lang):
+    urls = []
+    for row in weapon['timeline']:
+        if row[4]:
+            urls.append(row[4])
+    for row in weapon['combat']:
+        if row[4]:
+            urls.append(row[4])
+    if weapon['has_rank']:
+        for r in _ars_rank_data(df_peers, weapon['rank_key'], lang):
+            if r['src']:
+                urls.append(r['src'])
+    else:
+        for _, r in df_peers[df_peers['system_key'] == weapon['rank_key']].iterrows():
+            if r['source']:
+                urls.append(r['source'])
+    seen, items = set(), []
+    for u in urls:
+        if u in seen:
+            continue
+        seen.add(u)
+        items.append(f'<li><a href="{html.escape(u)}" target="_blank" rel="noopener">'
+                     f'{html.escape(_domain(u))}</a></li>')
+    return '<ul class="ars-srclist">' + ''.join(items) + '</ul>'
+
+
+def _ars_weapon_cards_html(lang, s):
+    """主頁武器內頁卡（3 張），每卡一句實戰 teaser，整卡連向內頁。"""
+    a = s['ars']
+    cards = []
+    for wkey in ARS_DETAIL_PAGES:
+        d = ARSENAL_DETAIL[wkey]
+        name   = d['name_en'] if lang == 'en' else d['name_zh']
+        teaser = d['teaser_en'] if lang == 'en' else d['teaser_zh']
+        href = f'/en/arsenal/{wkey}.html' if lang == 'en' else f'/arsenal/{wkey}.html'
+        cards.append(
+            f'<a class="ars-wcard" href="{href}">'
+            f'<div class="ars-wcard-name">{html.escape(name)}</div>'
+            f'<div class="ars-wcard-var">{html.escape(d["variant"])}</div>'
+            f'<p class="ars-wcard-teaser">{html.escape(teaser)}</p>'
+            f'<span class="ars-wcard-cta">{a["wcards_cta"]}</span></a>')
+    return '<div class="ars-wcards">' + ''.join(cards) + '</div>'
+
+
+def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
+    """/arsenal/{weapon}.html（zh）＋ /en/arsenal/{weapon}.html。"""
+    a = s['ars']
+    w = ARSENAL_DETAIL[weapon_key]
+    name = w['name_en'] if lang == 'en' else w['name_zh']
+    page_name = f'ars_{weapon_key}'
+    head = make_head(lang, page_name, s, page_path=f'/arsenal/{weapon_key}.html', abs_assets=True)
+    back_href = '/en/arsenal/' if lang == 'en' else '/arsenal/'
+
+    hero   = _ars_hero_stats_html(w, lang)
+    tl     = _ars_timeline_html(w, lang, s)
+    combat = _ars_combat_html(w, lang, s)
+    role   = _ars_role_html(w, lang)
+    srcs   = _ars_srclist_html(w, df_peers, lang)
+
+    if w['has_rank']:
+        rows = _ars_rank_data(df_peers, w['rank_key'], lang)
+        note = (f'<p class="ars-note">{a["rank_note"]}</p>'
+                if any(r['is_aid'] for r in rows) else '')
+        rank_sec = (
+            f'<section class="ars-section anim-ready">'
+            f'<div class="ars-sec-title">{a["rank_title"]}</div>'
+            f'<p class="ars-lead">{a["rank_intro"]}</p>'
+            f'{_ars_rank_chart_html(df_peers, w["rank_key"], lang, s)}{note}</section>')
+    else:
+        rank_sec = (
+            f'<section class="ars-section anim-ready">'
+            f'<div class="ars-sec-title">{a["users_title"]}</div>'
+            f'<p class="ars-lead">{a["users_intro"]}</p>'
+            f'{_ars_pac3_wall_html(df_peers, lang, s)}</section>')
+
+    today_label = fmt_date_display(df_ars['announce_date'].max(), lang)
+    html_doc = f"""{head}
+<body>
+<div class="top-bar">
+  <span>{a['topbar']}</span>
+  <span>{html.escape(w['variant'])}</span>
+</div>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-brand">
+      <div class="site-title">{s['site_title']}</div>
+      <div class="site-sub">{s['site_sub']}</div>
+    </div>
+    {nav_html('arsenal', lang, page_name, s)}
+  </div>
+</header>
+
+<main>
+  <div class="ars-hero anim-ready">
+    <a class="ars-back" href="{back_href}">{a['detail_back']}</a>
+    <h1 class="ars-h1">{html.escape(name)}</h1>
+    <p class="ars-sub">{html.escape(w['variant'])}</p>
+  </div>
+
+  {hero}
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['tl_title']}</div>
+    {tl}
+  </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['combat_title']}</div>
+    <p class="ars-lead">{a['combat_intro']}</p>
+    {combat}
+  </section>
+
+  {rank_sec}
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['role_title']}</div>
+    {role}
+  </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['src_title']}</div>
+    {srcs}
+  </section>
+</main>
+
+{_ANIM_JS}
+{footer_html(today_label, s)}
+</body></html>"""
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / f'{weapon_key}.html').write_text(html_doc, encoding='utf-8')
+    rel = 'arsenal' if out_dir.parent == SITE_DIR else 'en/arsenal'
+    print(f'[OK] {rel}/{weapon_key}.html')
 
 
 # ── sitemap.xml / robots.txt ──────────────────────────────────────────────────
@@ -2756,7 +3413,7 @@ def build_sitemap(df):
                 '  </url>'
             )
 
-    # /arsenal/（目錄式路徑，非 .html）：zh + en
+    # /arsenal/（目錄式路徑，非 .html）：zh + en。index 加 3 個武器內頁。
     ars_zh = f'{BASE_URL}/arsenal/'
     ars_en = f'{BASE_URL}/en/arsenal/'
     for loc in (ars_zh, ars_en):
@@ -2771,6 +3428,21 @@ def build_sitemap(df):
             f'    <xhtml:link rel="alternate" hreflang="x-default" href="{ars_zh}"/>\n'
             '  </url>'
         )
+    for wkey in ARS_DETAIL_PAGES:
+        d_zh = f'{BASE_URL}/arsenal/{wkey}.html'
+        d_en = f'{BASE_URL}/en/arsenal/{wkey}.html'
+        for loc in (d_zh, d_en):
+            blocks.append(
+                '  <url>\n'
+                f'    <loc>{loc}</loc>\n'
+                f'    <lastmod>{build_mod}</lastmod>\n'
+                '    <changefreq>monthly</changefreq>\n'
+                '    <priority>0.7</priority>\n'
+                f'    <xhtml:link rel="alternate" hreflang="zh-Hant" href="{d_zh}"/>\n'
+                f'    <xhtml:link rel="alternate" hreflang="en" href="{d_en}"/>\n'
+                f'    <xhtml:link rel="alternate" hreflang="x-default" href="{d_zh}"/>\n'
+                '  </url>'
+            )
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
            '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n'
@@ -2813,6 +3485,8 @@ if __name__ == '__main__':
         build_monthly(df, lang, out_dir, s)
         build_about(df, lang, out_dir, s)
         build_arsenal(df_ars, df_peers, lang, ars_dir, s)
+        for wkey in ARS_DETAIL_PAGES:
+            build_arsenal_detail(wkey, df_ars, df_peers, lang, ars_dir, s)
 
     build_sitemap(df)
     build_robots()
