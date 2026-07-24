@@ -40,6 +40,7 @@ SITEMAP    = ROOT / 'sitemap.xml'
 ROBOTS     = ROOT / 'robots.txt'
 OG_IMG     = ROOT / 'og.png'
 OG_IMG_EN  = ROOT / 'og-en.png'
+ARSENAL_OG_IMG = ROOT / 'assets' / 'arsenal' / 'og-arsenal.jpg'
 BASE_URL   = 'https://pla-tracker.pages.dev'
 
 VALID_TYPES = {'manned', 'uav', 'mixed', 'zero',
@@ -344,6 +345,7 @@ def validate_html():
             ('hreflang="zh-Hant"', 'hreflang zh'),
             ('hreflang="en"', 'hreflang en'),
             ('property="og:image"', 'OG 圖標籤'),
+            ('assets/arsenal/og-arsenal.jpg', '軍購專屬 OG 縮圖'),
         ]:
             if marker not in content:
                 errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
@@ -432,6 +434,12 @@ def validate_html():
             errors.append(f'{og.name} 不存在（請執行 scripts/make_og_image.py）')
         elif og.stat().st_size < 5_000:
             errors.append(f'{og.name} 檔案過小（{og.stat().st_size} bytes）')
+
+    # ── 軍購武器影像資產（assets/arsenal/，靜態檔不由 build 產生）──────────────
+    if not ARSENAL_OG_IMG.exists():
+        errors.append(f'{ARSENAL_OG_IMG.relative_to(ROOT)} 不存在（軍購 OG 圖缺檔）')
+    elif ARSENAL_OG_IMG.stat().st_size < 5_000:
+        errors.append(f'{ARSENAL_OG_IMG.relative_to(ROOT)} 檔案過小（{ARSENAL_OG_IMG.stat().st_size} bytes）')
 
     if errors:
         print(f'[FAIL] HTML 驗證發現 {len(errors)} 個問題：')

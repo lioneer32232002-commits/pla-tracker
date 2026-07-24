@@ -529,7 +529,8 @@ STRINGS = {
             'scope_body': ('本頁追蹤自 2019 年起、經美國國防安全合作署（DSCA）通知國會的對台軍售案（FMS）。'
                            '<strong>公告 ≠ 已簽約 ≠ 已交付</strong>：DSCA 公告是「國會通知」階段，實際簽署發價書（LOA）與交付時程另計。'
                            '本頁不含商售案與美軍自用移撥。案值為公告上限金額，實際簽約金額常較低。'
-                           '資料來源＝DSCA 官方公告與網路檔案館快照，交付進度輔以中央社／國防部／專業軍事媒體報導，逐案人工整理、逐案附來源。'),
+                           '資料來源＝DSCA 官方公告與網路檔案館快照，交付進度輔以中央社／國防部／專業軍事媒體報導，逐案人工整理、逐案附來源。'
+                           '武器影像為美國國防部 DVIDS 檔案照（公有領域，攝影者見各武器頁）；縮圖為同型系統示意，非台灣接裝之裝備。'),
             'divert_label': '軍購交付追蹤',
             'divert_pending': '待交付',
             'divert_yi': '億美元',
@@ -705,7 +706,9 @@ STRINGS = {
                            'A DSCA notice is the congressional-notification stage; the actual Letter of Offer and Acceptance (LOA) '
                            'and delivery schedule come later. Direct commercial sales and US-forces transfers are excluded. '
                            'Values are notified ceilings; signed amounts are often lower. Sources are official DSCA notices and web-archive '
-                           'snapshots, with delivery progress cross-checked against CNA / MND / defense-trade press, compiled case by case with a source for each.'),
+                           'snapshots, with delivery progress cross-checked against CNA / MND / defense-trade press, compiled case by case with a source for each. '
+                           'Weapon photos are US Department of Defense DVIDS archive images (public domain, photographer credited on each weapon page); '
+                           'thumbnails depict the same system type as a representative image, not equipment as delivered to Taiwan.'),
             'divert_label': 'Arms Delivery Tracker',
             'divert_pending': 'Pending',
             'divert_yi': '',
@@ -1283,6 +1286,12 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .ars-row{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
 .ars-row>summary{list-style:none;cursor:pointer;padding:.7rem .9rem;display:block}
 .ars-row>summary::-webkit-details-marker{display:none}
+.ars-row-flex{display:flex;align-items:center;gap:.65rem}
+.ars-row-main{flex:1;min-width:0}
+.ars-row-thumb{width:56px;height:56px;border-radius:8px;border:1px solid var(--bdr);
+  object-fit:cover;flex-shrink:0}
+.ars-row-thumb-ph{background:var(--sur);display:flex;align-items:center;justify-content:center;
+  color:var(--sub);font-size:.7rem;font-weight:700}
 .ars-row-top{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;margin-bottom:.5rem}
 .ars-name{font-size:.86rem;font-weight:700;color:var(--tx);line-height:1.35}
 .ars-name .qty{color:var(--sub);font-weight:600;font-size:.78rem;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:.35rem}
@@ -1379,6 +1388,11 @@ html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
 .ars-back{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;
   color:var(--sub);text-decoration:none;margin-bottom:.55rem}
 .ars-back:hover{color:var(--y)}
+/* weapon-page hero banner (only rendered when assets/arsenal/hero-{page}.jpg exists) */
+.ars-hero-imgwrap{position:relative;max-height:260px;overflow:hidden;border-radius:var(--rad);margin-bottom:1rem}
+.ars-hero-img{display:block;width:100%;max-height:260px;object-fit:cover}
+.ars-hero-courtesy{position:absolute;right:.6rem;bottom:.5rem;font-size:.62rem;color:#fff;
+  background:rgba(0,0,0,.55);padding:.15em .55em;border-radius:999px;letter-spacing:.02em}
 /* vertical procurement timeline */
 .ars-tl{position:relative;margin-left:.4rem;padding-left:1.1rem;border-left:2px solid var(--bdr)}
 .ars-tl-item{position:relative;padding:0 0 1.05rem}
@@ -1424,10 +1438,12 @@ html[lang="zh-Hant"] .ars-role li{font-size:.9rem}
 /* weapon internal-page cards (on arsenal index) */
 .ars-wcards{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
 .ars-wcard{display:flex;flex-direction:column;background:var(--sur);border:1px solid var(--bdr);
-  border-radius:var(--rad);padding:.9rem 1rem;text-decoration:none;border-top:3px solid var(--y);
+  border-radius:var(--rad);overflow:hidden;text-decoration:none;border-top:3px solid var(--y);
   transition:background .15s,transform .15s}
 .ars-wcard:hover{background:#12201a;transform:translateY(-2px)}
 html[data-theme="light"] .ars-wcard:hover{background:#f3f0e6}
+.ars-wcard-img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.ars-wcard-body{display:flex;flex-direction:column;flex:1;padding:.9rem 1rem}
 .ars-wcard-name{font-size:.95rem;font-weight:800;color:var(--tx);line-height:1.25}
 .ars-wcard-var{font-size:.68rem;color:var(--sub);margin-top:.2rem;letter-spacing:.02em}
 .ars-wcard-teaser{font-size:.8rem;color:var(--sub);line-height:1.65;margin:.55rem 0 .7rem;flex:1}
@@ -1478,6 +1494,7 @@ a.src-chip::after{content:'\\2197';font-size:.85em;opacity:.7}
   .ars-chart-canvas{height:220px}
   .ars-wcards{grid-template-columns:1fr}
   .ars-userwall{grid-template-columns:1fr}
+  .ars-row-thumb{width:44px;height:44px}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
@@ -1913,6 +1930,11 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
         ver_path = 'version.txt'
         og_image = f'{BASE_URL}/og.png'
         og_locale, og_locale_alt = 'zh_TW', 'en_US'
+
+    # /arsenal/ 全系列頁（index＋3 內頁，中英）用專屬 OG 圖，尺寸同為 1200×630，
+    # 沿用上面已固定的 og:image:width/height，不需另外改。
+    if page_name in ARSENAL_OG_PAGES:
+        og_image = f'{BASE_URL}/{ARSENAL_OG_IMG}'
 
     return f"""\
 <!DOCTYPE html>
@@ -2620,6 +2642,85 @@ def _ars_clean_en(v):
     return '' if _CJK.search(v) else v
 
 
+# ── 武器影像資產（assets/arsenal/，DVIDS 公有領域照片；圖片本身 untracked 但
+#    build 邏輯必須固定寫在此處，禁止手改產出 HTML）───────────────────────────
+ARSENAL_ASSET_DIR = ROOT / 'assets' / 'arsenal'
+ARSENAL_OG_IMG     = 'assets/arsenal/og-arsenal.jpg'   # 相對路徑；make_head 另補 BASE_URL
+# /arsenal/ 系列頁（index＋3 內頁）共用專屬 og:image；page_name 需與 make_head()
+# 呼叫時傳入的值一致（build_arsenal 用 'arsenal'，build_arsenal_detail 用 'ars_{key}'）
+ARSENAL_OG_PAGES = {'arsenal', 'ars_harpoon', 'ars_patriot', 'ars_himars'}
+
+# 進度矩陣 case_id → 縮圖檔名。同一系統多案共用同圖（例：26-01 與 20-77 同為
+# HIMARS）。不在此表中的案（qty 非空但無對應圖）一律顯示占位磚。
+ARSENAL_CASE_THUMB = {
+    '19-21': 'thumb-stinger.jpg',
+    '19-22': 'thumb-m1a2.jpg',
+    '19-50': 'thumb-f16v.jpg',
+    '20-07': 'thumb-mk48.jpg',
+    '20-69': 'thumb-slamer.jpg',
+    '20-77': 'thumb-himars.jpg',
+    '20-74': 'thumb-mq9b.jpg',
+    '21-44': 'thumb-m109a6.jpg',
+    '22-45': 'thumb-harpoon_air.jpg',
+    '22-46': 'thumb-aim9x.jpg',
+    '22-70': 'thumb-volcano.jpg',
+    '25-01': 'thumb-mk75.jpg',
+    '25-108': 'thumb-m109a7.jpg',
+    '26-01': 'thumb-himars.jpg',
+    '26-02': 'thumb-tow.jpg',
+    '26-06': 'thumb-javelin.jpg',
+    '26-09': 'thumb-altius700.jpg',
+}
+# 無圖案的類別占位單字。zh 頁用單字，en 頁需避免殘留中文（validate.py 的 en 頁
+# 中文檢查會攔到），改用對應類別代碼。
+ARSENAL_CAT_GLYPH = {
+    'aircraft': '機', 'missile': '彈', 'ground': '陸',
+    'naval': '艦', 'uas': '無', 'c4isr': '訊', 'sustainment': '',
+}
+ARSENAL_CAT_GLYPH_EN = {
+    'aircraft': 'AC', 'missile': 'MSL', 'ground': 'GRD',
+    'naval': 'NAV', 'uas': 'UAS', 'c4isr': 'C4I', 'sustainment': '',
+}
+# 武器內頁代表影像（三頁固定對應；hero-{key}.jpg 若存在則優先於此表，見
+# _ars_detail_hero_html）。卡片圖帶與頁尾 credit 皆由此表決定。
+ARSENAL_WEAPON_IMAGE = {
+    'himars': 'hero-himars.jpg',
+    'harpoon': 'hero-harpoon.jpg',
+    'patriot': 'hero-patriot.jpg',
+}
+
+_ars_credits_cache = None
+
+
+def _ars_credits():
+    """讀 assets/arsenal/credits.json（每檔攝影者/單位/來源頁），快取一次。
+    檔案不存在時回空 dict（不擋 build，圖片與 credits 是選配資產）。"""
+    global _ars_credits_cache
+    if _ars_credits_cache is None:
+        p = ARSENAL_ASSET_DIR / 'credits.json'
+        _ars_credits_cache = json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+    return _ars_credits_cache
+
+
+def _ars_credit_line(filename, lang):
+    """回傳「影像：{photographer}, {unit}（DVIDS）」一行；查無 credits 則回空字串。
+    unit 欄位少數含中文附注（例：「支援 African Lion 24」），en 頁需轉英文避免
+    殘留 CJK（validate.py 的 en 頁中文檢查會攔到）。"""
+    if not filename:
+        return ''
+    c = _ars_credits().get(filename)
+    if not c:
+        return ''
+    photographer = c.get('photographer', '')
+    unit = c.get('unit', '')
+    if lang == 'en':
+        unit = unit.replace('支援 ', 'in support of ').replace('支援', 'in support of ')
+    who = ', '.join(x for x in (photographer, unit) if x)
+    if not who:
+        return ''
+    return (f'Image: {who} (DVIDS)' if lang == 'en' else f'影像：{who}（DVIDS）')
+
+
 def _ars_qty_label(qty, unit, lang):
     if not qty:
         return ''
@@ -3001,11 +3102,20 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
         qtyl = _ars_qty_label(r['qty'], r['qty_unit'], lang)
         qspan = f'<span class="qty">{qtyl}</span>' if qtyl else ''
         caret = ('▸ ' + a['matrix_expand'])
+        thumb_file = ARSENAL_CASE_THUMB.get(r['case_id'])
+        if thumb_file:
+            thumb_html = (f'<img class="ars-row-thumb" src="/assets/arsenal/{thumb_file}" '
+                          f'alt="{name}" loading="lazy">')
+        else:
+            glyph_map = ARSENAL_CAT_GLYPH_EN if lang == 'en' else ARSENAL_CAT_GLYPH
+            glyph = glyph_map.get(r['category'], '')
+            thumb_html = f'<div class="ars-row-thumb ars-row-thumb-ph" aria-hidden="true">{glyph}</div>'
         mrows.append(
             f'<details class="ars-row"><summary>'
+            f'<div class="ars-row-flex">{thumb_html}<div class="ars-row-main">'
             f'<div class="ars-row-top"><span class="ars-name">{name}{qspan}</span>'
             f'{_ars_status_badge(r["delivery_status"], s)}</div>'
-            f'{_ars_bar(r["delivery_status"])}'
+            f'{_ars_bar(r["delivery_status"])}</div></div>'
             f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
             f'</summary>{_ars_matrix_detail(r, s, lang)}</details>')
     matrix_html = '<div class="ars-matrix">' + ''.join(mrows) + '</div>'
@@ -3272,6 +3382,28 @@ def _ars_pac3_wall_html(df_peers, lang, s):
     return '<div class="ars-userwall">' + ''.join(cards) + '</div>'
 
 
+def _ars_detail_hero_img_html(weapon_key, name, lang):
+    """武器內頁 H1 下方橫幅：僅當 assets/arsenal/hero-{weapon_key}.jpg 實際存在才渲染
+    （目前尚無 hero 檔，回空字串；資產補上後重 build 即生效，無需再改程式）。"""
+    fname = f'hero-{weapon_key}.jpg'
+    if not (ARSENAL_ASSET_DIR / fname).exists():
+        return ''
+    credit = _ars_credit_line(fname, lang)
+    courtesy = f'<span class="ars-hero-courtesy">{html.escape(credit)}</span>' if credit else ''
+    return (f'<div class="ars-hero-imgwrap"><img class="ars-hero-img" '
+            f'src="/assets/arsenal/{fname}" alt="{html.escape(name)}" loading="lazy">{courtesy}</div>')
+
+
+def _ars_detail_credit_li(weapon_key, lang):
+    """頁尾來源清單追加一行「影像：{photographer}, {unit}（DVIDS）」。
+    優先用實際存在的 hero-{weapon_key}.jpg 的 credits；沒有 hero 檔則退回該武器
+    的代表影像（ARSENAL_WEAPON_IMAGE，patriot 暫無 → 不輸出）。"""
+    hero_file = f'hero-{weapon_key}.jpg'
+    fname = hero_file if (ARSENAL_ASSET_DIR / hero_file).exists() else ARSENAL_WEAPON_IMAGE.get(weapon_key)
+    credit = _ars_credit_line(fname, lang)
+    return f'<li>{html.escape(credit)}</li>' if credit else ''
+
+
 def _ars_hero_stats_html(weapon, lang):
     cells = []
     for lz, le, vz, ve in weapon['hero']:
@@ -3343,7 +3475,8 @@ def _ars_srclist_html(weapon, df_peers, lang):
 
 
 def _ars_weapon_cards_html(lang, s):
-    """主頁武器內頁卡（3 張），每卡一句實戰 teaser，整卡連向內頁。"""
+    """主頁武器內頁卡（3 張），每卡一句實戰 teaser，整卡連向內頁。
+    himars/harpoon 有代表影像（16:9 圖片帶）；patriot 暫無專圖，維持無圖版型。"""
     a = s['ars']
     cards = []
     for wkey in ARS_DETAIL_PAGES:
@@ -3351,12 +3484,16 @@ def _ars_weapon_cards_html(lang, s):
         name   = d['name_en'] if lang == 'en' else d['name_zh']
         teaser = d['teaser_en'] if lang == 'en' else d['teaser_zh']
         href = f'/en/arsenal/{wkey}.html' if lang == 'en' else f'/arsenal/{wkey}.html'
+        img_file = ARSENAL_WEAPON_IMAGE.get(wkey)
+        img_html = (f'<img class="ars-wcard-img" src="/assets/arsenal/{img_file}" '
+                    f'alt="{html.escape(name)}" loading="lazy">') if img_file else ''
         cards.append(
-            f'<a class="ars-wcard" href="{href}">'
+            f'<a class="ars-wcard" href="{href}">{img_html}'
+            f'<div class="ars-wcard-body">'
             f'<div class="ars-wcard-name">{html.escape(name)}</div>'
             f'<div class="ars-wcard-var">{html.escape(d["variant"])}</div>'
             f'<p class="ars-wcard-teaser">{html.escape(teaser)}</p>'
-            f'<span class="ars-wcard-cta">{a["wcards_cta"]}</span></a>')
+            f'<span class="ars-wcard-cta">{a["wcards_cta"]}</span></div></a>')
     return '<div class="ars-wcards">' + ''.join(cards) + '</div>'
 
 
@@ -3369,11 +3506,15 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
     head = make_head(lang, page_name, s, page_path=f'/arsenal/{weapon_key}.html', abs_assets=True)
     back_href = '/en/arsenal/' if lang == 'en' else '/arsenal/'
 
+    hero_img = _ars_detail_hero_img_html(weapon_key, name, lang)
     hero   = _ars_hero_stats_html(w, lang)
     tl     = _ars_timeline_html(w, lang, s)
     combat = _ars_combat_html(w, lang, s)
     role   = _ars_role_html(w, lang)
+    credit_li = _ars_detail_credit_li(weapon_key, lang)
     srcs   = _ars_srclist_html(w, df_peers, lang)
+    if credit_li:
+        srcs = srcs.replace('</ul>', credit_li + '</ul>')
 
     if w['has_rank']:
         rows = _ars_rank_data(df_peers, w['rank_key'], lang)
@@ -3412,6 +3553,7 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
   <div class="ars-hero anim-ready">
     <a class="ars-back" href="{back_href}">{a['detail_back']}</a>
     <h1 class="ars-h1">{html.escape(name)}</h1>
+    {hero_img}
     <p class="ars-sub">{html.escape(w['variant'])}</p>
   </div>
 

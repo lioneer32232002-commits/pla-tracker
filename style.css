@@ -218,6 +218,12 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .ars-row{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
 .ars-row>summary{list-style:none;cursor:pointer;padding:.7rem .9rem;display:block}
 .ars-row>summary::-webkit-details-marker{display:none}
+.ars-row-flex{display:flex;align-items:center;gap:.65rem}
+.ars-row-main{flex:1;min-width:0}
+.ars-row-thumb{width:56px;height:56px;border-radius:8px;border:1px solid var(--bdr);
+  object-fit:cover;flex-shrink:0}
+.ars-row-thumb-ph{background:var(--sur);display:flex;align-items:center;justify-content:center;
+  color:var(--sub);font-size:.7rem;font-weight:700}
 .ars-row-top{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;margin-bottom:.5rem}
 .ars-name{font-size:.86rem;font-weight:700;color:var(--tx);line-height:1.35}
 .ars-name .qty{color:var(--sub);font-weight:600;font-size:.78rem;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:.35rem}
@@ -314,6 +320,11 @@ html[lang="zh-Hant"] .ars-divert .row{font-size:.86rem}
 .ars-back{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;
   color:var(--sub);text-decoration:none;margin-bottom:.55rem}
 .ars-back:hover{color:var(--y)}
+/* weapon-page hero banner (only rendered when assets/arsenal/hero-{page}.jpg exists) */
+.ars-hero-imgwrap{position:relative;max-height:260px;overflow:hidden;border-radius:var(--rad);margin-bottom:1rem}
+.ars-hero-img{display:block;width:100%;max-height:260px;object-fit:cover}
+.ars-hero-courtesy{position:absolute;right:.6rem;bottom:.5rem;font-size:.62rem;color:#fff;
+  background:rgba(0,0,0,.55);padding:.15em .55em;border-radius:999px;letter-spacing:.02em}
 /* vertical procurement timeline */
 .ars-tl{position:relative;margin-left:.4rem;padding-left:1.1rem;border-left:2px solid var(--bdr)}
 .ars-tl-item{position:relative;padding:0 0 1.05rem}
@@ -359,10 +370,12 @@ html[lang="zh-Hant"] .ars-role li{font-size:.9rem}
 /* weapon internal-page cards (on arsenal index) */
 .ars-wcards{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
 .ars-wcard{display:flex;flex-direction:column;background:var(--sur);border:1px solid var(--bdr);
-  border-radius:var(--rad);padding:.9rem 1rem;text-decoration:none;border-top:3px solid var(--y);
+  border-radius:var(--rad);overflow:hidden;text-decoration:none;border-top:3px solid var(--y);
   transition:background .15s,transform .15s}
 .ars-wcard:hover{background:#12201a;transform:translateY(-2px)}
 html[data-theme="light"] .ars-wcard:hover{background:#f3f0e6}
+.ars-wcard-img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.ars-wcard-body{display:flex;flex-direction:column;flex:1;padding:.9rem 1rem}
 .ars-wcard-name{font-size:.95rem;font-weight:800;color:var(--tx);line-height:1.25}
 .ars-wcard-var{font-size:.68rem;color:var(--sub);margin-top:.2rem;letter-spacing:.02em}
 .ars-wcard-teaser{font-size:.8rem;color:var(--sub);line-height:1.65;margin:.55rem 0 .7rem;flex:1}
@@ -413,6 +426,7 @@ a.src-chip::after{content:'\2197';font-size:.85em;opacity:.7}
   .ars-chart-canvas{height:220px}
   .ars-wcards{grid-template-columns:1fr}
   .ars-userwall{grid-template-columns:1fr}
+  .ars-row-thumb{width:44px;height:44px}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
