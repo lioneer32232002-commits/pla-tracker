@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="dark">
+<html lang="zh-Hant" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,7 +9,7 @@
 <link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/arsenal/harpoon.html">
 <link rel="alternate" hreflang="en" href="https://pla-tracker.pages.dev/en/arsenal/harpoon.html">
 <link rel="alternate" hreflang="x-default" href="https://pla-tracker.pages.dev/arsenal/harpoon.html">
-<meta name="theme-color" content="#090d0f">
+<meta name="theme-color" content="#f5f4f0">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="中國擾台趨勢數據分析">
 <meta property="og:title" content="魚叉反艦飛彈：台灣採購與實戰檔案 — 中國擾台趨勢數據分析">
@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="魚叉反艦飛彈（Harpoon Block II）台灣採購時間軸、國際買家排名，與 1986、1988 兩次美軍實戰紀錄，逐條附來源。">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/assets/arsenal/og-arsenal.jpg">
 <meta name="twitter:image:alt" content="魚叉反艦飛彈：台灣採購與實戰檔案 — 中國擾台趨勢數據分析">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607250401">
-<link rel="stylesheet" href="/style.css?v=202607250401">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607260400">
+<link rel="stylesheet" href="/style.css?v=202607260400">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607250401')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607260400')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "魚叉反艦飛彈", "description": "魚叉反艦飛彈（Harpoon Block II）台灣採購時間軸、國際買家排名，與 1986、1988 兩次美軍實戰紀錄，逐條附來源。", "mainEntityOfPage": "https://pla-tracker.pages.dev/arsenal/harpoon.html", "image": "https://pla-tracker.pages.dev/assets/arsenal/og-arsenal.jpg", "inLanguage": "zh-Hant", "datePublished": "2026-07-23", "dateModified": "2026-07-24", "author": {"@type": "Person", "name": "Adam Pan"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "首頁", "item": "https://pla-tracker.pages.dev/index.html"}, {"@type": "ListItem", "position": 2, "name": "對美軍購交付追蹤", "item": "https://pla-tracker.pages.dev/arsenal/"}, {"@type": "ListItem", "position": 3, "name": "魚叉反艦飛彈", "item": "https://pla-tracker.pages.dev/arsenal/harpoon.html"}]}</script>
@@ -73,22 +73,22 @@
   </section>
 
   <section class="ars-section anim-ready"><div class="ars-sec-title">國際買家排名</div><p class="ars-lead">同一系統，美國賣給誰、賣多少。台灣以站內黃強調，同盟關係以文字標籤標示，不靠顏色。</p><div class="ars-chart-wrap"><div class="ars-rank-canvas" style="height:170px"><canvas id="ars-rank"></canvas></div></div><script>(function(){
-var C=["台灣 〔夥伴〕", "印度 〔夥伴〕", "埃及 〔MNNA〕", "南韓 〔條約盟邦〕", "菲律賓 〔條約盟邦〕"],V=[460, 43, 20, 19, 12],COL=["#f5c842", "#8a7020", "#8a7020", "#8a7020", "#8a7020"],INFO=[["訂購年：2020", "來源：web.archive.org"], ["訂購年：2020", "來源：dsca.mil"], ["訂購年：2016", "來源：dsca.mil"], ["訂購年：2015", "來源：dsca.mil"], ["訂購年：2021", "來源：dsca.mil"]],TW=0,AID=-1;
+var C=["台灣 〔夥伴〕", "印度 〔夥伴〕", "埃及 〔MNNA〕", "南韓 〔條約盟邦〕", "菲律賓 〔條約盟邦〕"],V=[460, 43, 20, 19, 12],COL=["#d99f00", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b"],INFO=[["訂購年：2020", "來源：web.archive.org"], ["訂購年：2020", "來源：dsca.mil"], ["訂購年：2016", "來源：dsca.mil"], ["訂購年：2015", "來源：dsca.mil"], ["訂購年：2021", "來源：dsca.mil"]],TW=0,AID=-1;
 var lbl={id:'arslbl',afterDatasetsDraw:function(ch){
   var ctx=ch.ctx,a=ch.chartArea,m=ch.getDatasetMeta(0);
   ctx.save();ctx.font='700 11px "Noto Sans TC",sans-serif';ctx.textBaseline='middle';
   m.data.forEach(function(b,i){
     var t=V[i].toLocaleString(),x=b.x+6;ctx.textAlign='left';
     if(x+ctx.measureText(t).width>a.right){x=b.x-6;ctx.textAlign='right';}
-    ctx.fillStyle="#96b0b8";ctx.fillText(t,x,b.y);
+    ctx.fillStyle="#6b7a84";ctx.fillText(t,x,b.y);
   });
   if(AID>=0){var bar=m.data[AID],h=bar.height,x0=Math.min(bar.base,bar.x),w=Math.abs(bar.x-bar.base);
-    ctx.strokeStyle="#e05555";ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.strokeStyle="#c74040";ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
     ctx.strokeRect(x0+0.75,bar.y-h/2+0.75,Math.max(w-1.5,1),h-1.5);}
   ctx.restore();
 }};
-var xA={grid:{color:function(c){return c.tick.value===0?"#3a4448":'transparent';}},ticks:{color:"#96b0b8",font:{size:10},maxTicksLimit:5},border:{display:false},beginAtZero:true,grace:'12%'};
-var yA={grid:{display:false},ticks:{color:function(c){return c.index===TW?"#f5c842":"#96b0b8";},font:{size:11},autoSkip:false,crossAlign:'far'},border:{display:false}};
+var xA={grid:{color:function(c){return c.tick.value===0?"#cfc9ba":'transparent';}},ticks:{color:"#6b7a84",font:{size:10},maxTicksLimit:5},border:{display:false},beginAtZero:true,grace:'12%'};
+var yA={grid:{display:false},ticks:{color:function(c){return c.index===TW?"#d99f00":"#6b7a84";},font:{size:11},autoSkip:false,crossAlign:'far'},border:{display:false}};
 var opts={indexAxis:'y',animation:{duration:700,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,
   plugins:{legend:{display:false},tooltip:{callbacks:{
     title:function(it){return C[it[0].dataIndex];},
