@@ -80,7 +80,7 @@ ARSENAL_STATUS = {  # delivery_status enum → (zh, en, css class)
     'completed':  ('已完成', 'Completed',  'completed'),
     'delivering': ('交付中', 'Delivering', 'delivering'),
     'announced':  ('已公告', 'Announced',  'announced'),
-    'unknown':    ('未確認', 'Unconfirmed','unknown'),
+    'unknown':    ('進度未確認', 'Unconfirmed','unknown'),
     'cancelled':  ('已終止', 'Cancelled',  'cancelled'),
 }
 # 主要裝備進度矩陣的名目填充比例（僅「狀態示意」，非精確交付比例；
@@ -487,9 +487,10 @@ STRINGS = {
             'kpi_latest':  '資料更新',
             'kpi_unit_case': '案',
             'matrix_title':  '主要裝備交付進度',
-            'matrix_note':   '每張卡為一個武器系統，卡內每列對應一筆採購案（同系統多案已歸併）；進度條為交付狀態示意（已交付／待交付／終止），交付中案以名目比例呈現「已展開交付」。精確批次數量與延宕理由請點卡展開，以官方與媒體來源為準。',
-            'matrix_expand': '展開延宕理由與來源',
-            'matrix_delay':  '延宕／進度：',
+            'matrix_note':   '每張卡是一個武器系統，卡內每列是一筆採購案（同系統的多筆案子已合併在一起）。進度條只表示交付狀態（已交付／待交付／終止），交付中的案子一律畫成固定長度，不代表實際已交付的比例。標有「延宕」的卡展開後可看延宕原因與來源；其餘卡展開後是各批次明細與出處。',
+            'matrix_expand': '展開明細與來源',
+            'matrix_delay':  '交付進度：',
+            'matrix_delay_chip': '延宕',
             'chart_title':   '歷年軍售公告金額',
             'chart_sub':     '單位：億美元 · 依 DSCA 公告年',
             'chart_top':     '當年最大三案：',
@@ -508,7 +509,7 @@ STRINGS = {
             'card_value':  '案值',
             'card_qty':    '數量',
             'card_status': '狀態',
-            'scope_title': '口徑說明',
+            'scope_title': '這頁算什麼、不算什麼',
             'scope_body': ('本頁追蹤自 2019 年起、經美國國防安全合作署（DSCA）通知國會的對台軍售案（FMS）。'
                            '<strong>公告 ≠ 已簽約 ≠ 已交付</strong>：DSCA 公告是「國會通知」階段，實際簽署發價書（LOA）與交付時程另計。'
                            '本頁不含商售案與美軍自用移撥。案值為公告上限金額，實際簽約金額常較低。'
@@ -525,7 +526,7 @@ STRINGS = {
             'combat_title':  '實戰紀錄',
             'combat_intro':  '每一條都附來源；查無權威來源佐證者不列入本頁。',
             'rank_title':    '國際買家排名',
-            'rank_intro':    '同一系統，美國賣給誰、賣多少。台灣以站內黃強調，同盟關係以文字標籤標示，不靠顏色。',
+            'rank_intro':    '同一系統，美國賣給誰、賣多少。台灣那一列標成黃色；各國與美國的同盟關係用文字標籤標出，不只靠顏色分辨。',
             'rank_note':     '烏克蘭為美國軍援（非付費軍售 FMS），以虛線框另計。',
             'rank_q':        '數量 ',
             'rank_year':     '訂購年：',
@@ -656,9 +657,10 @@ STRINGS = {
             'kpi_latest':  'Data updated',
             'kpi_unit_case': '',
             'matrix_title':  'Major Systems — Delivery Progress',
-            'matrix_note':   'Each card is one weapon system; every row within it is a procurement case (multiple cases of the same system are consolidated). Bars indicate delivery status (delivered / pending / cancelled); in-progress cases use a nominal fill to show delivery has begun. For exact batch quantities and delay reasons, expand each card — official and press sources govern.',
-            'matrix_expand': 'Delay reason & sources',
-            'matrix_delay':  'Delay / progress: ',
+            'matrix_note':   'Each card is one weapon system; every row within it is a procurement case (multiple cases of the same system are consolidated). Bars show delivery status only (delivered / pending / cancelled); in-progress cases are drawn at a fixed length and do not represent the share actually delivered. Cards marked "Delayed" expand to the delay reason and its source; the rest expand to batch details and citations.',
+            'matrix_expand': 'Details & sources',
+            'matrix_delay':  'Delivery progress: ',
+            'matrix_delay_chip': 'Delayed',
             'chart_title':   'Arms Sales by Year',
             'chart_sub':     'US$ billion · by DSCA notice year',
             'chart_top':     'Top 3 cases: ',
@@ -1303,7 +1305,10 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .ars-seg-d{background:var(--y)}
 .ars-seg-p{background:rgba(245,200,66,.26)}
 .ars-seg-c{flex:1;background:repeating-linear-gradient(45deg,#3a4448 0 5px,#222a2e 5px 10px)}
-.ars-caret{color:var(--sub);font-size:.7rem;margin-top:.7rem;display:inline-flex;align-items:center;gap:.3rem}
+.ars-scard-foot{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.7rem}
+.ars-delaychip{font-size:.62rem;font-weight:800;letter-spacing:.05em;padding:.14em .5em;border-radius:999px;
+  white-space:nowrap;flex-shrink:0;color:var(--y);border:1px solid var(--y);background:transparent}
+.ars-caret{color:var(--sub);font-size:.7rem;display:inline-flex;align-items:center;gap:.3rem}
 .ars-syscard[open] .ars-caret .tri{transform:rotate(90deg)}
 .ars-caret .tri{transition:transform .15s;display:inline-block}
 .ars-scard-detail{padding:0 .85rem .8rem}
@@ -2213,8 +2218,12 @@ setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0});
 document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
 // 保險絲：無論 IntersectionObserver 是否正常（舊瀏覽器/省流模式/任何異常），
 // 2.5 秒後強制顯示所有尚未觸發的區塊。動畫是加分項，內容可見是底線。
+// 數字也要補：第 1 行已把 [data-count] 清成 '0'，若 IO 從未觸發，區塊會「顯示但數字全是 0」
+// ——比隱形更糟（讀者會以為當日零架次）。所以保險絲一併把未跑動畫的數字直接寫回真值。
 setTimeout(function(){
 document.querySelectorAll('.anim-ready:not(.visible)').forEach(function(el){el.classList.add('visible');});
+document.querySelectorAll('[data-count]').forEach(function(el){
+if(el.textContent==='0'&&el.dataset.count!=='0')el.textContent=el.dataset.count;});
 },2500);
 })();</script>"""
 
@@ -2488,92 +2497,71 @@ def build_about(df, lang, out_dir, s):
         body = f"""\
   <article class="prose">
     <h1 class="prose-title">Methodology &amp; Data Sources</h1>
-    <p class="lead">This site tracks the daily military activity of the People's Liberation
-      Army (PLA) around Taiwan. Every figure is transcribed verbatim from the daily public
-      releases of the Republic of China (Taiwan) Ministry of National Defense (MND) — nothing
-      is estimated or inferred. This page documents the source, update process, and the
-      definitions of key terms such as the "Taiwan Strait median line" versus the
-      "12 nautical-mile territorial sea", so journalists and researchers can verify and cite
-      the data.</p>
+    <p class="lead">This site tracks daily PLA military activity around Taiwan. Every figure is
+      transcribed verbatim from the daily public releases of the Republic of China (Taiwan)
+      Ministry of National Defense (MND) — nothing is estimated or inferred.</p>
     <div class="about-meta">
       <span>Coverage: {start} – {end}</span>
       <span>{n} daily records</span>
       <span>License: CC BY 4.0</span>
     </div>
 
-    <h2>Data source</h2>
-    <p>The single source is the <a href="{MND}" target="_blank" rel="noopener">ROC Ministry
-      of National Defense "Real-time Military Activity" bulletins</a> — the official daily
-      announcements and flight-path graphics on PLA activity in the airspace and waters around
-      Taiwan. This site only transcribes, structures and visualizes that data; it never
-      incorporates information not confirmed by the MND.</p>
+    <h2>Source &amp; updates</h2>
+    <ul>
+      <li>Single source: the <a href="{MND}" target="_blank" rel="noopener">ROC MND "Real-time
+        Military Activity" bulletins</a> and their flight-path graphics. This site only
+        transcribes, structures and visualizes that data; nothing unconfirmed by the MND is added.</li>
+      <li>Fetched automatically once a day after the MND publishes around midday Taiwan time
+        (≈ 12:00–14:00), with backup retry runs.</li>
+      <li>If the MND does not publish on a given day, that day stays blank — never filled with an
+        estimate. Records are append-only and never rewritten, so cited figures stay stable.</li>
+      <li>Checked before writing: median-line crossings may not exceed total sorties; the crossing
+        rate must match the computed value (±1%); no duplicate dates; aircraft-type values must be
+        valid. Pages are not regenerated unless the checks pass.</li>
+    </ul>
 
-    <h2>Update frequency</h2>
-    <p>Updated automatically once per day, fetched after the MND publishes around midday Taiwan
-      time (≈ 12:00–14:00), with backup retry runs. If the MND is delayed or does not publish
-      on a given day, that day is left blank rather than filled with an estimate. Historical
-      records are append-only and never altered once written, so cited figures stay stable.</p>
-
-    <h2>Key term definitions</h2>
+    <h2>Lines &amp; terms</h2>
     <div class="def-card">
       <div class="term">Taiwan Strait median line <span class="en">/ Davis Line</span></div>
-      <p>An informal line down the centre of the Taiwan Strait, never recognized by any formal
-        treaty between the two sides. For decades aircraft and vessels largely refrained from
-        crossing it, so a crossing carries strong political and military signalling weight.
-        However, crossing the median line <strong>does not constitute a violation of territory
-        or sovereign airspace under international law</strong> and does not automatically
-        trigger the right of self-defense. The "median-line crossings" figure on this site
-        counts the PLA sorties that crossed this line on a given day.</p>
+      <p>An informal line down the centre of the strait, never recognized by any treaty between
+        the two sides. For decades aircraft and vessels largely refrained from crossing it, so a
+        crossing is a strong political and military signal — but crossing it <strong>does not
+        constitute a violation of territory or sovereign airspace under international law</strong>
+        and does not trigger the right of self-defense. "Median-line crossings" here means the PLA
+        sorties that crossed this line that day.</p>
     </div>
     <div class="def-card">
       <div class="term">12 NM territorial sea</div>
-      <p>Under the UN Convention on the Law of the Sea, the 12 nautical miles measured from the
-        baseline constitute a state's territorial sea, and the airspace above it is sovereign
-        airspace — the boundary that actually carries legal weight. Once PLA aircraft or vessels
-        enter the territorial sea or airspace within this line, Taiwan may take defensive action
-        under international law and its Defense Act. This is a different order of event from a
+      <p>Under UNCLOS, the 12 nautical miles from the baseline are a state's territorial sea and
+        the airspace above it is sovereign airspace — the boundary that actually carries legal
+        weight. Once PLA aircraft or vessels come inside this line, Taiwan may take defensive
+        action under international law and its Defense Act. A different order of event from a
         median-line crossing.</p>
     </div>
     <div class="def-card">
       <div class="term">ADIZ <span class="en">Air Defense Identification Zone</span></div>
-      <p>A zone declared for the early identification of airborne objects; it is far larger than
-        sovereign airspace. Entering an ADIZ is not a violation of sovereignty, but is commonly
-        used to gauge the intensity and posture of activity.</p>
+      <p>Declared for the early identification of airborne objects, and far larger than sovereign
+        airspace. Entering an ADIZ is not a violation of sovereignty; it is used to gauge intensity.</p>
     </div>
     <div class="def-card">
       <div class="term">Sorties &amp; vessels</div>
       <p>"Sorties" is the number of PLA aircraft missions detected that day, per the MND's own
-        count; "vessels" is the number of PLA Navy ships detected that day. Other activity such
-        as surveillance balloons is noted separately in the notes column of the daily records.</p>
+        count; "vessels" is the number of PLA Navy ships detected that day. Other activity such as
+        surveillance balloons is noted in the notes column of the daily records.</p>
     </div>
 
-    <h2>How the data is compiled</h2>
-    <p>The pipeline is deterministic and uses no manual estimation:</p>
-    <ul>
-      <li>MND bulletin → fields extracted into a single master CSV;</li>
-      <li>Automated validation: median-line crossings may not exceed total sorties; the crossing
-        rate must match the computed value (±1%); no duplicate dates; aircraft-type values must
-        be valid;</li>
-      <li>Only after validation passes are the static pages and charts generated, in both
-        Chinese and English.</li>
-    </ul>
-
-    <h2>Arms-procurement tracking method</h2>
-    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset from the daily
-      activity log. It follows US Foreign Military Sales (FMS) to Taiwan notified to Congress by the
-      Defense Security Cooperation Agency (DSCA) since 2019. Note that a DSCA notification is the
-      congressional-notification stage only — it is <strong>not</strong> a signed contract, and
-      neither is a delivery; the Letter of Offer and Acceptance (LOA) and delivery schedule come
-      later, and notified values are ceilings that signed amounts often fall below. Direct commercial
-      sales and US-forces transfers are excluded. Each case is compiled by hand from the official
-      DSCA notice (or a web-archive snapshot where the original page is offline), with delivery
-      progress cross-checked against CNA / MND / defense-trade press, and every case carries its own
-      source link.</p>
+    <h2>The arms dataset</h2>
+    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset covering US
+      Foreign Military Sales to Taiwan notified to Congress by the Defense Security Cooperation
+      Agency (DSCA) since 2019. A DSCA notification is the congressional-notification stage only:
+      it is <strong>not</strong> a signed contract and not a delivery, and notified values are
+      ceilings that signed amounts often fall below. Direct commercial sales and US-forces
+      transfers are excluded; every case is compiled by hand and carries its own source link.</p>
 
     <h2>Citation &amp; license</h2>
     <p>The underlying figures are public information from the MND. This site's compilation, field
       structure and charts are released under <a href="{CC}" target="_blank" rel="noopener">CC
-      BY 4.0</a>. Journalists and researchers are welcome to cite them, please credit:</p>
+      BY 4.0</a>. Please credit:</p>
     <p><strong>Source: ROC Ministry of National Defense; compilation &amp; charts: PLA Activity
       Tracker ({BASE_URL}).</strong></p>
     <ul>
@@ -2585,68 +2573,56 @@ def build_about(df, lang, out_dir, s):
         body = f"""\
   <article class="prose">
     <h1 class="prose-title">方法論與資料來源</h1>
-    <p class="lead">本站每日追蹤中國解放軍（PLA）在台灣周邊的軍事活動。所有數字均逐字取自
-      中華民國國防部每日公布的資料，不推估、不加工。本頁說明資料來源、更新方式，以及
-      「海峽中線」與「12 浬領海線」等關鍵名詞的定義差異，供媒體與研究者查證引用。</p>
+    <p class="lead">本站每日追蹤解放軍在台灣周邊的軍事活動。數字全部逐字取自中華民國國防部
+      每日公告，不推估、不加工。</p>
     <div class="about-meta">
       <span>資料區間：{start} ～ {end}</span>
       <span>{n} 筆每日紀錄</span>
       <span>授權：CC BY 4.0</span>
     </div>
 
-    <h2>資料來源</h2>
-    <p>唯一來源為 <a href="{MND}" target="_blank" rel="noopener">中華民國國防部「即時軍事動態」</a>，
-      即國防部每日就「中共解放軍進入我周邊海空域動態」所發布的官方公告與航跡圖。
-      本站僅做轉錄、結構化與視覺化，不引用任何未經國防部證實的訊息。</p>
+    <h2>資料來源與更新</h2>
+    <ul>
+      <li>唯一來源：<a href="{MND}" target="_blank" rel="noopener">國防部「即時軍事動態」</a>
+        的每日公告與航跡圖。本站只做轉錄、結構化與視覺化，不引用未經國防部證實的訊息。</li>
+      <li>每天國防部中午公布後自動擷取一次（台灣時間約 12:00–14:00），另有備援班次重試。</li>
+      <li>國防部當日沒發布就留空，不用估計值補；歷史資料只新增、不改寫，所以引用過的數字不會變。</li>
+      <li>寫入前自動檢查：逾越中線數不得大於總架次、越線率與計算值相符（±1%）、日期不重複、
+        機型值合法。檢查沒過就不會產生新頁面。</li>
+    </ul>
 
-    <h2>更新頻率</h2>
-    <p>每日自動更新一次，於台灣時間中午國防部公布後擷取（約 12:00–14:00），並設有備援班次重試。
-      若當日國防部延遲或未發布，則當日從缺，不以估計值填補。歷史資料一旦寫入即不再修改（僅新增），
-      以確保被引用的數字穩定不變。</p>
-
-    <h2>關鍵名詞定義</h2>
+    <h2>界線與名詞</h2>
     <div class="def-card">
       <div class="term">海峽中線 <span class="en">Taiwan Strait median line / Davis Line</span></div>
-      <p>台灣海峽中央一條未經雙方正式條約承認的默契分界線。長期以來兩岸軍機艦多半不越線，
-        因此越線具有高度政治與軍事訊號意義。但越過中線<strong>並不構成國際法上的領土或領空侵犯</strong>，
-        不會自動觸發自衛權。本站「逾越中線」數字即指當日越過此線的共機架次。</p>
+      <p>海峽中央一條沒有任何條約承認的默契界線。長年雙方軍機艦多半不越線，所以越線是強烈的
+        政治與軍事訊號；但越線<strong>不構成國際法上的領土或領空侵犯</strong>，也不會觸發自衛權。
+        本站「逾越中線」＝當日越過此線的共機架次。</p>
     </div>
     <div class="def-card">
       <div class="term">12 浬領海線 <span class="en">12 NM territorial sea</span></div>
-      <p>依《聯合國海洋法公約》，自基線起算 12 浬為一國領海，其上空為領空，是真正具法律意義的邊界。
-        共機艦一旦進入此界線內的領海或領空，依國際法及我國《國防法》，台灣方得採取防衛行動。
-        這與「越中線」屬於兩個不同層級的事件。</p>
+      <p>依《聯合國海洋法公約》，自基線起算 12 浬為領海、其上空為領空，這才是有法律效力的邊界。
+        共機艦進到這條線以內，台灣依國際法與《國防法》可採取防衛行動——與越中線是兩個不同
+        層級的事件。</p>
     </div>
     <div class="def-card">
       <div class="term">防空識別區 <span class="en">ADIZ</span></div>
-      <p>為早期識別空中目標而劃設的空域，範圍遠大於領空。進入 ADIZ 不等於侵犯主權，
-        但常被用來觀察活動強度與態勢。</p>
+      <p>為早期識別空中目標而劃設，範圍遠大於領空。進入 ADIZ 不等於侵犯主權，只用來看活動強度。</p>
     </div>
     <div class="def-card">
       <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
-      <p>「架次」為當日偵獲的共機出動次數，以國防部計數為準；「共艦」為當日偵獲的解放軍海軍艦艇艘數。
-        空飄氣球等其他活動另記於每日紀錄的備註欄。</p>
+      <p>「架次」＝當日偵獲的共機出動次數（以國防部計數為準）；「共艦」＝當日偵獲的解放軍艦艇
+        艘數。空飄氣球等其他活動另記在每日紀錄的備註欄。</p>
     </div>
 
-    <h2>數據如何整理</h2>
-    <p>處理流程為決定式（deterministic），不使用人工估計：</p>
-    <ul>
-      <li>國防部公告 → 擷取欄位寫入單一 CSV 主檔；</li>
-      <li>自動驗證：逾越中線數不得大於總架次、越線率與計算值一致（容許 ±1%）、日期不重複、機型值合法；</li>
-      <li>通過驗證後才產生靜態網頁與圖表，中英雙語同步輸出。</li>
-    </ul>
-
-    <h2>軍購追蹤資料方法</h2>
-    <p><a href="/arsenal/">軍購交付追蹤</a>是與每日動態獨立的另一組資料，追蹤自 2019 年起、
-      經美國國防安全合作署（DSCA）通知國會的對台軍售案（FMS）。須留意 DSCA 公告僅是「國會通知」
-      階段，<strong>並不等於已簽約，也不等於已交付</strong>；實際發價書（LOA）與交付時程另計，
-      且公告金額為上限，實際簽約金額常較低。本資料不含商售案與美軍自用移撥。每一案均逐案人工
-      整理自 DSCA 官方公告（原頁下架者引用網路檔案館快照），交付進度輔以中央社／國防部／專業
-      軍事媒體報導交叉查證，且每一案都附上各自的來源連結。</p>
+    <h2>軍購資料</h2>
+    <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起由美國國防安全合作署
+      （DSCA）通知美國國會的對台軍售案。DSCA 公告只是「通知國會」，<strong>不等於簽約、
+      也不等於交付</strong>，公告金額是上限、實際簽約常較低。不含商售案與美軍自用移撥；
+      每案人工整理、逐案附來源。</p>
 
     <h2>引用與授權</h2>
     <p>底層數字屬國防部公開資訊。本站的整理、欄位結構與圖表以
-      <a href="{CC}" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎媒體與研究者引用，請註明：</p>
+      <a href="{CC}" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎引用，請註明：</p>
     <p><strong>資料來源：中華民國國防部；整理與圖表：解放軍擾台動態追蹤（{BASE_URL}）。</strong></p>
     <ul>
       <li>原始資料（CSV）：<a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></li>
@@ -2970,8 +2946,8 @@ def _ars_reads_html(df_ars, df_peers, lang, s):
              'The December 2025 HIMARS package (case 26-01) includes 420 M57 ATACMS — deep-strike missiles with '
              'roughly 300 km range. Willingness to sell a weapon that can strike deep across the strait signals a '
              'higher tier of trust in Taiwan.',
-             'This reading is contextual inference and still needs a DoD/CRS-grade source before publication; '
-             'it currently cites only the DSCA notice.',
+             'This is our own contextual reading, not an official position: the only citable document is the '
+             'DSCA notice itself, and Washington has made no corresponding statement about a "trust tier".',
              src_at),
         ]
     else:
@@ -2996,7 +2972,8 @@ def _ars_reads_html(df_ars, df_peers, lang, s):
             ('ATACMS 陸軍戰術飛彈：信任層級的指標',
              '2025 年 12 月的 HIMARS 大案（案號 26-01）包含 420 枚 M57 ATACMS——射程約 300 公里的縱深'
              '打擊武器。美國願意出售此級可打擊對岸縱深的武器，象徵對台信任層級的提升。',
-             '此判讀屬脈絡推論，上線前仍需補 DoD／CRS 級來源佐證，目前僅引 DSCA 公告。',
+             '這一段是本站的脈絡判讀，不是官方說法：目前可引的只有 DSCA 公告本身，'
+             '美方並未就「信任層級」做過對應表述。',
              src_at),
         ]
 
@@ -3182,7 +3159,15 @@ def _ars_syscards_html(df_ars, lang, s):
                         f'<div class="ars-scard-seg-h">{html.escape(r["case_id"])} · {seg_name}</div>'
                         f'{_ars_matrix_detail(r, s, lang)}</div>')
         detail_html = '<div class="ars-scard-detail">' + ''.join(segs) + '</div>'
-        caret = f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
+        # 延宕標記只掛在「真的有登錄延宕理由」的卡上（ARSENAL_DELAYS）。展開提示一律中性，
+        # 否則 49 案中僅 7 案延宕、卡卡都寫「展開延宕理由」會讓讀者誤以為每案都延宕
+        # （2026-07-30 使用者回報）。
+        has_delay = any(r['case_id'] in ARSENAL_DELAYS for r in rows)
+        chip = (f'<span class="ars-delaychip">{a["matrix_delay_chip"]}</span>'
+                if has_delay else '')
+        caret = (f'<span class="ars-scard-foot">'
+                 f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
+                 f'{chip}</span>')
         # 圖帶條件式渲染
         card_file = f'card-{key}.jpg'
         if (ARSENAL_ASSET_DIR / card_file).exists():

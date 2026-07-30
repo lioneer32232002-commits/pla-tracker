@@ -256,7 +256,10 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .ars-seg-d{background:var(--y)}
 .ars-seg-p{background:rgba(245,200,66,.26)}
 .ars-seg-c{flex:1;background:repeating-linear-gradient(45deg,#3a4448 0 5px,#222a2e 5px 10px)}
-.ars-caret{color:var(--sub);font-size:.7rem;margin-top:.7rem;display:inline-flex;align-items:center;gap:.3rem}
+.ars-scard-foot{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.7rem}
+.ars-delaychip{font-size:.62rem;font-weight:800;letter-spacing:.05em;padding:.14em .5em;border-radius:999px;
+  white-space:nowrap;flex-shrink:0;color:var(--y);border:1px solid var(--y);background:transparent}
+.ars-caret{color:var(--sub);font-size:.7rem;display:inline-flex;align-items:center;gap:.3rem}
 .ars-syscard[open] .ars-caret .tri{transform:rotate(90deg)}
 .ars-caret .tri{transition:transform .15s;display:inline-block}
 .ars-scard-detail{padding:0 .85rem .8rem}

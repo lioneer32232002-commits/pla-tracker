@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="Methodology: data source (ROC MND daily releases), update frequency, the difference between the Taiwan Strait median line and the 12 NM territorial sea, data compilation and citation/licensing.">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/og-en.png">
 <meta name="twitter:image:alt" content="PLA Activity Tracker — Taiwan Strait">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607290401">
-<link rel="stylesheet" href="/style.css?v=202607290401">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607301058">
+<link rel="stylesheet" href="/style.css?v=202607301058">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607290401')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607301058')location.reload(true);});</script>
 
 </head>
 <body>
@@ -48,92 +48,71 @@
 <main>
   <article class="prose">
     <h1 class="prose-title">Methodology &amp; Data Sources</h1>
-    <p class="lead">This site tracks the daily military activity of the People's Liberation
-      Army (PLA) around Taiwan. Every figure is transcribed verbatim from the daily public
-      releases of the Republic of China (Taiwan) Ministry of National Defense (MND) — nothing
-      is estimated or inferred. This page documents the source, update process, and the
-      definitions of key terms such as the "Taiwan Strait median line" versus the
-      "12 nautical-mile territorial sea", so journalists and researchers can verify and cite
-      the data.</p>
+    <p class="lead">This site tracks daily PLA military activity around Taiwan. Every figure is
+      transcribed verbatim from the daily public releases of the Republic of China (Taiwan)
+      Ministry of National Defense (MND) — nothing is estimated or inferred.</p>
     <div class="about-meta">
       <span>Coverage: 2026-01-01 – 2026-07-29</span>
       <span>209 daily records</span>
       <span>License: CC BY 4.0</span>
     </div>
 
-    <h2>Data source</h2>
-    <p>The single source is the <a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">ROC Ministry
-      of National Defense "Real-time Military Activity" bulletins</a> — the official daily
-      announcements and flight-path graphics on PLA activity in the airspace and waters around
-      Taiwan. This site only transcribes, structures and visualizes that data; it never
-      incorporates information not confirmed by the MND.</p>
+    <h2>Source &amp; updates</h2>
+    <ul>
+      <li>Single source: the <a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">ROC MND "Real-time
+        Military Activity" bulletins</a> and their flight-path graphics. This site only
+        transcribes, structures and visualizes that data; nothing unconfirmed by the MND is added.</li>
+      <li>Fetched automatically once a day after the MND publishes around midday Taiwan time
+        (≈ 12:00–14:00), with backup retry runs.</li>
+      <li>If the MND does not publish on a given day, that day stays blank — never filled with an
+        estimate. Records are append-only and never rewritten, so cited figures stay stable.</li>
+      <li>Checked before writing: median-line crossings may not exceed total sorties; the crossing
+        rate must match the computed value (±1%); no duplicate dates; aircraft-type values must be
+        valid. Pages are not regenerated unless the checks pass.</li>
+    </ul>
 
-    <h2>Update frequency</h2>
-    <p>Updated automatically once per day, fetched after the MND publishes around midday Taiwan
-      time (≈ 12:00–14:00), with backup retry runs. If the MND is delayed or does not publish
-      on a given day, that day is left blank rather than filled with an estimate. Historical
-      records are append-only and never altered once written, so cited figures stay stable.</p>
-
-    <h2>Key term definitions</h2>
+    <h2>Lines &amp; terms</h2>
     <div class="def-card">
       <div class="term">Taiwan Strait median line <span class="en">/ Davis Line</span></div>
-      <p>An informal line down the centre of the Taiwan Strait, never recognized by any formal
-        treaty between the two sides. For decades aircraft and vessels largely refrained from
-        crossing it, so a crossing carries strong political and military signalling weight.
-        However, crossing the median line <strong>does not constitute a violation of territory
-        or sovereign airspace under international law</strong> and does not automatically
-        trigger the right of self-defense. The "median-line crossings" figure on this site
-        counts the PLA sorties that crossed this line on a given day.</p>
+      <p>An informal line down the centre of the strait, never recognized by any treaty between
+        the two sides. For decades aircraft and vessels largely refrained from crossing it, so a
+        crossing is a strong political and military signal — but crossing it <strong>does not
+        constitute a violation of territory or sovereign airspace under international law</strong>
+        and does not trigger the right of self-defense. "Median-line crossings" here means the PLA
+        sorties that crossed this line that day.</p>
     </div>
     <div class="def-card">
       <div class="term">12 NM territorial sea</div>
-      <p>Under the UN Convention on the Law of the Sea, the 12 nautical miles measured from the
-        baseline constitute a state's territorial sea, and the airspace above it is sovereign
-        airspace — the boundary that actually carries legal weight. Once PLA aircraft or vessels
-        enter the territorial sea or airspace within this line, Taiwan may take defensive action
-        under international law and its Defense Act. This is a different order of event from a
+      <p>Under UNCLOS, the 12 nautical miles from the baseline are a state's territorial sea and
+        the airspace above it is sovereign airspace — the boundary that actually carries legal
+        weight. Once PLA aircraft or vessels come inside this line, Taiwan may take defensive
+        action under international law and its Defense Act. A different order of event from a
         median-line crossing.</p>
     </div>
     <div class="def-card">
       <div class="term">ADIZ <span class="en">Air Defense Identification Zone</span></div>
-      <p>A zone declared for the early identification of airborne objects; it is far larger than
-        sovereign airspace. Entering an ADIZ is not a violation of sovereignty, but is commonly
-        used to gauge the intensity and posture of activity.</p>
+      <p>Declared for the early identification of airborne objects, and far larger than sovereign
+        airspace. Entering an ADIZ is not a violation of sovereignty; it is used to gauge intensity.</p>
     </div>
     <div class="def-card">
       <div class="term">Sorties &amp; vessels</div>
       <p>"Sorties" is the number of PLA aircraft missions detected that day, per the MND's own
-        count; "vessels" is the number of PLA Navy ships detected that day. Other activity such
-        as surveillance balloons is noted separately in the notes column of the daily records.</p>
+        count; "vessels" is the number of PLA Navy ships detected that day. Other activity such as
+        surveillance balloons is noted in the notes column of the daily records.</p>
     </div>
 
-    <h2>How the data is compiled</h2>
-    <p>The pipeline is deterministic and uses no manual estimation:</p>
-    <ul>
-      <li>MND bulletin → fields extracted into a single master CSV;</li>
-      <li>Automated validation: median-line crossings may not exceed total sorties; the crossing
-        rate must match the computed value (±1%); no duplicate dates; aircraft-type values must
-        be valid;</li>
-      <li>Only after validation passes are the static pages and charts generated, in both
-        Chinese and English.</li>
-    </ul>
-
-    <h2>Arms-procurement tracking method</h2>
-    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset from the daily
-      activity log. It follows US Foreign Military Sales (FMS) to Taiwan notified to Congress by the
-      Defense Security Cooperation Agency (DSCA) since 2019. Note that a DSCA notification is the
-      congressional-notification stage only — it is <strong>not</strong> a signed contract, and
-      neither is a delivery; the Letter of Offer and Acceptance (LOA) and delivery schedule come
-      later, and notified values are ceilings that signed amounts often fall below. Direct commercial
-      sales and US-forces transfers are excluded. Each case is compiled by hand from the official
-      DSCA notice (or a web-archive snapshot where the original page is offline), with delivery
-      progress cross-checked against CNA / MND / defense-trade press, and every case carries its own
-      source link.</p>
+    <h2>The arms dataset</h2>
+    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset covering US
+      Foreign Military Sales to Taiwan notified to Congress by the Defense Security Cooperation
+      Agency (DSCA) since 2019. A DSCA notification is the congressional-notification stage only:
+      it is <strong>not</strong> a signed contract and not a delivery, and notified values are
+      ceilings that signed amounts often fall below. Direct commercial sales and US-forces
+      transfers are excluded; every case is compiled by hand and carries its own source link.</p>
 
     <h2>Citation &amp; license</h2>
     <p>The underlying figures are public information from the MND. This site's compilation, field
       structure and charts are released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC
-      BY 4.0</a>. Journalists and researchers are welcome to cite them, please credit:</p>
+      BY 4.0</a>. Please credit:</p>
     <p><strong>Source: ROC Ministry of National Defense; compilation &amp; charts: PLA Activity
       Tracker (https://pla-tracker.pages.dev).</strong></p>
     <ul>

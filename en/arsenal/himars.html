@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="M142 HIMARS: Taiwan's procurement timeline, international buyer ranking, and combat record in Ukraine, Afghanistan and Syria — each entry sourced.">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/assets/arsenal/og-arsenal.jpg">
 <meta name="twitter:image:alt" content="HIMARS: Taiwan Procurement & Combat Record — PLA Activity Tracker">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607290401">
-<link rel="stylesheet" href="/style.css?v=202607290401">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607301058">
+<link rel="stylesheet" href="/style.css?v=202607301058">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607290401')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607301058')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "HIMARS Rocket Artillery", "description": "M142 HIMARS: Taiwan's procurement timeline, international buyer ranking, and combat record in Ukraine, Afghanistan and Syria — each entry sourced.", "mainEntityOfPage": "https://pla-tracker.pages.dev/en/arsenal/himars.html", "image": "https://pla-tracker.pages.dev/assets/arsenal/og-arsenal.jpg", "inLanguage": "en", "datePublished": "2026-07-23", "dateModified": "2026-07-24", "author": {"@type": "Person", "name": "Adam Pan"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://pla-tracker.pages.dev/en/index.html"}, {"@type": "ListItem", "position": 2, "name": "US Arms Deliveries to Taiwan", "item": "https://pla-tracker.pages.dev/en/arsenal/"}, {"@type": "ListItem", "position": 3, "name": "HIMARS Rocket Artillery", "item": "https://pla-tracker.pages.dev/en/arsenal/himars.html"}]}</script>
@@ -145,8 +145,12 @@ setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0});
 document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
 // 保險絲：無論 IntersectionObserver 是否正常（舊瀏覽器/省流模式/任何異常），
 // 2.5 秒後強制顯示所有尚未觸發的區塊。動畫是加分項，內容可見是底線。
+// 數字也要補：第 1 行已把 [data-count] 清成 '0'，若 IO 從未觸發，區塊會「顯示但數字全是 0」
+// ——比隱形更糟（讀者會以為當日零架次）。所以保險絲一併把未跑動畫的數字直接寫回真值。
 setTimeout(function(){
 document.querySelectorAll('.anim-ready:not(.visible)').forEach(function(el){el.classList.add('visible');});
+document.querySelectorAll('[data-count]').forEach(function(el){
+if(el.textContent==='0'&&el.dataset.count!=='0')el.textContent=el.dataset.count;});
 },2500);
 })();</script>
 <footer><span>Source: <a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">ROC Ministry of National Defense</a></span><span>By Adam Pan</span><span>Updated: Dec 17</span><span class="footer-hub"><a href="https://skyfaring.net/" rel="noopener">Made by Skyfaring</a></span></footer>
