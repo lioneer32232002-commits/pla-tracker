@@ -64,7 +64,16 @@ HTML 長怎樣」。
 5. 改了 `build_site.py` 等腳本卻沒重新 build 就 commit HTML → 腳本與產物不同步。
    鐵律：改腳本 → `python -X utf8 scripts/build_site.py` → `python -X utf8 scripts/validate.py html`
    → 一次 commit 全部（腳本＋HTML＋version.txt）。
-6. [2026-07-24] 症狀：push 含 `.github/workflows/` 變更被拒（refusing… without
+6. [2026-07-30] 症狀：用 `file://` 開產出 HTML 驗收版面，量到的 computed style 全是預設值
+   （CSS 變數解析成空、flex 變 inline）。根因：產出頁的樣式表是 `/style.css` **根絕對路徑**，
+   在 file:// 下會去找磁碟根目錄。規則：前端驗收一律走 HTTP——`preview_start {name:"pla-tracker"}`
+   （launch.json 已備，port 8765）；若上一輪的 server 還在跑，`preview_start` 會誤報一個
+   新 port 但實際程序啟動失敗（runtimeArgs 寫死 8765，autoPort 管不到），先用
+   `curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8765/index.html` 確認誰在服務。
+   另：`javascript_tool` 在 isolated world 執行，**讀不到頁面 main world 的 `window.*` 變數**
+   （DOM 與 computed style 讀得到）；要驗證頁內腳本的行為，改成在真實 DOM 上重現故障狀態
+   再逐字執行那段程式碼，不要靠注入 `window` 旗標判斷。
+7. [2026-07-24] 症狀：push 含 `.github/workflows/` 變更被拒（refusing… without
    `workflow` scope）。根因：gh 的 OAuth token 缺 `workflow` scope（已於當日
    `gh auth refresh -s workflow` 補上）。規則：再遇到就跑 `gh auth status` 查
    scopes，缺就請使用者跑 `gh auth refresh -h github.com -s workflow` 走瀏覽器
