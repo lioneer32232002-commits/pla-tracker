@@ -58,6 +58,12 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   build_site.py Grep `font` 定位，不要憑記憶找函式名）
 - 圖表全程 Chart.js 瀏覽器端渲染。**鐵律：禁止為圖表在 build/CI 加入字型或
   Pillow 渲染**（CI 是 ubuntu、無 CJK 字型）
+- **首頁兩組面板的差異（2026-07-30 起）**：`_CHART_JS_RECENT`＝近兩週（14 天）
+  堆疊長條（下段逾越中線／上段未越線）＋30 日均虛線＋46px 艦艇細帶＋圖例；
+  `_CHART_JS_YTD`＝年初至今，仍是原本的長條＋越線虛線＋130px 艦艇圖。
+  改 recent 面板前先讀 `_CHART_JS_RECENT` 內的註解（記載 x/y 軸對齊為什麼要
+  `offset:true` 與 `y.afterFit`，以及右緣 ~6px 殘差為何不再追）。
+  `_build_panels` 傳 `avg` 才走堆疊版，不傳＝原面積線版。
 
 ## SEO 資產規則
 
@@ -88,6 +94,12 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 - 2026-06-18 前：零架次且無航跡圖的日子，fetcher 誤判為「未發布」而漏資料
   （CI 仍 success）。已修（commit 741cff8）：無圖時改讀 `div.maincontent` 公告文字。
 - 2026-06-21：SEO 地基（95b84ca）＋媒體引用圖表（51e04e5）上線。
+- 2026-07-30：使用者體檢日（2763cc9／ad7a5b2／d21d106）。方法論頁 6 節→4 節；
+  清掉內部用語（「站內黃」「口徑說明」「未確認」→「進度未確認」）與一句殘留的
+  內部待辦（ATACMS 判讀的「上線前仍需補來源」）；/arsenal/ 卡片牆按交付階段拆成
+  圖卡（10）＋緊湊列（11），延宕標籤只掛真延宕者並加進全表狀態欄；首頁近兩週面板
+  改堆疊長條。**教訓**：內部語彙與待辦註解會隨字串一路上線，寫使用者可見字串時
+  要當成對外文案審一次。
 - 2026-07-23：大改版日。(1) 功能 E（PNG 下載/iframe 嵌入、embed 頁）**整組移除**
   （使用者判斷無人引用，b2038a6）；(2) 一句話 SITREP 移到地圖下方、SITREP/月統計
   卡片化、導覽列藥丸化（58b8261/b2038a6）；(3) 嚴重日自動配色上線（ec935b3）；
