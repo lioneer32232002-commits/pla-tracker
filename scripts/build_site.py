@@ -405,6 +405,8 @@ STRINGS = {
         'stat_aircraft': '中共軍機架次',
         'stat_median': '逾越中線',
         'stat_ships': '中共艦艇',
+        'delta_title': '較前一日 {sign}{n}',
+        'delta_note':  '▲▼ 為與前一日的比較',
         'mo_prefix': '{m}月至今',
         'mo_days': '天',
         'mo_aircraft': '中共軍機架次',
@@ -488,9 +490,14 @@ STRINGS = {
             'kpi_unit_case': '案',
             'matrix_title':  '主要裝備交付進度',
             'matrix_note':   '每張卡是一個武器系統，卡內每列是一筆採購案（同系統的多筆案子已合併在一起）。進度條只表示交付狀態（已交付／待交付／終止），交付中的案子一律畫成固定長度，不代表實際已交付的比例。標有「延宕」的卡展開後可看延宕原因與來源；其餘卡展開後是各批次明細與出處。',
+            'matrix_scope':  '本頁只收 2019 年起的 DSCA 公告案，卡上數量不含更早批次；'
+                             '含歷年累計的數字（如 HIMARS 111 套、魚叉 460 枚）見下方〈這些軍售說明什麼〉。',
             'matrix_expand': '展開明細與來源',
             'matrix_delay':  '交付進度：',
             'matrix_delay_chip': '延宕',
+            'grp_active':    '已交付／交付中／已終止',
+            'grp_pend':      '已公告，尚未開始交付',
+            'grp_count':     '{n} 項',
             'chart_title':   '歷年軍售公告金額',
             'chart_sub':     '單位：億美元 · 依 DSCA 公告年',
             'chart_top':     '當年最大三案：',
@@ -575,6 +582,8 @@ STRINGS = {
         'stat_aircraft': 'PLA Sorties',
         'stat_median': 'Median Line Crossings',
         'stat_ships': 'PLA Vessels',
+        'delta_title': '{sign}{n} vs. previous day',
+        'delta_note':  '▲▼ compared with the previous day',
         'mo_prefix': '{m} MTD',
         'mo_days': 'days',
         'mo_aircraft': 'PLA Sorties',
@@ -658,9 +667,15 @@ STRINGS = {
             'kpi_unit_case': '',
             'matrix_title':  'Major Systems — Delivery Progress',
             'matrix_note':   'Each card is one weapon system; every row within it is a procurement case (multiple cases of the same system are consolidated). Bars show delivery status only (delivered / pending / cancelled); in-progress cases are drawn at a fixed length and do not represent the share actually delivered. Cards marked "Delayed" expand to the delay reason and its source; the rest expand to batch details and citations.',
+            'matrix_scope':  'This page only covers DSCA notifications from 2019 onward, so card quantities '
+                             'exclude earlier batches; cumulative totals (e.g. 111 HIMARS launchers, 460 Harpoons) '
+                             'appear under "What these sales tell us" below.',
             'matrix_expand': 'Details & sources',
             'matrix_delay':  'Delivery progress: ',
             'matrix_delay_chip': 'Delayed',
+            'grp_active':    'Delivered / in progress / cancelled',
+            'grp_pend':      'Announced — delivery not yet started',
+            'grp_count':     '{n} systems',
             'chart_title':   'Arms Sales by Year',
             'chart_sub':     'US$ billion · by DSCA notice year',
             'chart_top':     'Top 3 cases: ',
@@ -1032,13 +1047,22 @@ def fmt_date_full(date_str, lang):
     return f"{dt.year}年{dt.month}月{dt.day}日"
 
 
-def delta_span(cur, prev_val):
+def delta_span(cur, prev_val, s=None):
+    """▲/▼ 與前一日的差。箭頭本身沒說「跟誰比」（2026-07-30 使用者回報），
+    所以掛 title/aria-label，並由呼叫端在 stats-row 下方補一行常駐說明
+    （手機沒有 hover，只靠 title 不夠）。"""
     try:
         d = float(cur) - float(prev_val)
         if d == 0: return ''
         arrow = '▲' if d > 0 else '▼'
         cls   = 'delta-up' if d > 0 else 'delta-dn'
-        return f'<span class="{cls}">{arrow}{abs(d):.0f}</span>'
+        if s:
+            lbl = html.escape(s['delta_title'].format(
+                sign='+' if d > 0 else '−', n=f'{abs(d):.0f}'))
+            attrs = f' title="{lbl}" aria-label="{lbl}"'
+        else:
+            attrs = ''
+        return f'<span class="{cls}"{attrs}>{arrow}{abs(d):.0f}</span>'
     except Exception:
         return ''
 
@@ -1114,6 +1138,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .stat-detail{font-size:1.1rem;color:var(--sub);margin-top:.2rem;white-space:nowrap}
 .delta-up{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
 .delta-dn{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
+.delta-note{font-size:.68rem;color:var(--sub);opacity:.8;text-align:center;margin-top:.55rem;
+  letter-spacing:.02em}
 
 /* ── Badge ── */
 .badge{display:inline-block;padding:.2em .7em;border-radius:999px;font-size:.78rem;font-weight:700}
@@ -1278,6 +1304,41 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .ars-scard-band .band-word{font-size:1.05rem;font-weight:800;letter-spacing:.35em;
   color:var(--sub);opacity:.55;padding-left:.35em}
 .ars-scard-band .band-note{font-size:.62rem;letter-spacing:.08em;color:var(--sub);opacity:.5}
+/* 無照片的卡：矮帶，不撐 16:9（撐滿會像圖片載入失敗） */
+.ars-scard-band-slim{aspect-ratio:auto;height:38px}
+
+/* 分組標題（有進度 / 尚未開始交付） */
+.ars-grp{display:flex;align-items:baseline;gap:.5rem;margin:.2rem 0 .7rem}
+.ars-grp+.ars-syscards,.ars-grp+.ars-prows{margin-top:0}
+.ars-syscards+.ars-grp,.ars-prows+.ars-grp{margin-top:1.4rem}
+.ars-grp-t{font-size:.74rem;font-weight:800;letter-spacing:.08em;color:var(--sub)}
+.ars-grp-n{font-size:.68rem;color:var(--sub);opacity:.7;font-variant-numeric:tabular-nums}
+
+/* 尚未開始交付的系統：縮圖緊湊列 */
+.ars-prows{display:flex;flex-direction:column;gap:.4rem}
+.ars-prow{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
+.ars-prow>summary{list-style:none;cursor:pointer;display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:.65rem;padding:.5rem .7rem}
+.ars-prow>summary::-webkit-details-marker{display:none}
+.ars-prow-thumb{width:42px;height:42px;border-radius:6px;overflow:hidden;background:var(--bg);
+  border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center}
+.ars-prow-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ars-prow-glyph{font-size:1.05rem;font-weight:800;color:var(--sub);opacity:.6}
+.ars-prow-main{min-width:0}
+.ars-prow-name{display:block;font-size:.82rem;font-weight:800;color:var(--tx);line-height:1.3}
+.ars-prow-name .en{display:block;font-size:.65rem;font-weight:600;color:var(--sub);
+  margin-top:.1rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ars-prow-meta{display:block;font-size:.7rem;color:var(--sub);margin-top:.2rem;
+  font-variant-numeric:tabular-nums}
+.ars-prow-meta .dot{opacity:.5;margin:0 .35em}
+.ars-prow-meta .brk{opacity:.8}
+.ars-prow-tags{display:flex;align-items:center;gap:.35rem;flex-shrink:0}
+.ars-prow-tags .tri{color:var(--sub);font-size:.7rem;transition:transform .15s;display:inline-block}
+.ars-prow[open] .ars-prow-tags .tri{transform:rotate(90deg)}
+.ars-prow>.ars-scard-detail{padding:0 .7rem .7rem;border-top:1px solid var(--bdr);margin-top:.1rem}
+/* 全表狀態欄：狀態徽章＋延宕標籤同格不擠壓 */
+.ars-td-st{white-space:nowrap}
+.ars-td-st .ars-delaychip{margin-left:.3rem}
 .ars-scard-body{padding:.75rem .85rem;display:flex;flex-direction:column;flex:1;min-width:0}
 .ars-scard-head{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-between}
 .ars-scard-ph{width:40px;height:40px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);
@@ -2251,8 +2312,10 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     else:
         special_display = special_zh
 
-    ac_delta = delta_span(latest['aircraft_total'], prev['aircraft_total'])
-    sh_delta = delta_span(latest['ships_total'],    prev['ships_total'])
+    ac_delta = delta_span(latest['aircraft_total'], prev['aircraft_total'], s)
+    sh_delta = delta_span(latest['ships_total'],    prev['ships_total'], s)
+    delta_note = (f'<div class="delta-note">{s["delta_note"]}</div>'
+                  if (ac_delta or sh_delta) else '')
 
     type_lower, type_label = type_info(atype, special_zh, s)
     sitrep_badge = (f'&nbsp;·&nbsp; {type_label}'
@@ -2326,6 +2389,7 @@ def build_index(df, lang, out_dir, s, df_ars=None):
         {sh_delta}
       </div>
     </div>
+    {delta_note}
   </div>
 
   {monthly_html}
@@ -3020,6 +3084,11 @@ def _ars_chart_html(df_ars, lang, s):
 def _ars_cases_html(df_ars, lang, s):
     a = s['ars']
     df = df_ars.sort_values('announce_date', ascending=False)
+    # 延宕標籤也掛在全表的狀態欄：系統卡牆只收 qty 非空的主要裝備，像 20-87 野戰資訊
+    # 通信系統（qty 空白）登錄了延宕理由卻無處露出。全表是唯一涵蓋 49 案的地方。
+    def _chip(r):
+        return (f'<span class="ars-delaychip">{a["matrix_delay_chip"]}</span>'
+                if r['case_id'] in ARSENAL_DELAYS else '')
     # desktop table
     rows = []
     for _, r in df.iterrows():
@@ -3029,7 +3098,7 @@ def _ars_cases_html(df_ars, lang, s):
             f'<td style="white-space:normal;max-width:280px">{name}</td>'
             f'<td>{_ars_cat_badge(r["category"], s)}</td>'
             f'<td class="num">{fmt_money(r["value_usd_m"], lang)}</td>'
-            f'<td>{_ars_status_badge(r["delivery_status"], s)}</td>'
+            f'<td class="ars-td-st">{_ars_status_badge(r["delivery_status"], s)}{_chip(r)}</td>'
             f'<td>{_ars_srcs(r, s) or "—"}</td></tr>')
     table = (f'<div class="ars-tbl-wrap tbl-wrap"><table><thead><tr>'
              f'<th>{a["th_date"]}</th><th>{a["th_system"]}</th><th>{a["th_cat"]}</th>'
@@ -3044,7 +3113,7 @@ def _ars_cases_html(df_ars, lang, s):
         meta = (f'<span>{html.escape(r["announce_date"])}</span>'
                 f'<span>{_ars_cat_badge(r["category"], s)}</span>'
                 f'<span>{fmt_money(r["value_usd_m"], lang)}</span>'
-                f'<span>{_ars_status_badge(r["delivery_status"], s)}</span>')
+                f'<span>{_ars_status_badge(r["delivery_status"], s)}{_chip(r)}</span>')
         if lang == 'en':
             body_parts = []
             if qtyl:
@@ -3106,9 +3175,11 @@ def _ars_agg_label(cases, lang):
 
 
 def _ars_syscards_html(df_ars, lang, s):
-    """系統卡片牆：主要裝備（category≠sustainment 且 qty 非空）依 ARSENAL_SYSCARD
-    歸併為系統卡。有 card-{key}.jpg 掛 16:9 圖帶，否則退無圖緊湊版（類別占位磚）。
-    卡片依系統內最高進度排序，同組依系統合計案值由大到小。"""
+    """系統卡片牆。主要裝備（category≠sustainment 且 qty 非空）依 ARSENAL_SYSCARD
+    歸併為系統，依系統內最高進度排序、同組依合計案值由大到小，再拆成兩組：
+      1. 已交付／交付中／已終止 → 16:9 圖卡（有 card-{key}.jpg 用照片，否則類別斜紋帶）
+      2. 已公告／進度未確認     → 縮圖緊湊列（進度條全空的圖卡沒有資訊量）
+    回傳 (圖卡 HTML, 緊湊列 HTML, 圖卡數, 緊湊列數)。"""
     a = s['ars']
     major = df_ars[(df_ars['category'] != 'sustainment') & (df_ars['qty'] != '')]
     # 依 ARSENAL_SYSCARD 分組，保留每案原始 dict
@@ -3125,8 +3196,9 @@ def _ars_syscards_html(df_ars, lang, s):
         cards.append((top_st, -tot_val, key, rows))
     cards.sort(key=lambda c: (c[0], c[1]))
 
-    out = []
-    for _, _, key, rows in cards:
+    prog, pend = [], []
+    for top_st, neg_val, key, rows in cards:
+        tot_val = -neg_val
         first = rows[0]
         if key in ARSENAL_SYSCARD_NAME:
             name_zh, name_en = ARSENAL_SYSCARD_NAME[key]
@@ -3178,22 +3250,60 @@ def _ars_syscards_html(df_ars, lang, s):
                          f'<span class="ars-scard-name">{name}{sub}</span></div>'
                          f'{agg_html}</div>')
         else:
-            # 設計化占位帶：與圖帶同高的斜紋底＋類別大字，避免無圖卡顯得殘缺
-            word_map = ARSENAL_CAT_WORD_EN if lang == 'en' else ARSENAL_CAT_WORD
-            word = word_map.get(first['category'], '')
-            noimg_note = 'No public-domain archive photo' if lang == 'en' else '暫無公開檔案照'
-            img_html = (f'<div class="ars-scard-img ars-scard-band" aria-hidden="true">'
-                        f'<span class="band-word">{word}</span>'
+            # 無圖卡：不再撐 16:9 的空圖帶（看起來像圖片壞了），改成一條矮斜紋帶。
+            # 原本磚上的類別大字（「無人系統」）與下方卡名（「ALTIUS 600M-V無人機系統」）
+            # 語意重複，2026-07-30 移除，只留一行說明為什麼沒有照片。
+            noimg_note = 'No public-domain archive photo' if lang == 'en' else '無公開領域檔案照'
+            img_html = (f'<div class="ars-scard-img ars-scard-band ars-scard-band-slim"'
+                        f' aria-hidden="true">'
                         f'<span class="band-note">{noimg_note}</span></div>')
             head_html = (f'<div class="ars-scard-head">'
                          f'<div class="ars-scard-titles">'
                          f'<span class="ars-scard-name">{name}{sub}</span></div>'
                          f'{agg_html}</div>')
-        out.append(
-            f'<details class="ars-syscard"><summary>{img_html}'
-            f'<div class="ars-scard-body">{head_html}{rows_html}{caret}</div>'
+        if top_st in _ARS_PENDING_ST:
+            # 尚未開始交付（已公告／進度未確認）：進度條必然全空，做成圖卡會讓卡牆下半段
+            # 變成一片空白長條（2026-07-30 使用者回報）。改用縮圖緊湊列，資訊密度更高，
+            # 且依案值排序讓最大案（F-16V 80 億）居首、不會因為降格而被埋掉。
+            pend.append(_ars_prow_html(key, name, sub, main_agg, brk, tot_val,
+                                       rows, first, chip, detail_html, lang, s))
+        else:
+            prog.append(
+                f'<details class="ars-syscard"><summary>{img_html}'
+                f'<div class="ars-scard-body">{head_html}{rows_html}{caret}</div>'
+                f'</summary>{detail_html}</details>')
+    return (('<div class="ars-syscards">' + ''.join(prog) + '</div>') if prog else '',
+            ('<div class="ars-prows">' + ''.join(pend) + '</div>') if pend else '',
+            len(prog), len(pend))
+
+
+# 尚未開始交付的狀態：進度條為 0，不做圖卡（見 _ars_syscards_html 內註解）
+_ARS_PENDING_ST = frozenset({2, 3})   # announced / unknown（_ARS_ST_ORDER 的序號）
+
+
+def _ars_prow_html(key, name, sub, main_agg, brk, tot_val, rows, first,
+                   chip, detail_html, lang, s):
+    """尚未開始交付的系統：縮圖＋單列緊湊格。縮圖用既有 thumb-{key}.jpg，
+    沒有縮圖的用類別單字磚（不再掛 16:9 空圖帶）。"""
+    a = s['ars']
+    thumb_file = f'thumb-{key}.jpg'
+    if (ARSENAL_ASSET_DIR / thumb_file).exists():
+        thumb = (f'<span class="ars-prow-thumb">'
+                 f'<img src="/assets/arsenal/{thumb_file}" alt="{name}" loading="lazy"></span>')
+    else:
+        glyph_map = ARSENAL_CAT_GLYPH_EN if lang == 'en' else ARSENAL_CAT_GLYPH
+        thumb = (f'<span class="ars-prow-thumb ars-prow-glyph" aria-hidden="true">'
+                 f'{glyph_map.get(first["category"], "")}</span>')
+    qty = html.escape(main_agg) + (f' <span class="brk">{html.escape(brk)}</span>' if brk else '')
+    badges = ''.join(_ars_status_badge(r['delivery_status'], s) for r in rows)
+    return (f'<details class="ars-prow"><summary>{thumb}'
+            f'<span class="ars-prow-main">'
+            f'<span class="ars-prow-name">{name}{sub}</span>'
+            f'<span class="ars-prow-meta">{qty}<span class="dot">·</span>'
+            f'{fmt_money(tot_val, lang)}</span></span>'
+            f'<span class="ars-prow-tags">{badges}{chip}'
+            f'<span class="tri">▸</span></span>'
             f'</summary>{detail_html}</details>')
-    return '<div class="ars-syscards">' + ''.join(out) + '</div>'
 
 
 def build_arsenal(df_ars, df_peers, lang, out_dir, s):
@@ -3227,7 +3337,14 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
         for val, lab, cls in kpis)
 
     # 主要裝備系統卡片牆（category≠sustainment 且 qty 非空 → 歸併為系統卡）
-    matrix_html = _ars_syscards_html(df_ars, lang, s)
+    prog_html, pend_html, n_prog, n_pend = _ars_syscards_html(df_ars, lang, s)
+    matrix_html = (f'<div class="ars-grp"><span class="ars-grp-t">{a["grp_active"]}</span>'
+                   f'<span class="ars-grp-n">{a["grp_count"].format(n=n_prog)}</span></div>'
+                   f'{prog_html}')
+    if pend_html:
+        matrix_html += (f'<div class="ars-grp"><span class="ars-grp-t">{a["grp_pend"]}</span>'
+                        f'<span class="ars-grp-n">{a["grp_count"].format(n=n_pend)}</span></div>'
+                        f'{pend_html}')
 
     reads_html   = _ars_reads_html(df_ars, df_peers, lang, s)
     # 延宕對照表已移除（2026-07-24 使用者裁定）：與系統卡展開內容重複；
@@ -3268,6 +3385,7 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     <div class="ars-sec-title">{a['matrix_title']}</div>
     {matrix_html}
     <p class="ars-note">{a['matrix_note']}</p>
+    <p class="ars-note">{a['matrix_scope']}</p>
   </section>
 
   <section class="ars-section anim-ready">

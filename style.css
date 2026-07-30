@@ -65,6 +65,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .stat-detail{font-size:1.1rem;color:var(--sub);margin-top:.2rem;white-space:nowrap}
 .delta-up{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
 .delta-dn{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
+.delta-note{font-size:.68rem;color:var(--sub);opacity:.8;text-align:center;margin-top:.55rem;
+  letter-spacing:.02em}
 
 /* ── Badge ── */
 .badge{display:inline-block;padding:.2em .7em;border-radius:999px;font-size:.78rem;font-weight:700}
@@ -229,6 +231,41 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .ars-scard-band .band-word{font-size:1.05rem;font-weight:800;letter-spacing:.35em;
   color:var(--sub);opacity:.55;padding-left:.35em}
 .ars-scard-band .band-note{font-size:.62rem;letter-spacing:.08em;color:var(--sub);opacity:.5}
+/* 無照片的卡：矮帶，不撐 16:9（撐滿會像圖片載入失敗） */
+.ars-scard-band-slim{aspect-ratio:auto;height:38px}
+
+/* 分組標題（有進度 / 尚未開始交付） */
+.ars-grp{display:flex;align-items:baseline;gap:.5rem;margin:.2rem 0 .7rem}
+.ars-grp+.ars-syscards,.ars-grp+.ars-prows{margin-top:0}
+.ars-syscards+.ars-grp,.ars-prows+.ars-grp{margin-top:1.4rem}
+.ars-grp-t{font-size:.74rem;font-weight:800;letter-spacing:.08em;color:var(--sub)}
+.ars-grp-n{font-size:.68rem;color:var(--sub);opacity:.7;font-variant-numeric:tabular-nums}
+
+/* 尚未開始交付的系統：縮圖緊湊列 */
+.ars-prows{display:flex;flex-direction:column;gap:.4rem}
+.ars-prow{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
+.ars-prow>summary{list-style:none;cursor:pointer;display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:.65rem;padding:.5rem .7rem}
+.ars-prow>summary::-webkit-details-marker{display:none}
+.ars-prow-thumb{width:42px;height:42px;border-radius:6px;overflow:hidden;background:var(--bg);
+  border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center}
+.ars-prow-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ars-prow-glyph{font-size:1.05rem;font-weight:800;color:var(--sub);opacity:.6}
+.ars-prow-main{min-width:0}
+.ars-prow-name{display:block;font-size:.82rem;font-weight:800;color:var(--tx);line-height:1.3}
+.ars-prow-name .en{display:block;font-size:.65rem;font-weight:600;color:var(--sub);
+  margin-top:.1rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ars-prow-meta{display:block;font-size:.7rem;color:var(--sub);margin-top:.2rem;
+  font-variant-numeric:tabular-nums}
+.ars-prow-meta .dot{opacity:.5;margin:0 .35em}
+.ars-prow-meta .brk{opacity:.8}
+.ars-prow-tags{display:flex;align-items:center;gap:.35rem;flex-shrink:0}
+.ars-prow-tags .tri{color:var(--sub);font-size:.7rem;transition:transform .15s;display:inline-block}
+.ars-prow[open] .ars-prow-tags .tri{transform:rotate(90deg)}
+.ars-prow>.ars-scard-detail{padding:0 .7rem .7rem;border-top:1px solid var(--bdr);margin-top:.1rem}
+/* 全表狀態欄：狀態徽章＋延宕標籤同格不擠壓 */
+.ars-td-st{white-space:nowrap}
+.ars-td-st .ars-delaychip{margin-left:.3rem}
 .ars-scard-body{padding:.75rem .85rem;display:flex;flex-direction:column;flex:1;min-width:0}
 .ars-scard-head{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-between}
 .ars-scard-ph{width:40px;height:40px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);
