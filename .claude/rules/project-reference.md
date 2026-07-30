@@ -58,6 +58,11 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   build_site.py Grep `font` 定位，不要憑記憶找函式名）
 - 圖表全程 Chart.js 瀏覽器端渲染。**鐵律：禁止為圖表在 build/CI 加入字型或
   Pillow 渲染**（CI 是 ubuntu、無 CJK 字型）
+- **月統計頁的每日強度日曆（2026-07-30 起）**：`_monthly_heatmap_html`，純 HTML/CSS
+  grid（不用 Chart.js），列＝月、欄＝該月 1→31 日，覆蓋全部歷史。三種「空白格」
+  **必須維持區分**：`e`＝該月無此日／未來日、`n`＝有此日但國防部未發布、`v0`＝零架次。
+  合併任兩者就是用視覺造假（目前 v0 有 42 天、n 只有 1 天）。validate.py 會檢查
+  `hm-c n` 與 `hm-c v0` 都存在，合併會被攔下。
 - **首頁兩組面板的差異（2026-07-30 起）**：`_CHART_JS_RECENT`＝近兩週（14 天）
   堆疊長條（下段逾越中線／上段未越線）＋30 日均虛線＋46px 艦艇細帶＋圖例；
   `_CHART_JS_YTD`＝年初至今，仍是原本的長條＋越線虛線＋130px 艦艇圖。
