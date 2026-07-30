@@ -44,12 +44,20 @@ _CHART_COLORS = {
               'ac_line': '#f5c842', 'sh_line': '#e05555',
               'cr_line': '#ff9933', 'pt_ring': '#1e2224',
               'ac_today': '#f5c842', 'ac_other': '#8a7020',
-              'sh_today': '#e05555', 'sh_other': '#7a2a2a'},
+              'sh_today': '#e05555', 'sh_other': '#7a2a2a',
+              # 近兩週堆疊長條：同色相兩階（越線＝亮、未越線＝暗），
+              # 不用第二色相，避免與艦艇紅搶注意力
+              'cr_bar': '#c9a52f', 'cr_today': '#f5c842',
+              'nc_bar': '#4a4526', 'nc_today': '#6b6234',
+              'avg_line': '#5a6c74'},
     'light': {'tick': '#6b7a84', 'zero': '#cfc9ba',
               'ac_line': '#d99f00', 'sh_line': '#c74040',
               'cr_line': '#cc7a1f', 'pt_ring': '#fbfaf6',
               'ac_today': '#d99f00', 'ac_other': '#d6c79b',
-              'sh_today': '#c74040', 'sh_other': '#e0b9b9'},
+              'sh_today': '#c74040', 'sh_other': '#e0b9b9',
+              'cr_bar': '#c08c00', 'cr_today': '#8a6300',
+              'nc_bar': '#e6dcc0', 'nc_today': '#d3c395',
+              'avg_line': '#9aa7ae'},
 }
 
 # 地圖注入色（直接以裸 hex 取代，因同一顏色在 _MAP_JS 中同時出現於 JS 字串與
@@ -412,9 +420,17 @@ STRINGS = {
         'mo_aircraft': '中共軍機架次',
         'mo_cross': '逾越中線',
         'mo_ships_avg': '艦艇日均（艘）',
-        'chart_recent': '10日觀察',
+        'chart_recent': '近兩週',
+        'chart': {
+            'lg_cross':   '逾越中線',
+            'lg_nocross': '未越線',
+            'lg_avg':     '30 日均',
+            'lg_ship':    '共艦（艘）',
+            'lg_total':   '合計 ',
+        },
         'chart_ytd': '2026 至今',
-        'obs_ac': '今日 {n} 架次',
+        'obs_ac': '今日 {n} 架次 · {m} 架次越線',
+        'obs_ac_zero': '今日 0 架次',
         'obs_sh': '{n} 艘艦艇',
         'peak_ac': '本月峰值 {n} 架次（{d}）',
         'ships_range': '艦艇 {lo}–{hi} 艘',
@@ -589,9 +605,17 @@ STRINGS = {
         'mo_aircraft': 'PLA Sorties',
         'mo_cross': 'Median Line Crossings',
         'mo_ships_avg': 'Avg Vessels/Day',
-        'chart_recent': '10-Day Trend',
+        'chart_recent': 'Last 14 days',
+        'chart': {
+            'lg_cross':   'Crossed median line',
+            'lg_nocross': 'Did not cross',
+            'lg_avg':     '30-day avg',
+            'lg_ship':    'Vessels',
+            'lg_total':   'Total ',
+        },
         'chart_ytd': '2026 YTD',
-        'obs_ac': 'Today: {n} sorties',
+        'obs_ac': 'Today: {n} sorties · {m} crossed',
+        'obs_ac_zero': 'Today: no sorties',
         'obs_sh': '{n} vessels',
         'peak_ac': 'Month peak: {n} ({d})',
         'ships_range': 'Vessels {lo}–{hi}',
@@ -1162,6 +1186,17 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .split-panels{background:#1e2224;border-radius:var(--rad);padding:12px 12px 8px}
 .panel-wrap-ac{position:relative;height:200px}
 .panel-wrap-sh{position:relative;height:130px;margin-top:8px}
+/* 艦艇細帶（近兩週版）：變異小的資料給小空間，讀起來更快 */
+/* 46px（改版前 130px）：艦艇 60 日只在 7–17 之間，變異小的資料不該佔一半版面。
+   日期由上圖標出，細帶不重複畫座標軸。 */
+.panel-wrap-sh-slim{height:46px;margin-top:2px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:.45rem .95rem;margin:0 0 .55rem;
+  font-size:.66rem;color:var(--sub);line-height:1.4}
+.chart-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;
+  margin-right:.3rem;vertical-align:-1px}
+.chart-legend i.dash{height:0;border-radius:0;border-top:2px dashed;
+  background:none;width:14px;vertical-align:2px}
+.chart-legend .sh{margin-left:auto}
 
 /* ── Records table ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -1632,24 +1667,53 @@ html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}
 
 # ── Chart.js 圖表產生 ─────────────────────────────────────────────────────────
 
+# 近兩週面板（2026-07-30 改版）。原本是「架次面積線＋越線數虛線」兩條疊在一起，
+# 加上與架次等大的艦艇面積圖。問題：(1) 艦艇 60 日只在 7–17 之間、變異極小，卻拿到
+# 一半版面；(2) 越線數用另一條線畫，讀者得在兩條線之間換算才知道「這天越線佔多少」。
+# 改法：架次做同色相堆疊長條（下段＝逾越中線、上段＝未越線），一根長條同時回答
+# 「多不多」與「越不越線」；加 30 日均虛線當基準；艦艇壓成無座標軸的細帶。
 _CHART_JS_RECENT = """\
 (function(){
-var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
-// 垂直漸層填色（頂濃底透）：area chart 質感關鍵；匯出 PNG 端會保留此函式重畫。
+var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,SHbg=__SHbg__,AVG=__AVG__,T=L.length-1;
 function gfill(hex){return function(c){var a=c.chart.chartArea;if(!a)return 'rgba(0,0,0,0)';
   var g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);
   g.addColorStop(0,hex+'59');g.addColorStop(0.85,hex+'0d');g.addColorStop(1,hex+'00');return g;};}
-var xA={grid:{display:false},ticks:{color:__TICK__,font:{size:10},maxRotation:0},border:{display:false}};
-var yA={grid:{color:function(ctx){return ctx.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
+var NC=AC.map(function(v,i){return Math.max(0,v-CR[i]);});
+var CRbg=AC.map(function(v,i){return i===T?__CRTODAY__:__CRBAR__;});
+var NCbg=AC.map(function(v,i){return i===T?__NCTODAY__:__NCBAR__;});
+// 下段圓角只在「當日全部越線」（上段為 0）時打開，其餘保持與 x 軸齊平的方角
+var CRrad=NC.map(function(v){return v===0?3:0;});
+var xA={stacked:true,grid:{display:false},ticks:{color:__TICK__,font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return (i%2===0||i===T)?L[i]:'';}},border:{display:false}};
+var yA={stacked:true,grid:{color:function(ctx){return ctx.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
-var baseOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
+var acOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,
+ plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
+   filter:function(it){return it.datasetIndex<2;},
+   callbacks:{footer:function(items){var i=items[0].dataIndex;return __L_TOTAL__+AC[i];}}}},
+ scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
-  {type:'line',data:AC,borderColor:__ACLINE__,backgroundColor:gfill(__ACLINE__),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:ACbg,pointBorderColor:__PTRING__,pointBorderWidth:1.5,order:2},
-  {type:'line',data:CR,borderColor:__CRLINE__,borderDash:[5,4],borderWidth:1.5,pointBackgroundColor:__CRLINE__,pointRadius:0,pointHoverRadius:4,tension:0.35,fill:false,order:1}
-]},options:baseOpts});
+  {type:'bar',label:__L_CROSS__,data:CR,backgroundColor:CRbg,borderRadius:CRrad,maxBarThickness:24,stack:'a',order:3},
+  {type:'bar',label:__L_NOCROSS__,data:NC,backgroundColor:NCbg,borderRadius:3,maxBarThickness:24,stack:'a',order:3},
+  {type:'line',label:__L_AVG__,data:AC.map(function(){return AVG;}),borderColor:__AVGLINE__,borderDash:[5,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,fill:false,tension:0,order:1}
+]},options:acOpts});
+// 艦艇細帶：不畫座標軸（日期已由上圖標出），只留形狀與當日點
+// 細帶隱藏了 y 軸刻度，繪圖區左緣會比上圖淺 ~17px，同一天的欄位就對不齊。
+// afterFit 把細帶的 y 軸寬度綁到上圖的實際 y 軸寬度（每次 layout 都會跑，resize 後仍對齊）。
+// 細帶與上圖的逐日對齊，兩件事是必要的：
+//   offset:true —— 長條畫在「格中央」、折線預設畫在「格邊界」，少了它第一天就差 29px。
+//   y 的 afterFit —— 細帶隱藏了 y 刻度，繪圖區左緣會比上圖淺 ~17px，把寬度綁回上圖。
+// 兩者做完左緣完全齊平、第一天 0px。右緣仍有 ~6px 差（累積到第 14 天 6px），來源不是
+// 刻度標籤（改成透明刻度、或執行期量測補 padding 都試過，殘差不變），是 Chart.js 對
+// bar/line 繪圖區的內距處理差異；站上原有的 YTD 兩圖也有同級（4px）差異。不再追。
+var shOpts={animation:{duration:600,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,
+ plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+ scales:{x:{grid:{display:false},ticks:{display:false},border:{display:false},offset:true},
+         y:{grid:{display:false},ticks:{display:false},border:{display:false},beginAtZero:true,
+            afterFit:function(sc){var a=Chart.getChart('__UID__-ac');
+              if(a&&a.scales&&a.scales.y)sc.width=a.scales.y.width;}}}};
 new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
-  {type:'line',data:SH,borderColor:__SHLINE__,backgroundColor:gfill(__SHLINE__),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:__PTRING__,pointBorderWidth:1.5}
-]},options:baseOpts});
+  {type:'line',label:__L_SHIP__,data:SH,borderColor:__SHLINE__,backgroundColor:gfill(__SHLINE__),fill:true,tension:0.35,borderWidth:2,pointRadius:2,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:__PTRING__,pointBorderWidth:1}
+]},options:shOpts});
 })();"""
 
 _CHART_JS_YTD = """\
@@ -1717,7 +1781,9 @@ new Chart(document.getElementById('__UID__'),{type:'bar',data:{labels:C,datasets
 })();"""
 
 
-def _build_panels(uid, df_slice, today_date, template):
+def _build_panels(uid, df_slice, today_date, template, s=None, avg=None):
+    """兩段圖表面板。傳 avg（30 日均架次）＝近兩週堆疊版：架次改堆疊長條、加基準線、
+    艦艇改細帶＋圖例；不傳＝原本的面積線版（YTD 用）。"""
     data = df_slice.reset_index(drop=True)
     today_idx = next(
         (i for i, (_, r) in enumerate(data.iterrows()) if r['date'] == today_date),
@@ -1749,9 +1815,37 @@ def _build_panels(uid, df_slice, today_date, template):
           .replace('__PTRING__', json.dumps(tc['pt_ring']))
           .replace('__UID__',    uid))
 
-    return (f'<div class="split-panels">'
+    if avg is None:
+        return (f'<div class="split-panels">'
+                f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
+                f'<div class="panel-wrap-sh"><canvas id="{uid}-sh"></canvas></div>'
+                f'</div>'
+                f'<script>{js}</script>')
+
+    # 堆疊版：注入基準線值、資料集名稱（tooltip 用），並在面板內加圖例。
+    # 兩段用同色相的亮/暗兩階，色相不同不足以區辨 → 圖例是必需品不是裝飾。
+    c = s['chart']
+    js = (js.replace('__AVG__',       json.dumps(round(avg, 1)))
+            .replace('__CRBAR__',     json.dumps(tc['cr_bar']))
+            .replace('__CRTODAY__',   json.dumps(tc['cr_today']))
+            .replace('__NCBAR__',     json.dumps(tc['nc_bar']))
+            .replace('__NCTODAY__',   json.dumps(tc['nc_today']))
+            .replace('__AVGLINE__',   json.dumps(tc['avg_line']))
+            .replace('__L_CROSS__',   json.dumps(c['lg_cross']))
+            .replace('__L_NOCROSS__', json.dumps(c['lg_nocross']))
+            .replace('__L_AVG__',     json.dumps(c['lg_avg']))
+            .replace('__L_SHIP__',    json.dumps(c['lg_ship']))
+            .replace('__L_TOTAL__',   json.dumps(c['lg_total'])))
+    legend = (f'<div class="chart-legend">'
+              f'<span><i style="background:{tc["cr_today"]}"></i>{c["lg_cross"]}</span>'
+              f'<span><i style="background:{tc["nc_bar"]}"></i>{c["lg_nocross"]}</span>'
+              f'<span><i class="dash" style="border-top-color:{tc["avg_line"]}"></i>'
+              f'{c["lg_avg"]} {avg:.1f}</span>'
+              f'<span class="sh"><i style="background:{tc["sh_today"]}"></i>{c["lg_ship"]}</span>'
+              f'</div>')
+    return (f'<div class="split-panels">{legend}'
             f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
-            f'<div class="panel-wrap-sh"><canvas id="{uid}-sh"></canvas></div>'
+            f'<div class="panel-wrap-sh panel-wrap-sh-slim"><canvas id="{uid}-sh"></canvas></div>'
             f'</div>'
             f'<script>{js}</script>')
 
@@ -2321,7 +2415,11 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     sitrep_badge = (f'&nbsp;·&nbsp; {type_label}'
                     if type_label not in s['generic_types'] else '')
 
-    recent_html = _build_panels('rc',  df.tail(10), today_date, _CHART_JS_RECENT)
+    # 近兩週：14 天而非 10 天——以目前的活動節奏（多數日 0–4 架次、偶發 20+ 的脈衝日），
+    # 10 天常只框到一個脈衝，看不出節奏。基準線用近 30 日平均架次（不足 30 天就用全部）。
+    avg30 = float(df['aircraft_total'].tail(30).fillna(0).mean())
+    recent_html = _build_panels('rc',  df.tail(14), today_date, _CHART_JS_RECENT,
+                                s, avg30)
     year_prefix = today_date[:4]
     ytd_html    = _build_panels('ytd', df[df['date'] >= year_prefix], today_date, _CHART_JS_YTD)
 
@@ -2333,7 +2431,8 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     sh_lo    = int(df['ships_total'].min())
     sh_hi    = int(df['ships_total'].max())
 
-    split_ac  = s['obs_ac'].format(n=ac_val)
+    split_ac  = (s['obs_ac_zero'] if ac_val == 0
+                 else s['obs_ac'].format(n=ac_val, m=ml_val))
     split_sh  = s['obs_sh'].format(n=sh_val)
     streak_ac = s['peak_ac'].format(n=mo_max, d=mo_max_d) if mo_max > 0 else ''
     streak_sh = s['ships_range'].format(lo=sh_lo, hi=sh_hi)

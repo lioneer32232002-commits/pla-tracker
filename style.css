@@ -89,6 +89,17 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .split-panels{background:#1e2224;border-radius:var(--rad);padding:12px 12px 8px}
 .panel-wrap-ac{position:relative;height:200px}
 .panel-wrap-sh{position:relative;height:130px;margin-top:8px}
+/* 艦艇細帶（近兩週版）：變異小的資料給小空間，讀起來更快 */
+/* 46px（改版前 130px）：艦艇 60 日只在 7–17 之間，變異小的資料不該佔一半版面。
+   日期由上圖標出，細帶不重複畫座標軸。 */
+.panel-wrap-sh-slim{height:46px;margin-top:2px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:.45rem .95rem;margin:0 0 .55rem;
+  font-size:.66rem;color:var(--sub);line-height:1.4}
+.chart-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;
+  margin-right:.3rem;vertical-align:-1px}
+.chart-legend i.dash{height:0;border-radius:0;border-top:2px dashed;
+  background:none;width:14px;vertical-align:2px}
+.chart-legend .sh{margin-left:auto}
 
 /* ── Records table ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
