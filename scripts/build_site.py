@@ -3186,8 +3186,15 @@ def _ars_cases_html(df_ars, lang, s):
     # 延宕標籤也掛在全表的狀態欄：系統卡牆只收 qty 非空的主要裝備，像 20-87 野戰資訊
     # 通信系統（qty 空白）登錄了延宕理由卻無處露出。全表是唯一涵蓋 49 案的地方。
     def _chip(r):
-        return (f'<span class="ars-delaychip">{a["matrix_delay_chip"]}</span>'
-                if r['case_id'] in ARSENAL_DELAYS else '')
+        """桌機表格沒有展開列，所以理由掛在標籤的 title 上；手機卡片版另在 body 展開
+        理由全文（見下）。缺了這段，qty 空白因而進不了系統卡牆的案子（如 20-87
+        野戰資訊通信系統）會只看到「延宕」卻查不到原因。"""
+        if r['case_id'] not in ARSENAL_DELAYS:
+            return ''
+        zh, en, _src, tag = ARSENAL_DELAYS[r['case_id']]
+        tip = html.escape(en if lang == 'en' else zh, quote=True)
+        return (f'<span class="ars-delaychip" title="{tip}" aria-label="{tip}">'
+                f'{a["matrix_delay_chip"]}</span>')
     # desktop table
     rows = []
     for _, r in df.iterrows():
@@ -3231,6 +3238,9 @@ def _ars_cases_html(df_ars, lang, s):
             srcs = _ars_srcs(r, s)
             if srcs:
                 body += f'<br>{srcs}'
+        delay = _ars_delay_html(r['case_id'], lang)
+        if delay:
+            body += f'<br>{delay}'
         cards.append(
             f'<details class="ars-card"><summary>'
             f'<div class="ars-card-top"><span class="ars-card-sys">{name}</span></div>'
