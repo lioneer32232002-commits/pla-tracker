@@ -227,6 +227,38 @@ html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
 .ars-kpi-l{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);margin-top:.4rem;white-space:nowrap}
 html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 
+/* 每日強度日曆（月統計頁）。列＝月、欄＝1→31 日。格子純 CSS，無 JS。 */
+.hm{margin-top:1.6rem}
+.hm-h{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
+.hm-t{font-size:.9rem;font-weight:800;color:var(--tx)}
+.hm-s{font-size:.68rem;color:var(--sub)}
+.hm-grid{display:flex;flex-direction:column;gap:3px}
+.hm-row{display:grid;grid-template-columns:2.1rem repeat(31,minmax(0,1fr));gap:3px;align-items:center}
+.hm-mo{font-size:.62rem;color:var(--sub);text-align:right;padding-right:.3rem;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.hm-c{aspect-ratio:1;border-radius:2px;position:relative;display:block;min-width:0}
+.hm-c.e{background:none}
+.hm-c.n{background:none;box-shadow:inset 0 0 0 1px var(--bdr)}
+.hm-c.v0{background:#1a2830}
+.hm-c.v1{background:#5c4c17}
+.hm-c.v2{background:#8a7020}
+.hm-c.v3{background:#c9a52f}
+.hm-c.v4{background:#f5c842}
+.hm-c.x::after{content:'';position:absolute;right:1px;bottom:1px;width:3px;height:3px;
+  border-radius:50%;background:var(--r)}
+.hm-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .85rem;margin-top:.8rem;
+  font-size:.66rem;color:var(--sub)}
+.hm-lg span{display:inline-flex;align-items:center;gap:.3rem}
+.hm-lg .hm-c{width:11px;height:11px;aspect-ratio:auto;flex-shrink:0}
+.hm-lg-x{margin-left:auto}
+@media(max-width:520px){
+  .hm-row{grid-template-columns:1.7rem repeat(31,minmax(0,1fr));gap:2px}
+  .hm-grid{gap:2px}
+  .hm-mo{font-size:.58rem;padding-right:.2rem}
+  .hm-c.x::after{width:2px;height:2px;right:0;bottom:0}
+  .hm-lg-x{margin-left:0}
+}
+
 /* System card wall (裝備系統卡片牆) */
 .ars-syscards{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .ars-syscard{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;
@@ -540,6 +572,13 @@ html[data-theme="light"] .map-lbl-sm{color:#5d7079;
 html[data-theme="light"] .map-info{background:rgba(255,255,255,0.9)}
 html[data-theme="light"] .map-ml-label{color:#5a7280}
 html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
+
+/* 每日強度日曆淺色階（同一色相由淺到深，順序與深色版一致） */
+html[data-theme="light"] .hm-c.v0{background:#e9e5da}
+html[data-theme="light"] .hm-c.v1{background:#efdfae}
+html[data-theme="light"] .hm-c.v2{background:#ddc477}
+html[data-theme="light"] .hm-c.v3{background:#c09a25}
+html[data-theme="light"] .hm-c.v4{background:#8a6300}
 
 /* ── Arsenal 淺色覆蓋（僅顏色，不動版面尺寸）── */
 html[data-theme="light"] .ars-chart-wrap{background:#fbfaf6;box-shadow:inset 0 0 0 1px var(--bdr)}

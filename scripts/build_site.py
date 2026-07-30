@@ -3,6 +3,7 @@ build_site.py — 讀取 records.csv，產出靜態網站（中英雙語）
 圖表使用 Chart.js 瀏覽器端渲染，不需要 matplotlib 或字型安裝。
 en/ 子目錄由本腳本自動產生，禁止手動修改。
 """
+import calendar
 import html
 import json
 import os
@@ -493,6 +494,16 @@ STRINGS = {
         'monthly_col_rate':  '越線率',
         'monthly_col_ships': '艦艇日均',
         'monthly_records_count': '共 {n} 筆',
+        'hm': {
+            'title':    '每日強度日曆',
+            'sub':      '每格一天 · 橫向為該月 1 → 31 日 · 顏色深淺＝共機架次',
+            'lg_none':  '未發布',
+            'lg_zero':  '0 架次',
+            'lg_cross': '紅點＝當日有逾越中線',
+            'tip':      '{date}：共機 {ac} 架次，其中 {ml} 架次逾越中線；共艦 {sh} 艘',
+            'tip_zero': '{date}：未偵獲共機；共艦 {sh} 艘',
+            'tip_none': '{date}：國防部當日未發布，本站從缺',
+        },
         'ars': {
             'topbar':      'ARMS PROCUREMENT TRACKER',
             'h1':          '台灣對美軍購追蹤',
@@ -678,6 +689,16 @@ STRINGS = {
         'monthly_col_rate':  'Cross Rate',
         'monthly_col_ships': 'Avg Vessels',
         'monthly_records_count': '{n} records',
+        'hm': {
+            'title':    'Daily intensity calendar',
+            'sub':      'One cell per day · columns run 1 → 31 of each month · darker = more sorties',
+            'lg_none':  'No release',
+            'lg_zero':  'No sorties',
+            'lg_cross': 'Red dot = median line crossed that day',
+            'tip':      '{date}: {ac} PLA sorties, {ml} crossed the median line; {sh} vessels',
+            'tip_zero': '{date}: no PLA aircraft detected; {sh} vessels',
+            'tip_none': '{date}: no MND release that day — left blank',
+        },
         'ars': {
             'topbar':      'ARMS PROCUREMENT TRACKER',
             'h1':          'Taiwan–US Arms Delivery Tracker',
@@ -1324,6 +1345,38 @@ html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
 .ars-kpi-l{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);margin-top:.4rem;white-space:nowrap}
 html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 
+/* 每日強度日曆（月統計頁）。列＝月、欄＝1→31 日。格子純 CSS，無 JS。 */
+.hm{margin-top:1.6rem}
+.hm-h{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
+.hm-t{font-size:.9rem;font-weight:800;color:var(--tx)}
+.hm-s{font-size:.68rem;color:var(--sub)}
+.hm-grid{display:flex;flex-direction:column;gap:3px}
+.hm-row{display:grid;grid-template-columns:2.1rem repeat(31,minmax(0,1fr));gap:3px;align-items:center}
+.hm-mo{font-size:.62rem;color:var(--sub);text-align:right;padding-right:.3rem;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.hm-c{aspect-ratio:1;border-radius:2px;position:relative;display:block;min-width:0}
+.hm-c.e{background:none}
+.hm-c.n{background:none;box-shadow:inset 0 0 0 1px var(--bdr)}
+.hm-c.v0{background:#1a2830}
+.hm-c.v1{background:#5c4c17}
+.hm-c.v2{background:#8a7020}
+.hm-c.v3{background:#c9a52f}
+.hm-c.v4{background:#f5c842}
+.hm-c.x::after{content:'';position:absolute;right:1px;bottom:1px;width:3px;height:3px;
+  border-radius:50%;background:var(--r)}
+.hm-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .85rem;margin-top:.8rem;
+  font-size:.66rem;color:var(--sub)}
+.hm-lg span{display:inline-flex;align-items:center;gap:.3rem}
+.hm-lg .hm-c{width:11px;height:11px;aspect-ratio:auto;flex-shrink:0}
+.hm-lg-x{margin-left:auto}
+@media(max-width:520px){
+  .hm-row{grid-template-columns:1.7rem repeat(31,minmax(0,1fr));gap:2px}
+  .hm-grid{gap:2px}
+  .hm-mo{font-size:.58rem;padding-right:.2rem}
+  .hm-c.x::after{width:2px;height:2px;right:0;bottom:0}
+  .hm-lg-x{margin-left:0}
+}
+
 /* System card wall (裝備系統卡片牆) */
 .ars-syscards{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .ars-syscard{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;
@@ -1637,6 +1690,13 @@ html[data-theme="light"] .map-lbl-sm{color:#5d7079;
 html[data-theme="light"] .map-info{background:rgba(255,255,255,0.9)}
 html[data-theme="light"] .map-ml-label{color:#5a7280}
 html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
+
+/* 每日強度日曆淺色階（同一色相由淺到深，順序與深色版一致） */
+html[data-theme="light"] .hm-c.v0{background:#e9e5da}
+html[data-theme="light"] .hm-c.v1{background:#efdfae}
+html[data-theme="light"] .hm-c.v2{background:#ddc477}
+html[data-theme="light"] .hm-c.v3{background:#c09a25}
+html[data-theme="light"] .hm-c.v4{background:#8a6300}
 
 /* ── Arsenal 淺色覆蓋（僅顏色，不動版面尺寸）── */
 html[data-theme="light"] .ars-chart-wrap{background:#fbfaf6;box-shadow:inset 0 0 0 1px var(--bdr)}
@@ -2576,6 +2636,73 @@ def build_records(df, lang, out_dir, s):
 
 # ── monthly.html ──────────────────────────────────────────────────────────────
 
+# 每日強度日曆（月統計頁，2026-07-30）。列＝月、欄＝該月 1→31 日，與上方月統計表
+# 逐列對齊（表格給總量，熱圖給該月的形狀）。純 HTML/CSS，不用 Chart.js：格子是靜態
+# 方塊，沒有需要客戶端計算的東西，也不必再多載一份圖表初始化。
+# 三種「沒有顏色」必須分開，不能混為一格空白：
+#   e  = 該月沒有這一天（如 2 月的 30 日）或還沒到的未來日期 → 完全不畫
+#   n  = 有這一天但國防部當日未發布 → 只畫邊框（對應方法論頁「當日從缺不以估計值填補」）
+#   v0 = 有資料且為零架次 → 畫最淺的實色
+# 少了這個區分，「沒發布」會被讀成「零架次」，等於用視覺造假。
+_HM_BUCKETS = (5, 10, 20)   # v1: 1-4, v2: 5-9, v3: 10-19, v4: 20+
+
+
+def _hm_level(ac):
+    if ac == 0:
+        return 'v0'
+    for i, b in enumerate(_HM_BUCKETS):
+        if ac < b:
+            return f'v{i + 1}'
+    return 'v4'
+
+
+def _monthly_heatmap_html(df, lang, s):
+    h = s['hm']
+    recs = {}
+    for _, r in df.iterrows():
+        recs[r['date']] = r
+    today = df.iloc[-1]['date']
+    months = sorted({d[:7] for d in recs}, reverse=True)
+
+    rows = []
+    for mo in months:
+        yr, mn = int(mo[:4]), int(mo[5:7])
+        ndays = calendar.monthrange(yr, mn)[1]
+        label = (pd.to_datetime(mo + '-01').strftime('%b') if lang == 'en'
+                 else f'{mn}月')
+        cells = [f'<span class="hm-mo">{label}</span>']
+        for d in range(1, 32):
+            iso = f'{mo}-{d:02d}'
+            if d > ndays or iso > today:
+                cells.append('<span class="hm-c e"></span>')
+                continue
+            r = recs.get(iso)
+            if r is None:
+                tip = h['tip_none'].format(date=iso)
+                cells.append(f'<span class="hm-c n" title="{tip}"></span>')
+                continue
+            ac = int(r['aircraft_total']) if pd.notna(r['aircraft_total']) else 0
+            ml = int(r['median_line_cross']) if pd.notna(r['median_line_cross']) else 0
+            sh = int(r['ships_total']) if pd.notna(r['ships_total']) else 0
+            tip = (h['tip_zero'].format(date=iso, sh=sh) if ac == 0
+                   else h['tip'].format(date=iso, ac=ac, ml=ml, sh=sh))
+            cls = _hm_level(ac) + (' x' if ml > 0 else '')
+            cells.append(f'<span class="hm-c {cls}" title="{html.escape(tip, quote=True)}"></span>')
+        rows.append('<div class="hm-row">' + ''.join(cells) + '</div>')
+
+    swatches = ''.join(
+        f'<span><i class="hm-c {c}"></i>{l}</span>'
+        for c, l in [('n', h['lg_none']), ('v0', h['lg_zero']), ('v1', '1–4'),
+                     ('v2', '5–9'), ('v3', '10–19'), ('v4', '20+')])
+    return (f'<section class="hm">'
+            f'<div class="hm-h"><span class="hm-t">{h["title"]}</span>'
+            f'<span class="hm-s">{h["sub"]}</span></div>'
+            f'<div class="hm-grid">' + ''.join(rows) + '</div>'
+            f'<div class="hm-lg">{swatches}'
+            f'<span class="hm-lg-x"><i class="hm-c v2 x"></i>{h["lg_cross"]}</span></div>'
+            f'</section>')
+
+
 def build_monthly(df, lang, out_dir, s):
     """Monthly aggregated stats page."""
     df_copy = df.copy()
@@ -2607,7 +2734,8 @@ def build_monthly(df, lang, out_dir, s):
                  f'<td class="num r">{mo_sh:.1f}</td>'
                  f'</tr>')
 
-    today_label = fmt_date_display(df.iloc[-1]['date'], lang)
+    today_label  = fmt_date_display(df.iloc[-1]['date'], lang)
+    heatmap_html = _monthly_heatmap_html(df, lang, s)
     head = make_head(lang, 'monthly', s)
     html = f"""{head}
 <body>
@@ -2635,6 +2763,8 @@ def build_monthly(df, lang, out_dir, s):
     <tbody>{rows}</tbody>
   </table>
   </div>
+
+  {heatmap_html}
 </main>
 
 {footer_html(today_label, s)}

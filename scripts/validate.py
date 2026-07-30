@@ -26,6 +26,7 @@ EN_ARSENAL_HTML = ROOT / 'en' / 'arsenal' / 'index.html'
 ARS_DETAIL_KEYS = ['harpoon', 'patriot', 'himars']
 INDEX_HTML = ROOT / 'index.html'
 RECORDS_HTML = ROOT / 'records.html'
+MONTHLY_HTML = ROOT / 'monthly.html'
 VERSION_TXT = ROOT / 'version.txt'
 
 EN_DIR = ROOT / 'en'
@@ -310,6 +311,20 @@ def validate_html():
         ]:
             if marker not in en_idx:
                 errors.append(f'en/index.html 缺少 {desc}（找不到「{marker}」）')
+
+    # ── monthly.html 每日強度日曆（zh + en）────────────────────────────────────
+    # 只查「有沒有」不夠：熱圖最容易壞的方式是把「未發布」和「零架次」畫成同一格
+    # （視覺造假）。所以一併確認兩種格子的 class 都真的出現在頁面上。
+    for path, label in [(MONTHLY_HTML, 'monthly.html'), (EN_MONTHLY, 'en/monthly.html')]:
+        if not path.exists():
+            continue
+        mo = path.read_text(encoding='utf-8')
+        for marker, desc in [('class="hm-grid"', '每日強度日曆格線'),
+                             ('hm-c n"',         '未發布格（無資料 ≠ 零架次）'),
+                             ('hm-c v0',         '零架次格'),
+                             ('class="hm-lg"',   '日曆圖例')]:
+            if marker not in mo:
+                errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
 
     # ── about.html（中文方法論頁）─────────────────────────────────────────────
     if not ABOUT_HTML.exists():
