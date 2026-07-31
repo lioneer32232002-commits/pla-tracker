@@ -26,11 +26,9 @@
 | `scripts/send_daily_email.py` | CI 用的每日報告信／失敗提醒信 |
 | `scripts/backfill_history.py` | 歷史回填工具（一次性） |
 | `scripts/make_og_image.py` | 一次性產生 `og.png`/`og-en.png`（用 Windows 字型，只能本機跑；改品牌視覺才需要重跑） |
-| `data/geo_card.json` | 分享圖卡地圖輪廓（Natural Earth 10m 裁切＋簡化，靜態；每日更新不會動它） |
 | `index.html` | 首頁（總覽＋SITREP；一句話文字 SITREP 在地圖區塊之後，2026-07-23 起） |
 | `records.html` / `monthly.html` | 每日紀錄頁／月度頁 |
 | `about.html` / `en/about.html` | 方法論頁（build 產生，每日更新資料區間/筆數） |
-| `card.html` | 每日分享圖卡（直式 1080×1350，canvas 客戶端繪製＋一鍵下載 PNG；只有中文版，noindex 不進 sitemap） |
 | `sitemap.xml` / `robots.txt` | build 產生；基準網址 = `https://pla-tracker.pages.dev` |
 | `version.txt` | build 時間戳，每次 build 必變 |
 
@@ -71,21 +69,6 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   改 recent 面板前先讀 `_CHART_JS_RECENT` 內的註解（記載 x/y 軸對齊為什麼要
   `offset:true` 與 `y.afterFit`，以及右緣 ~6px 殘差為何不再追）。
   `_build_panels` 傳 `avg` 才走堆疊版，不傳＝原面積線版。
-
-## 分享圖卡 card.html（2026-07-31 起）
-
-- 產生邏輯＝`build_site.py` 的 `_CARD_JS` ＋ `build_card()`；入口是首頁 SITREP 下方
-  `.card-cta` 連結（英文版不掛，因為沒有 en/card.html）。
-- **全部用 Canvas 2D 自繪，不得改用 html2canvas 或把 Leaflet 圖磚畫進 canvas**——
-  圖磚是跨域點陣圖，會污染 canvas 讓 `toBlob()` 直接失敗（＝下載鈕壞掉）。
-- 地圖輪廓讀 `data/geo_card.json`；空域方框／中線座標與首頁 `_MAP_JS` 同一組，
-  空域判斷共用 `zones_from_special()`（改判斷邏輯時兩處會一起變，這是刻意的）。
-- 取景由 `MH` 反推比例尺，並以 `MW/9.0` 為經度視野下限：超過這個下限，左緣會露出
-  geo 資料被裁切出的直邊。改版面高度後要重看一次圖，別只看 validate。
-- 圖卡固定深色，不跟隨嚴重日主題（分享出去的圖在各 App 深色底上都要能看）。
-- 已知落差：地圖只畫得出北部／西南／東部／東北四個空域框，公告裡的「中部」「南部」
-  沒有對應多邊形（首頁地圖同樣沒有）。摘要 pill 用的是公告原文，所以文字會提到
-  地圖上沒有的空域。要補就得先定出可查證的範圍，別憑印象畫。
 
 ## SEO 資產規則
 
@@ -132,9 +115,8 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   的刪除被一併帶進 commit。根因：`git add <檔>` 後的 `git commit` 會提交 index
   中**所有**已 stage 內容。規則：多 agent 並行改 repo 時，commit 一律用
   pathspec 限定（`git commit -- <路徑>`）。
-- 2026-07-31：功能 F（分享圖卡）上線＝`card.html`，直式 1080×1350、客戶端 canvas
-  繪製、一鍵下載 PNG。CI 自動產圖的路線**沒有**採用（要在 runner 裝 CJK 字型，
-  違反鐵律 7）；使用者選的是「卡片頁＋下載鈕」。
+- 待辦（使用者未催）：功能 F＝每日自動社群卡圖（1200×675）。難點是 CI 無 CJK
+  字型；方向建議延續客戶端渲染，不要在 build 塞字型/Pillow。
 - 進行中（2026-07-23 啟動）：「美製武器實戰檔案」內容區（/arsenal/，魚叉/愛國者/
   HIMARS 三篇研究稿在 session scratchpad，待使用者審後建頁）；
   pla-tracker × skyfaring 串接計畫（調查報告同 scratchpad）。
