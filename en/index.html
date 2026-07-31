@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="Daily tracking of PLA military activity around Taiwan: aircraft sorties, Taiwan Strait median-line crossings, naval vessels and trends. Source: ROC Ministry of National Defense daily releases.">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/og-en.png">
 <meta name="twitter:image:alt" content="PLA Activity Tracker — Taiwan Strait">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607311618">
-<link rel="stylesheet" href="/style.css?v=202607311618">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202607311639">
+<link rel="stylesheet" href="/style.css?v=202607311639">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607311618')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202607311639')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "PLA Activity Around Taiwan — Daily Dataset", "description": "Daily structured record of People's Liberation Army (PLA) military activity around Taiwan, compiled from ROC Ministry of National Defense public releases: aircraft sorties, Taiwan Strait median-line crossings and naval vessel counts.", "url": "https://pla-tracker.pages.dev/en/index.html", "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait", "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions", "PLAAF", "PLAN", "cross-strait tensions", "解放軍", "擾台", "海峽中線", "防空識別區"], "creator": {"@type": "Person", "name": "Adam Pan"}, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "temporalCoverage": "2026-01-01/2026-07-31", "dateModified": "2026-07-31", "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"}, "variableMeasured": [{"@type": "PropertyValue", "name": "aircraft_total", "description": "PLA aircraft sorties detected per day"}, {"@type": "PropertyValue", "name": "median_line_cross", "description": "Sorties crossing the Taiwan Strait median line per day"}, {"@type": "PropertyValue", "name": "ships_total", "description": "PLA naval vessels detected per day"}], "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist", "creditText": "Source: ROC Ministry of National Defense (MND)", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://pla-tracker.pages.dev/data/records.csv"}]}</script>
 </head>
@@ -77,7 +77,7 @@
   <div class="sitrep anim-ready"><div class="sitrep-label">July MTD &nbsp;·&nbsp; 31 days</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="268">268</div><div class="stat-l">PLA Sorties</div></div><div class="stat"><div class="stat-n y" data-count="172">172</div><div class="stat-l">Median Line Crossings&nbsp;<span class="stat-detail">64%</span></div></div><div class="stat"><div class="stat-n r">10.7</div><div class="stat-l">Avg Vessels/Day</div></div></div></div>
 
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">Activity Areas</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">Taiwan Strait · Indicative</span></div><div class="map-wrap"><div id="activity-map"></div></div><div class="map-note"><strong>12 NM territorial sea (green)</strong> is the de facto legal boundary. PLA aircraft/vessels crossing the median line does not trigger the right of self-defense; entry into the territorial sea or airspace within this boundary would, under international law and the Defense Act, allow Taiwan to take defensive action.</div><script>(function(){
-var ML=22,AC=27,SH=11,ZONES={"n": true, "sw": true, "e": true, "ne": false, "s": false};
+var ML=22,AC=27,SH=11,ZONES={"n": true, "c": true, "sw": true, "e": true, "ne": false, "s": false};
 
 var map=L.map('activity-map',{
   center:[23.8,120.5],zoom:6,
@@ -134,6 +134,14 @@ if(ZONES.n){
 if(ZONES.sw){
   gradZone([[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5]);
   zoneLabel([21.8,117.5],'SW');
+}
+if(ZONES.c){
+  gradZone([[25.05,119.75],[25.05,120.45],[23.6,120.05],[23.6,118.95]],[24.3,119.8]);
+  zoneLabel([24.88,119.98],'Central');
+}
+if(ZONES.s){
+  gradZone([[21.9,120.05],[21.9,121.9],[21.0,121.9],[21.0,120.05]],[21.45,121.0]);
+  zoneLabel([21.72,121.45],'Southern');
 }
 if(ZONES.e){
   gradZone([[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1]);

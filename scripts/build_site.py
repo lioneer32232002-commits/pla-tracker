@@ -446,6 +446,8 @@ STRINGS = {
             '依國際法及《國防法》，台灣方面可採取防衛行動。'
         ),
         'map_zone_n':    '北部空域',
+        'map_zone_c':    '中部空域',
+        'map_zone_s':    '南部空域',
         'map_zone_sw':   '西南部空域',
         'map_zone_e':    '東部空域',
         'map_zone_ne':   '東北部空域',
@@ -641,6 +643,8 @@ STRINGS = {
             'under international law and the Defense Act, allow Taiwan to take defensive action.'
         ),
         'map_zone_n':    'Northern',
+        'map_zone_c':    'Central',
+        'map_zone_s':    'Southern',
         'map_zone_sw':   'SW',
         'map_zone_e':    'Eastern',
         'map_zone_ne':   'NE',
@@ -1993,6 +1997,14 @@ if(ZONES.sw){
   gradZone([[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5]);
   zoneLabel([21.8,117.5],'__ZN_SW__');
 }
+if(ZONES.c){
+  gradZone([[25.05,119.75],[25.05,120.45],[23.6,120.05],[23.6,118.95]],[24.3,119.8]);
+  zoneLabel([24.88,119.98],'__ZN_C__');
+}
+if(ZONES.s){
+  gradZone([[21.9,120.05],[21.9,121.9],[21.0,121.9],[21.0,120.05]],[21.45,121.0]);
+  zoneLabel([21.72,121.45],'__ZN_S__');
+}
 if(ZONES.e){
   gradZone([[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1]);
   zoneLabel([22.8,122.5],'__ZN_E__');
@@ -2071,6 +2083,7 @@ def zones_from_special(special):
     has_ne = '東北' in special_str
     return {
         'n':  has_n,
+        'c':  '中部' in special_str,
         'sw': '西南' in special_str,
         'e':  '東部' in special_str and not has_ne,
         'ne': has_ne,
@@ -2094,6 +2107,8 @@ def map_section_html(ac_val, ml_val, sh_val, special, s):
           .replace('__SH__',      str(sh_val))
           .replace('__ZONES__',   json.dumps(zones))
           .replace('__ZN_N__',    s['map_zone_n'])
+          .replace('__ZN_C__',    s['map_zone_c'])
+          .replace('__ZN_S__',    s['map_zone_s'])
           .replace('__ZN_SW__',   s['map_zone_sw'])
           .replace('__ZN_E__',    s['map_zone_e'])
           .replace('__ZN_NE__',   s['map_zone_ne'])
@@ -4187,9 +4202,7 @@ ringPath(D.geo.cn);x.fillStyle=CO.land;x.fill();
 
 // 12 浬領海：沿本島外緣由粗到細疊四層綠，做出向外淡出的漸層帶
 // （與首頁 _MAP_JS 的 gradZone12 同一種分層做法，只是改用等距外擴的描邊）
-var CANBLUR=('filter' in x);
-x.save();if(CANBLUR)x.filter='blur(13px)';
-var bw=[0.46,0.35,0.25,0.15],ba=[0.05,0.07,0.10,0.15];
+var bw=[0.40,0.30,0.21,0.12],ba=[0.04,0.07,0.11,0.16];
 ringPath([D.geo.tw[0]]);x.lineJoin='round';
 for(var bi=0;bi<bw.length;bi++){
   x.lineWidth=bw[bi]*KY;x.strokeStyle='rgba(77,186,106,'+ba[bi]+')';x.stroke();}
@@ -4200,7 +4213,6 @@ function gradCircle(la,lo,km){
     x.beginPath();x.arc(pX(lo),pY(la),rp*sc[i],0,6.2832);
     x.fillStyle='rgba(77,186,106,'+fo[i]+')';x.fill();}}
 gradCircle(23.57,119.62,38);gradCircle(22.67,121.47,22.2);gradCircle(22.05,121.55,22.2);
-x.restore();
 
 ringPath(D.geo.tw);x.fillStyle=CO.tw;x.fill();
 x.strokeStyle='rgba(150,172,188,0.30)';x.lineWidth=1.2;x.stroke();
@@ -4208,13 +4220,15 @@ x.strokeStyle='rgba(150,172,188,0.30)';x.lineWidth=1.2;x.stroke();
 // 活動空域：照首頁 gradZone 的做法——以焦點為中心逐層縮小疊加同色低透明度，
 // 疊出中心濃、邊緣淡的漸層（不是單一色塊，也不描邊框）。
 var ZP={n:[[[25.5,120.3],[26.5,120.3],[26.5,122.5],[25.5,122.0]],[25.6,121.2],[26.16,120.72]],
+        c:[[[25.05,119.75],[25.05,120.45],[23.6,120.05],[23.6,118.95]],[24.3,119.8],[24.88,119.98]],
         sw:[[[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5],[21.72,117.35]],
+        s:[[[21.9,120.05],[21.9,121.9],[21.0,121.9],[21.0,120.05]],[21.45,121.0],[21.72,121.45]],
         e:[[[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1],[24.28,122.15]],
         ne:[[[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],[25.5,121.2],[25.62,121.42]]};
-// 外圈一層硬邊界定範圍（不模糊，否則整塊糊成光斑、看不出是「區域」），
-// 內部八層縮放疊加後上模糊，做出往中心漸濃的柔和漸層。
-var ZSC=[0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20],
-    ZFO=[0.045,0.048,0.052,0.056,0.060,0.065,0.070,0.075];
+// 等高線式疊加：與首頁 _MAP_JS 的 gradZone 用同一組縮放係數與透明度，
+// 一層層看得見邊界（使用者 2026-07-31 指定要跟網頁一致）。
+// 不要描邊、也不要整塊上模糊——前者「有框線很怪」，後者會糊成沒有形狀的光斑。
+var ZSC=[1.0,0.78,0.58,0.40,0.24],ZFO=[0.04,0.07,0.10,0.14,0.19];
 var zl=[];
 function zonePath(co,fp,sc){x.beginPath();
   for(var j=0;j<co.length;j++){
@@ -4224,12 +4238,8 @@ function zonePath(co,fp,sc){x.beginPath();
 for(var zk in ZP){
   if(!D.zones[zk])continue;
   var Z=ZP[zk],co=Z[0],fp=Z[1],lp=Z[2];
-  zonePath(co,fp,1.0);x.fillStyle='rgba(245,200,66,0.055)';x.fill();
-  x.strokeStyle='rgba(245,200,66,0.16)';x.lineWidth=1.5;x.stroke();
-  x.save();if(CANBLUR)x.filter='blur(16px)';
   for(var si=ZSC.length-1;si>=0;si--){
     zonePath(co,fp,ZSC[si]);x.fillStyle='rgba(245,200,66,'+ZFO[si]+')';x.fill();}
-  x.restore();
   zl.push([D.zn[zk],pX(lp[1]),pY(lp[0])]);
 }
 
@@ -4368,8 +4378,8 @@ def build_card(df, out_dir, s):
         's_sh': _delta_text(latest['ships_total'], prev['ships_total']),
         'zones': zones,
         'hasZone': any(zones.values()),
-        'zn':  {'n': '北部空域', 'sw': '西南部空域',
-                'e': '東部空域', 'ne': '東北部空域'},
+        'zn':  {'n': '北部空域', 'c': '中部空域', 'sw': '西南部空域',
+                's': '南部空域', 'e': '東部空域', 'ne': '東北部空域'},
         'lbl': {'tw': '台灣', 'ph': '澎湖', 'km': '金門', 'mz': '馬祖'},
         'leg': {'ml': '海峽中線', 'nm': '12 浬領海', 'zone': '當日活動空域'},
         'mapnote': '地圖為示意圖',
