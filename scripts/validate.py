@@ -343,7 +343,8 @@ def validate_html():
                              ('"geo"',              '內嵌地圖輪廓資料'),
                              ('rel="canonical"',    'canonical 連結'),
                              ('content="noindex',   'noindex（工具頁不進索引）'),
-                             ('href="index.html"',  '回總覽連結')]:
+                             ('/index.html',        '回站內導覽'),
+                             ('nav-card',           '導覽列圖卡項（active）')]:
             if marker not in card:
                 errors.append(f'card.html 缺少 {desc}（找不到「{marker}」）')
         if '__DATA__' in card:
@@ -358,8 +359,8 @@ def validate_html():
     if not GEO_JSON.exists():
         errors.append('data/geo_card.json 不存在（分享圖卡地圖會畫不出來）')
     # 首頁的圖卡入口（中文版才有；英文版沒有對應頁面，不該出現）
-    if INDEX_HTML.exists() and 'card.html' not in INDEX_HTML.read_text(encoding='utf-8'):
-        errors.append('index.html 缺少分享圖卡入口連結（card-cta）')
+    if INDEX_HTML.exists() and 'nav-card' not in INDEX_HTML.read_text(encoding='utf-8'):
+        errors.append('index.html 導覽列缺少分享圖卡入口（nav-card）')
     if EN_INDEX.exists() and 'card.html' in EN_INDEX.read_text(encoding='utf-8'):
         errors.append('en/index.html 不應出現 card.html 連結（圖卡目前只有中文版）')
 

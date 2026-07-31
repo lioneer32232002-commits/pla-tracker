@@ -402,6 +402,7 @@ STRINGS = {
         'site_title': '中國擾台趨勢數據分析',
         'site_sub': 'PLA Activity Around Taiwan',
         'nav_about': '關於',
+        'nav_card':  '圖卡',
         'footer_hub': '由 Skyfaring 製作',
         'sitrep_text':      '{date}：偵獲中共軍機 {ac} 架次，其中 {ml} 架次逾越海峽中線（越線率 {rate}）；中共艦艇 {sh} 艘。',
         'sitrep_text_zero': '{date}：當日未偵獲中共軍機；中共艦艇 {sh} 艘。',
@@ -1152,6 +1153,13 @@ nav a:hover{color:var(--tx)}
 nav a.active{color:var(--tx);background:var(--nav-active)}
 nav a.lang-toggle{border:0;border-left:1px solid var(--bdr);border-radius:0;
   margin-left:.15rem;padding-left:.9em}
+/* 分享圖卡：導覽列最後一項。窄螢幕只留圖示，避免導覽列被第七項擠爆 */
+nav a.nav-card{display:inline-flex;align-items:center;gap:.34em;color:var(--y);opacity:.9}
+nav a.nav-card:hover{color:var(--y);opacity:1}
+nav a.nav-card.active{color:var(--y);background:var(--nav-active);opacity:1}
+nav a.nav-card .nc-i{flex-shrink:0}
+@media (max-width:560px){nav a.nav-card .nc-t{display:none}
+  nav a.nav-card{padding-left:.6em;padding-right:.6em}}
 
 /* ── Main ── */
 main{max-width:900px;margin:0 auto;padding:1.5rem}
@@ -1187,12 +1195,6 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .delta-note{font-size:.68rem;color:var(--sub);opacity:.8;text-align:center;margin-top:.55rem;
   letter-spacing:.02em}
 
-/* ── 分享圖卡入口（首頁 SITREP 下方，僅中文版）── */
-.card-cta{text-align:right;margin:-.35rem 0 .9rem}
-.card-cta a{display:inline-flex;align-items:center;gap:.35rem;font-size:.76rem;
-  color:var(--sub);text-decoration:none;border:1px solid var(--bdr);
-  border-radius:999px;padding:.32rem .8rem;transition:color .2s,border-color .2s}
-.card-cta a:hover{color:var(--y);border-color:var(--y)}
 
 /* ── Badge ── */
 .badge{display:inline-block;padding:.2em .7em;border-radius:999px;font-size:.78rem;font-weight:700}
@@ -2315,13 +2317,24 @@ def arsenal_jsonld(lang, s, df_ars, weapon_key=None):
                    + json.dumps(b, ensure_ascii=False) + '</script>' for b in blocks)
 
 
+_NAV_CARD_ICON = (
+    '<svg class="nc-i" viewBox="0 0 16 16" width="13" height="13" fill="none" '
+    'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '
+    'stroke-linejoin="round" aria-hidden="true">'
+    '<rect x="2" y="2.6" width="12" height="10.8" rx="1.6"/>'
+    '<path d="M8 5.6v4.2M6.1 7.9 8 9.8l1.9-1.9"/></svg>')
+
+
 def nav_html(active, lang, page_name, s):
     """Navigation bar with language toggle. 'arsenal' is a nested page (/arsenal/)."""
     base = '/en' if lang == 'en' else ''
 
     # 語言切換連結：arsenal 為 /arsenal/ 目錄式路徑；武器內頁為 /arsenal/{w}.html；
     # 其餘為 /{page}.html。
-    if page_name == 'arsenal':
+    if page_name == 'card':
+        # 英文版沒有圖卡頁，語言切換退回英文首頁
+        toggle = '/en/index.html'
+    elif page_name == 'arsenal':
         toggle = '/arsenal/' if lang == 'en' else '/en/arsenal/'
     elif page_name.startswith('ars_'):
         w = page_name[4:]
@@ -2336,10 +2349,16 @@ def nav_html(active, lang, page_name, s):
         ('arsenal', f'{base}/arsenal/',     s['nav_arsenal']),
         ('about',   f'{base}/about.html',   s['nav_about']),
     ]
-    items = ''.join(
-        f'<a href="{href}"{"" if active != p else " class=active"}>{label}</a>'
-        for p, href, label in pages
-    )
+    if lang == 'zh':
+        # 分享圖卡只有中文版；擺在導覽列最後一項，手機寬度下只留圖示（見 CSS .nav-card）
+        pages.append(('card', '/card.html', s['nav_card']))
+    items = ''
+    for p, href, label in pages:
+        cls = ' '.join(([] if active != p else ['active'])
+                       + ([] if p != 'card' else ['nav-card']))
+        attr = f' class="{cls}"' if cls else ''
+        inner = f'{_NAV_CARD_ICON}<span class="nc-t">{label}</span>' if p == 'card' else label
+        items += f'<a href="{href}"{attr}>{inner}</a>'
     lang_link = f'<a href="{toggle}" class="lang-toggle">{s["nav_toggle"]}</a>'
     return f'<nav>{items}{lang_link}</nav>'
 
@@ -2512,9 +2531,6 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     streak_sh = s['ships_range'].format(lo=sh_lo, hi=sh_hi)
 
     alert_html   = f'<div class="alert">⚡ {special_display}</div>' if special_display else ''
-    # 分享圖卡目前只有中文版（card.html）；英文版沒有對應頁面就不掛入口。
-    card_cta = ('<div class="card-cta"><a href="card.html">🖼 產生今日分享圖卡 →</a></div>'
-                if lang == 'zh' else '')
     monthly_html = monthly_stats_html(df, today_date, s)
     map_html     = map_section_html(ac_val, ml_val, sh_val, _raw_special, s)
 
@@ -2567,8 +2583,6 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     </div>
     {delta_note}
   </div>
-
-  {card_cta}
 
   {monthly_html}
 
@@ -4107,88 +4121,60 @@ var D=__DATA__;
 var C=document.getElementById('cardcv');
 if(!C||!C.getContext)return;
 var x=C.getContext('2d');
-var W=1080,H=1350,P=64;
+var W=1080,H=1350,P=72;
 var F='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif';
-var CO={bg:'#0d1114',pan:'#161c21',line:'#242d34',tx:'#e9eff3',sub:'#8b9aa4',
-        dim:'#61707a',y:'#f5c842',r:'#e05555',g:'#4dba6a',sea:'#0a1013',
-        land:'#1b2228',tw:'#333d45'};
+var CO={bg:'#0d1114',tx:'#eaf0f4',hd:'#cbd6dd',sub:'#7f8f9a',dim:'#5b6a74',
+        y:'#f5c842',r:'#e0575c',g:'#4dba6a',sea:'#0a0f12',land:'#191f25',tw:'#2a333a'};
+var LS='letterSpacing' in x;
 
-function ff(sz,w){x.font=(w||400)+' '+sz+'px '+F;}
-function txt(t,px_,py_,sz,col,w,al){ff(sz,w);x.fillStyle=col;x.textAlign=al||'left';
-  x.textBaseline='alphabetic';x.fillText(t,px_,py_);x.textAlign='left';}
-function rpath(a,b,w,h,r){
-  x.beginPath();x.moveTo(a+r,b);x.lineTo(a+w-r,b);x.quadraticCurveTo(a+w,b,a+w,b+r);
-  x.lineTo(a+w,b+h-r);x.quadraticCurveTo(a+w,b+h,a+w-r,b+h);x.lineTo(a+r,b+h);
-  x.quadraticCurveTo(a,b+h,a,b+h-r);x.lineTo(a,b+r);x.quadraticCurveTo(a,b,a+r,b);x.closePath();}
-function wrap(t,maxw,sz,w){ff(sz,w);var L=[],cur='';
-  for(var i=0;i<t.length;i++){var ch=t[i];
-    if(cur&&x.measureText(cur+ch).width>maxw){L.push(cur);cur=ch;}else{cur+=ch;}}
-  if(cur)L.push(cur);return L;}
-// 一行由多段不同顏色的文字組成，整行靠右對齊到 rx
-function runsRight(runs,rx,ry){
-  var tot=0,i;
-  for(i=0;i<runs.length;i++){ff(runs[i][2],runs[i][3]);tot+=x.measureText(runs[i][0]).width;}
-  var cx=rx-tot;
-  for(i=0;i<runs.length;i++){txt(runs[i][0],cx,ry,runs[i][2],runs[i][1],runs[i][3]);
-    ff(runs[i][2],runs[i][3]);cx+=x.measureText(runs[i][0]).width;}
-}
+function ff(sz,w,sp){x.font=(w||400)+' '+sz+'px '+F;if(LS)x.letterSpacing=(sp||0)+'px';}
+function txt(t,px_,py_,sz,col,w,al,sp){ff(sz,w,sp);x.fillStyle=col;x.textAlign=al||'left';
+  x.textBaseline='alphabetic';x.fillText(t,px_,py_);x.textAlign='left';if(LS)x.letterSpacing='0px';}
+function tw_(t,sz,w,sp){ff(sz,w,sp);var v=x.measureText(t).width;if(LS)x.letterSpacing='0px';return v;}
+function line(x1,y1,x2,y2,col,w){x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);
+  x.strokeStyle=col;x.lineWidth=w||1;x.stroke();}
 
 // ── 背景 ──────────────────────────────────────────────────────────────────
 x.fillStyle=CO.bg;x.fillRect(0,0,W,H);
-var gg=x.createRadialGradient(W*0.5,-160,60,W*0.5,-160,900);
-gg.addColorStop(0,'rgba(245,200,66,0.10)');gg.addColorStop(1,'rgba(245,200,66,0)');
-x.fillStyle=gg;x.fillRect(0,0,W,420);
-x.fillStyle=CO.y;x.fillRect(0,0,W,7);
 
 // ── 抬頭 ──────────────────────────────────────────────────────────────────
-txt(D.title,P,112,46,CO.tx,700);
-txt(D.sub,P,150,22,CO.dim,400);
-txt(D.dl,W-P,108,34,CO.tx,700,'right');
-txt(D.wd,W-P,146,21,CO.sub,400,'right');
+txt(D.title,P,98,31,CO.hd,500,'left',2);
+txt(D.sub,P,128,15,CO.dim,400,'left',4.2);
+txt(D.dl,W-P,100,27,CO.tx,700,'right',1);
+txt(D.wd,W-P,128,18,CO.sub,400,'right',1);
+line(P,162,W-P,162,'#1d252b',1);
 
-// ── 空域摘要 pill ─────────────────────────────────────────────────────────
-var y0=182;
-if(D.spec){
-  var lines=wrap('\\u26a1 '+D.spec,W-2*P-56,26,700);
-  if(lines.length>2){lines=[lines[0],lines[1].slice(0,Math.max(1,lines[1].length-1))+'\\u2026'];}
-  var ph=lines.length*38+28;
-  x.fillStyle='rgba(245,200,66,0.09)';rpath(P,y0,W-2*P,ph,14);x.fill();
-  x.strokeStyle='rgba(245,200,66,0.38)';x.lineWidth=2;x.stroke();
-  x.fillStyle=CO.y;rpath(P,y0,6,ph,3);x.fill();
-  for(var li=0;li<lines.length;li++){txt(lines[li],P+28,y0+38+li*38,26,CO.y,700);}
-  y0+=ph+30;
-}else{y0+=6;}
-
-// ── 當日三數字 ────────────────────────────────────────────────────────────
+// ── 當日三數字（標籤在上、數字在下）──────────────────────────────────────
 var cw=(W-2*P)/3;
-var stats=[[String(D.ac),CO.y,D.l_ac,D.d_ac],
-           [String(D.ml),CO.y,D.l_ml+'  '+D.cr,D.d_ml],
-           [String(D.sh),CO.r,D.l_sh,D.d_sh]];
+var st=[[D.l_ac,String(D.ac),CO.y,D.s_ac],
+        [D.l_ml,String(D.ml),CO.y,D.cr],
+        [D.l_sh,String(D.sh),CO.r,D.s_sh]];
 for(var i=0;i<3;i++){
   var cx0=P+cw*i;
-  if(i){x.strokeStyle=CO.line;x.lineWidth=1;x.beginPath();
-    x.moveTo(cx0,y0+14);x.lineTo(cx0,y0+188);x.stroke();}
-  txt(stats[i][0],cx0+26,y0+104,104,stats[i][1],900);
-  txt(stats[i][2],cx0+26,y0+150,26,CO.sub,500);
-  if(stats[i][3])txt(stats[i][3],cx0+26,y0+190,24,
-                     stats[i][3].charAt(0)==='\\u25b2'?CO.r:CO.g,700);
+  txt(st[i][0],cx0,214,19,CO.sub,500,'left',1.6);
+  txt(st[i][1],cx0,330,116,st[i][2],900,'left',-2);
+  if(st[i][3])txt(st[i][3],cx0+4,368,20,CO.dim,500,'left',1);
 }
-var noteY=y0+228;
-txt(D.dnote,W/2,noteY,20,CO.dim,400,'center');
 
-// ── 地圖 ──────────────────────────────────────────────────────────────────
-var MTOP=noteY+28,MBOT=1192,MH=MBOT-MTOP,MX=P,MW=W-2*P;
-// 取景：先求「北部空域框頂(26.5)到西南空域框底(21.0)都進得來」所需比例尺，
-// 再用 MW/9.0 設下限——經度視野一旦超過 geo_card.json 的裁切範圍(115.6–124.8)，
-// 左緣會露出大陸多邊形被裁出的直邊。空域摘要占兩行時 MH 變小，這個下限會接手。
-var LONC=120.35,LATC=23.78,CS=Math.cos(LATC*Math.PI/180);
-var K=Math.max(MH/5.67*CS, MW/9.0), KY=K/CS;
-var LON0=LONC-MW/2/K, LATT=LATC+MH/2/KY;
-function pX(lon){return MX+(lon-LON0)*K;}
-function pY(lat){return MTOP+(LATT-lat)*KY;}
+// ── 活動空域（一行，取公告原文到「空域」為止，架次已在上面的數字裡）──────
+var zy=430;
+if(D.zonetext){
+  x.fillStyle=CO.y;x.fillRect(P,zy-19,4,22);
+  txt(D.zonetext,P+18,zy,25,CO.y,700,'left',1.5);
+}
+
+// ── 地圖（滿版出血）────────────────────────────────────────────────────────
+var MTOP=D.zonetext?472:452,MBOT=1252,MH=MBOT-MTOP,MX=0,MW=W;
+// 取景：先讓北部空域框頂(26.5)與西南空域框底(21.0)都進得來，再以 MW/9.0 設
+// 經度視野下限——超過下限，左緣會露出 geo_card.json 被裁切出的直邊。
+var LONC=120.32,LATC=23.78,CS=Math.cos(LATC*Math.PI/180);
+var K=Math.max(MH/5.67*CS,MW/9.0),KY=K/CS;
+var LON0=LONC-MW/2/K,LATT=LATC+MH/2/KY;
+function pX(lo){return MX+(lo-LON0)*K;}
+function pY(la){return MTOP+(LATT-la)*KY;}
 
 x.save();
-rpath(MX,MTOP,MW,MH,18);x.clip();
+x.beginPath();x.rect(MX,MTOP,MW,MH);x.clip();
 x.fillStyle=CO.sea;x.fillRect(MX,MTOP,MW,MH);
 
 function ringPath(rings){x.beginPath();
@@ -4198,89 +4184,101 @@ function ringPath(rings){x.beginPath();
     x.closePath();}}
 
 ringPath(D.geo.cn);x.fillStyle=CO.land;x.fill();
-// 12 浬領海帶：沿台灣本島外緣描粗線（0.2 度 ≈ 12 浬），再把島填回來蓋掉內側
-var tw0=[D.geo.tw[0]];
-ringPath(tw0);x.lineJoin='round';
-x.strokeStyle='rgba(77,186,106,0.10)';x.lineWidth=0.40*KY;x.stroke();
-x.strokeStyle='rgba(77,186,106,0.20)';x.lineWidth=0.20*KY;x.stroke();
-ringPath(D.geo.tw);x.fillStyle=CO.tw;x.fill();
-x.strokeStyle='rgba(150,170,185,0.35)';x.lineWidth=1.2;x.stroke();
 
-// 活動空域
-var ZP={n:[[[25.5,120.3],[26.5,120.3],[26.5,122.5],[25.5,122.0]],[25.6,121.2],[26.15,120.7]],
-        sw:[[[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5],[21.75,117.3]],
-        e:[[[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1],[24.25,122.2]],
-        ne:[[[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],[25.5,121.2],[26.05,121.0]]};
+// 12 浬領海：沿本島外緣由粗到細疊四層綠，做出向外淡出的漸層帶
+// （與首頁 _MAP_JS 的 gradZone12 同一種分層做法，只是改用等距外擴的描邊）
+var CANBLUR=('filter' in x);
+x.save();if(CANBLUR)x.filter='blur(13px)';
+var bw=[0.46,0.35,0.25,0.15],ba=[0.05,0.07,0.10,0.15];
+ringPath([D.geo.tw[0]]);x.lineJoin='round';
+for(var bi=0;bi<bw.length;bi++){
+  x.lineWidth=bw[bi]*KY;x.strokeStyle='rgba(77,186,106,'+ba[bi]+')';x.stroke();}
+// 離島 12 浬光暈（澎湖／綠島／蘭嶼），同 _MAP_JS 的 gradCircle 分層
+function gradCircle(la,lo,km){
+  var sc=[1.0,0.72,0.47,0.25],fo=[0.06,0.11,0.17,0.25],rp=km/111.0*KY;
+  for(var i=sc.length-1;i>=0;i--){
+    x.beginPath();x.arc(pX(lo),pY(la),rp*sc[i],0,6.2832);
+    x.fillStyle='rgba(77,186,106,'+fo[i]+')';x.fill();}}
+gradCircle(23.57,119.62,38);gradCircle(22.67,121.47,22.2);gradCircle(22.05,121.55,22.2);
+x.restore();
+
+ringPath(D.geo.tw);x.fillStyle=CO.tw;x.fill();
+x.strokeStyle='rgba(150,172,188,0.30)';x.lineWidth=1.2;x.stroke();
+
+// 活動空域：照首頁 gradZone 的做法——以焦點為中心逐層縮小疊加同色低透明度，
+// 疊出中心濃、邊緣淡的漸層（不是單一色塊，也不描邊框）。
+var ZP={n:[[[25.5,120.3],[26.5,120.3],[26.5,122.5],[25.5,122.0]],[25.6,121.2],[26.16,120.72]],
+        sw:[[[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5],[21.72,117.35]],
+        e:[[[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1],[24.28,122.15]],
+        ne:[[[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],[25.5,121.2],[25.62,121.42]]};
+// 外圈一層硬邊界定範圍（不模糊，否則整塊糊成光斑、看不出是「區域」），
+// 內部八層縮放疊加後上模糊，做出往中心漸濃的柔和漸層。
+var ZSC=[0.90,0.80,0.70,0.60,0.50,0.40,0.30,0.20],
+    ZFO=[0.045,0.048,0.052,0.056,0.060,0.065,0.070,0.075];
 var zl=[];
+function zonePath(co,fp,sc){x.beginPath();
+  for(var j=0;j<co.length;j++){
+    var la=fp[0]+sc*(co[j][0]-fp[0]),lo=fp[1]+sc*(co[j][1]-fp[1]);
+    var zx=pX(lo),zy2=pY(la);if(j)x.lineTo(zx,zy2);else x.moveTo(zx,zy2);}
+  x.closePath();}
 for(var zk in ZP){
   if(!D.zones[zk])continue;
-  var Z=ZP[zk],co=Z[0],fp=Z[1],lp=Z[2],j;
-  x.beginPath();
-  for(j=0;j<co.length;j++){var zx=pX(co[j][1]),zy=pY(co[j][0]);
-    if(j)x.lineTo(zx,zy);else x.moveTo(zx,zy);}
-  x.closePath();
-  var fx=pX(fp[1]),fy=pY(fp[0]),rad=0;
-  for(j=0;j<co.length;j++){rad=Math.max(rad,Math.hypot(pX(co[j][1])-fx,pY(co[j][0])-fy));}
-  var zg=x.createRadialGradient(fx,fy,0,fx,fy,rad);
-  zg.addColorStop(0,'rgba(245,200,66,0.26)');zg.addColorStop(1,'rgba(245,200,66,0.04)');
-  x.fillStyle=zg;x.fill();
-  x.strokeStyle='rgba(245,200,66,0.34)';x.lineWidth=2;x.stroke();
+  var Z=ZP[zk],co=Z[0],fp=Z[1],lp=Z[2];
+  zonePath(co,fp,1.0);x.fillStyle='rgba(245,200,66,0.055)';x.fill();
+  x.strokeStyle='rgba(245,200,66,0.16)';x.lineWidth=1.5;x.stroke();
+  x.save();if(CANBLUR)x.filter='blur(16px)';
+  for(var si=ZSC.length-1;si>=0;si--){
+    zonePath(co,fp,ZSC[si]);x.fillStyle='rgba(245,200,66,'+ZFO[si]+')';x.fill();}
+  x.restore();
   zl.push([D.zn[zk],pX(lp[1]),pY(lp[0])]);
 }
 
-// 海峽中線（首末各外推一段，讓線貫穿整個面板而不是斷在半空）
+// 海峽中線（首末各外推一段，讓線貫穿整個畫面而不是斷在半空）
 var MLPT=[[27.3,120.82],[26.5,120.5],[26.0,120.3],[25.5,120.0],[25.0,119.8],[24.5,119.5],
-          [24.0,119.2],[23.5,119.1],[23.0,119.0],[22.5,118.9],[20.6,118.52]];
+          [24.0,119.2],[23.5,119.1],[23.0,119.0],[22.5,118.9],[20.4,118.48]];
 x.beginPath();
 for(var mi=0;mi<MLPT.length;mi++){var mx=pX(MLPT[mi][1]),my=pY(MLPT[mi][0]);
   if(mi)x.lineTo(mx,my);else x.moveTo(mx,my);}
-x.setLineDash(D.ml>0?[18,10]:[12,10]);
-x.strokeStyle=D.ml>0?CO.r:'#3a6070';x.lineWidth=D.ml>0?4:2.5;x.stroke();
-x.setLineDash([]);
+x.setLineDash(D.ml>0?[16,11]:[11,10]);
+x.strokeStyle=D.ml>0?'rgba(224,87,92,0.92)':'rgba(120,150,165,0.55)';
+x.lineWidth=D.ml>0?3.5:2.4;x.stroke();x.setLineDash([]);
 
-// 地名
-x.shadowColor='rgba(0,0,0,0.9)';x.shadowBlur=10;
-txt(D.lbl.tw,pX(120.98),pY(24.30),30,'#ffffff',700);
-txt(D.lbl.ph,pX(119.30),pY(23.40),18,'#c7d3da',500);
-txt(D.lbl.km,pX(118.10),pY(24.36),18,'#c7d3da',500);
-txt(D.lbl.mz,pX(119.66),pY(26.05),18,'#c7d3da',500);
-for(var zi=0;zi<zl.length;zi++){txt(zl[zi][0],zl[zi][1],zl[zi][2],23,CO.y,700);}
+// 地名與空域名稱
+x.shadowColor='rgba(0,0,0,0.85)';x.shadowBlur=12;
+txt(D.lbl.tw,pX(120.96),pY(24.28),29,'#f2f7fa',700,'left',3);
+txt(D.lbl.ph,pX(119.24),pY(23.36),17,'#a9b7c0',500,'left',1);
+txt(D.lbl.km,pX(118.06),pY(24.34),17,'#a9b7c0',500,'left',1);
+txt(D.lbl.mz,pX(119.62),pY(26.02),17,'#a9b7c0',500,'left',1);
+for(var zi=0;zi<zl.length;zi++){txt(zl[zi][0],zl[zi][1],zl[zi][2],23,CO.y,700,'left',1.5);}
 x.shadowBlur=0;
 
-// 圖例：放左上（大陸側海面，永遠沒有標籤與空域框）。左下＝西南部空域標籤、
-// 右下＝東部空域框，兩處都會被壓住，不要改回去。
-var lgw=232,lgh=D.hasZone?122:92,lgx=MX+18,lgy=MTOP+18;
-x.fillStyle='rgba(8,12,15,0.80)';rpath(lgx,lgy,lgw,lgh,12);x.fill();
-x.strokeStyle='rgba(120,140,155,0.28)';x.lineWidth=1;x.stroke();
-var ly=lgy+34;
-x.setLineDash([9,6]);x.strokeStyle=D.ml>0?CO.r:'#3a6070';x.lineWidth=3;
-x.beginPath();x.moveTo(lgx+18,ly-6);x.lineTo(lgx+60,ly-6);x.stroke();x.setLineDash([]);
-txt(D.leg.ml,lgx+72,ly,21,D.ml>0?CO.r:'#8ea3ae',500);
+// 圖例：無底框，貼齊版面左邊界
+var ly=MTOP+118;
+x.setLineDash([9,7]);x.strokeStyle=D.ml>0?'rgba(224,87,92,0.92)':'rgba(120,150,165,0.55)';
+x.lineWidth=3;x.beginPath();x.moveTo(P,ly-7);x.lineTo(P+38,ly-7);x.stroke();x.setLineDash([]);
+txt(D.leg.ml,P+50,ly,19,'rgba(215,225,232,0.78)',500,'left',1);
 ly+=30;
-x.fillStyle='rgba(77,186,106,0.30)';x.fillRect(lgx+18,ly-15,42,12);
-txt(D.leg.nm,lgx+72,ly,21,CO.g,500);
+x.fillStyle='rgba(77,186,106,0.32)';x.fillRect(P,ly-15,38,11);
+txt(D.leg.nm,P+50,ly,19,'rgba(215,225,232,0.78)',500,'left',1);
 if(D.hasZone){ly+=30;
-  x.fillStyle='rgba(245,200,66,0.28)';x.fillRect(lgx+18,ly-15,42,12);
-  txt(D.leg.zone,lgx+72,ly,21,CO.y,500);}
+  x.fillStyle='rgba(245,200,66,0.34)';x.fillRect(P,ly-15,38,11);
+  txt(D.leg.zone,P+50,ly,19,'rgba(215,225,232,0.78)',500,'left',1);}
 
-txt(D.mapnote,MX+18,MTOP+MH-20,19,'rgba(190,205,215,0.65)',400);
+// 上下淡出，讓地圖融進版面而不是關在框裡
+var gt=x.createLinearGradient(0,MTOP,0,MTOP+80);
+gt.addColorStop(0,CO.bg);gt.addColorStop(1,'rgba(13,17,20,0)');
+x.fillStyle=gt;x.fillRect(MX,MTOP,MW,80);
+var gb=x.createLinearGradient(0,MBOT-150,0,MBOT);
+gb.addColorStop(0,'rgba(13,17,20,0)');gb.addColorStop(1,CO.bg);
+x.fillStyle=gb;x.fillRect(MX,MBOT-150,MW,150);
 x.restore();
-x.strokeStyle='rgba(120,140,155,0.20)';x.lineWidth=1;rpath(MX,MTOP,MW,MH,18);x.stroke();
 
-// ── 月累計 ────────────────────────────────────────────────────────────────
-var msy=1212,msh=76;
-x.fillStyle=CO.pan;rpath(P,msy,W-2*P,msh,14);x.fill();
-x.strokeStyle=CO.line;x.lineWidth=1;x.stroke();
-txt(D.mo.label,P+26,msy+48,24,CO.sub,700);
-runsRight([[D.mo.l_ac+' ',CO.sub,22,400],[String(D.mo.ac),CO.y,32,900],
-           ['   '+D.mo.l_ml+' ',CO.sub,22,400],[String(D.mo.ml),CO.y,32,900],
-           [' ('+D.mo.rate+')',CO.sub,22,400],
-           ['   '+D.mo.l_sh+' ',CO.sub,22,400],[D.mo.sh,CO.r,32,900]],
-          W-P-26,msy+50);
-
-// ── 落款 ──────────────────────────────────────────────────────────────────
-txt(D.site,P,1322,23,CO.y,700);
-txt(D.src,W-P,1322,21,CO.dim,400,'right');
+// ── 頁尾：月累計一行＋落款 ─────────────────────────────────────────────────
+txt(D.moline,P,1288,21,CO.sub,500,'left',1);
+txt(D.mapnote,W-P,1288,19,CO.dim,400,'right',1);
+line(P,1306,W-P,1306,'#1d252b',1);
+txt(D.site,P,1334,22,CO.y,700,'left',1.5);
+txt(D.src,W-P,1334,19,CO.dim,400,'right',1);
 
 // ── 下載 ──────────────────────────────────────────────────────────────────
 var btn=document.getElementById('carddl');
@@ -4294,14 +4292,14 @@ if(btn)btn.addEventListener('click',function(){
       setTimeout(function(){URL.revokeObjectURL(u);},8000);
     },'image/png');
   }catch(e){
-    var st=document.getElementById('cardmsg');
-    if(st)st.textContent='\\u700f\\u89bd\\u5668\\u4e0d\\u652f\\u63f4\\u81ea\\u52d5\\u4e0b\\u8f09\\uff0c\\u8acb\\u9577\\u6309\\u5716\\u7247\\u5132\\u5b58\\u3002';
+    var st2=document.getElementById('cardmsg');
+    if(st2)st2.textContent='\\u700f\\u89bd\\u5668\\u4e0d\\u652f\\u63f4\\u81ea\\u52d5\\u4e0b\\u8f09\\uff0c\\u8acb\\u9577\\u6309\\u5716\\u7247\\u5132\\u5b58\\u3002';
   }
 });
 })();"""
 
 
-def build_card(df, out_dir):
+def build_card(df, out_dir, s):
     """產生 card.html：當日分享圖卡（中文版；直式 1080×1350）。
 
     圖卡本身在瀏覽器端畫進 <canvas>，按鈕把 canvas 轉成 PNG 下載；
@@ -4318,12 +4316,16 @@ def build_card(df, out_dir):
     cr_str = (f"{float(latest['cross_rate']):.0f}%"
               if str(latest['cross_rate']) not in ('', 'nan') else '—')
 
-    def _delta(cur, old):
+    def _delta_text(cur, old):
+        """圖卡上寫「較昨日 +15」而不是孤零零的 ▲15——圖被單獨分享出去時，
+        沒有頁面上下文可以解釋箭頭跟誰比。"""
         try:
             d = int(float(cur) - float(old))
         except Exception:
             return ''
-        return '' if d == 0 else ('▲' if d > 0 else '▼') + str(abs(d))
+        if d == 0:
+            return '與昨日持平'
+        return f'較昨日 {"+" if d > 0 else "−"}{abs(d)}'
 
     _BOILERPLATE = ['航跡圖', '故無提供', '未偵獲共機']
     raw_special = (latest['special_event']
@@ -4343,29 +4345,36 @@ def build_card(df, out_dir):
 
     geo = json.loads(GEO_FILE.read_text(encoding='utf-8'))
 
+    # 空域只留公告原文中「…空域」為止的那一段：括號裡的架次已經在上面的大數字裡，
+    # 重複寫一次只是把版面塞滿。抓不到就整段拿來截斷。
+    zonetext = ''
+    if spec:
+        m_zone = re.match(r'^([^（(]*空域)', spec.strip())
+        zonetext = m_zone.group(1) if m_zone else spec.strip()
+        if len(zonetext) > 26:
+            zonetext = zonetext[:25] + '…'
+
     data = {
         'date':  today,
         'title': '中國擾台趨勢數據分析',
         'sub':   'PLA ACTIVITY AROUND TAIWAN',
         'dl':    dt.strftime('%Y.%m.%d'),
         'wd':    wd,
-        'spec':  spec,
-        'ac': ac_val, 'ml': ml_val, 'sh': sh_val, 'cr': cr_str,
-        'l_ac': '中共軍機架次', 'l_ml': '逾越中線', 'l_sh': '中共艦艇',
-        'd_ac': _delta(latest['aircraft_total'], prev['aircraft_total']),
-        'd_ml': _delta(latest['median_line_cross'], prev['median_line_cross']),
-        'd_sh': _delta(latest['ships_total'], prev['ships_total']),
-        'dnote': '▲▼ 為與前一日的比較',
+        'zonetext': zonetext,
+        'ac': ac_val, 'ml': ml_val, 'sh': sh_val,
+        'cr': cr_str if ac_val else '',   # 零架次日不留一個孤零零的破折號
+        'l_ac': '共機架次', 'l_ml': '逾越中線', 'l_sh': '共艦',
+        's_ac': _delta_text(latest['aircraft_total'], prev['aircraft_total']),
+        's_sh': _delta_text(latest['ships_total'], prev['ships_total']),
         'zones': zones,
         'hasZone': any(zones.values()),
         'zn':  {'n': '北部空域', 'sw': '西南部空域',
                 'e': '東部空域', 'ne': '東北部空域'},
         'lbl': {'tw': '台灣', 'ph': '澎湖', 'km': '金門', 'mz': '馬祖'},
         'leg': {'ml': '海峽中線', 'nm': '12 浬領海', 'zone': '當日活動空域'},
-        'mapnote': '示意圖，非實際航跡',
-        'mo': {'label': f'{dt.month} 月至今 · {len(df_mo)} 天',
-               'l_ac': '軍機', 'l_ml': '逾越', 'l_sh': '艦艇日均',
-               'ac': mo_ac, 'ml': mo_ml, 'rate': mo_rate, 'sh': f'{mo_sh:.1f}'},
+        'mapnote': '地圖為示意圖',
+        'moline': (f'{dt.month} 月至今 {len(df_mo)} 天 ｜ 共機 {mo_ac} 架次 ｜ '
+                   f'逾越中線 {mo_ml}（{mo_rate}）'),
         'site': 'pla-tracker.pages.dev',
         'src':  '資料來源：中華民國國防部',
         'geo':  geo,
@@ -4391,38 +4400,45 @@ def build_card(df, out_dir):
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v={_VER}">
 <link rel="stylesheet" href="style.css?v={_VER}">
 <style>
-.card-main{{max-width:620px;margin:0 auto;padding:1.4rem 1rem 3rem}}
-.card-back{{display:inline-block;color:var(--sub);font-size:.82rem;
-  text-decoration:none;margin-bottom:1rem}}
-.card-back:hover{{color:var(--y)}}
-.card-h{{font-size:1.05rem;font-weight:700;margin:0 0 .3rem}}
-.card-p{{color:var(--sub);font-size:.8rem;line-height:1.7;margin:0 0 1.1rem}}
-#cardcv{{width:100%;height:auto;display:block;border-radius:10px;
+.card-main{{max-width:640px;margin:0 auto;padding:1.6rem 1rem 3rem}}
+.card-h{{font-size:.78rem;font-weight:700;letter-spacing:.14em;color:var(--sub);
+  text-transform:uppercase;margin:0 0 .9rem}}
+#cardcv{{width:100%;height:auto;display:block;border-radius:12px;
   border:1px solid var(--bdr);background:#0d1114}}
-.card-actions{{display:flex;gap:.6rem;align-items:center;margin:1rem 0 .5rem;
+.card-actions{{display:flex;gap:.7rem;align-items:center;margin:1.1rem 0 .6rem;
   flex-wrap:wrap}}
-.card-btn{{appearance:none;border:1px solid var(--y);background:var(--y);
-  color:#14181b;font-weight:700;font-size:.9rem;padding:.62rem 1.2rem;
-  border-radius:999px;cursor:pointer;font-family:inherit}}
+.card-btn{{appearance:none;border:0;background:var(--y);color:#14181b;
+  font-weight:700;font-size:.88rem;letter-spacing:.04em;padding:.72rem 1.4rem;
+  border-radius:999px;cursor:pointer;font-family:inherit;
+  display:inline-flex;align-items:center;gap:.45rem}}
 .card-btn:hover{{filter:brightness(1.08)}}
-.card-hint{{color:var(--sub);font-size:.75rem;line-height:1.7}}
+.card-hint{{color:var(--sub);font-size:.75rem;line-height:1.75}}
 </style>
 </head>
 <body>
-<div class="top-bar"><span>SHAREABLE CARD</span><span>ROC MND · {fmt_date_full(today, 'zh')}</span></div>
+<div class="top-bar">
+  <span>{s['unclassified']}</span>
+  <span>ROC MND · {fmt_date(today)}</span>
+</div>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-brand">
+      <div class="site-title">{s['site_title']}</div>
+      <div class="site-sub">{s['site_sub']}</div>
+    </div>
+    {nav_html('card', 'zh', 'card', s)}
+  </div>
+</header>
 <main class="card-main">
-  <a class="card-back" href="index.html">← 回總覽</a>
-  <h1 class="card-h">{fmt_date_full(today, 'zh')} 分享圖卡</h1>
-  <p class="card-p">當日架次、逾越中線比例、艦艇數與活動空域示意圖，
-  直式 1080×1350，適合 Threads／IG。按下方按鈕存成 PNG，手機也可長按圖片儲存。</p>
+  <h1 class="card-h">{fmt_date_full(today, 'zh')} · 分享圖卡</h1>
   <canvas id="cardcv" width="1080" height="1350" role="img"
     aria-label="{fmt_date_full(today, 'zh')} 共機 {ac_val} 架次，逾越中線 {ml_val} 架次（{cr_str}），中共艦艇 {sh_val} 艘"></canvas>
   <div class="card-actions">
-    <button id="carddl" class="card-btn" type="button">下載圖卡 PNG</button>
+    <button id="carddl" class="card-btn" type="button">下載 PNG</button>
     <span id="cardmsg" class="card-hint"></span>
   </div>
-  <p class="card-hint">圖卡採固定深色配色，與全站嚴重日／平常日主題無關。
-  地圖為示意圖，非實際航跡；空域範圍依國防部公告文字判讀。</p>
+  <p class="card-hint">直式 1080×1350，適合 Threads／IG；手機也可長按圖片儲存。
+  地圖為示意圖，非實際航跡，空域範圍依國防部公告文字判讀。</p>
 </main>
 <script>
 (function(){{
@@ -4538,7 +4554,7 @@ if __name__ == '__main__':
         for wkey in ARS_DETAIL_PAGES:
             build_arsenal_detail(wkey, df_ars, df_peers, lang, ars_dir, s)
 
-    build_card(df, SITE_DIR)   # 分享圖卡（僅中文版）
+    build_card(df, SITE_DIR, STRINGS['zh'])   # 分享圖卡（僅中文版）
     build_sitemap(df)
     build_robots()
 
