@@ -68,6 +68,13 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .delta-note{font-size:.68rem;color:var(--sub);opacity:.8;text-align:center;margin-top:.55rem;
   letter-spacing:.02em}
 
+/* ── 分享圖卡入口（首頁 SITREP 下方，僅中文版）── */
+.card-cta{text-align:right;margin:-.35rem 0 .9rem}
+.card-cta a{display:inline-flex;align-items:center;gap:.35rem;font-size:.76rem;
+  color:var(--sub);text-decoration:none;border:1px solid var(--bdr);
+  border-radius:999px;padding:.32rem .8rem;transition:color .2s,border-color .2s}
+.card-cta a:hover{color:var(--y);border-color:var(--y)}
+
 /* ── Badge ── */
 .badge{display:inline-block;padding:.2em .7em;border-radius:999px;font-size:.78rem;font-weight:700}
 .badge.manned    {background:#152b0c;color:#7ed46a}

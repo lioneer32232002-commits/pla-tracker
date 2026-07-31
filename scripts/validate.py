@@ -34,6 +34,9 @@ EN_INDEX   = EN_DIR / 'index.html'
 EN_RECORDS = EN_DIR / 'records.html'
 EN_MONTHLY = EN_DIR / 'monthly.html'
 
+CARD_HTML  = ROOT / 'card.html'
+GEO_JSON   = ROOT / 'data' / 'geo_card.json'
+
 ABOUT_HTML = ROOT / 'about.html'
 EN_ABOUT   = EN_DIR / 'about.html'
 
@@ -325,6 +328,40 @@ def validate_html():
                              ('class="hm-lg"',   '日曆圖例')]:
             if marker not in mo:
                 errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
+
+    # ── card.html（每日分享圖卡）──────────────────────────────────────────────
+    # 圖卡整張畫在 canvas 裡，validate 讀不到像素，只能查「畫圖需要的東西都在」：
+    # 資料日期是最新的、地圖輪廓有內嵌、佔位字串沒殘留、下載按鈕還在。
+    if not CARD_HTML.exists():
+        errors.append('card.html 不存在（build 可能未產出分享圖卡頁）')
+    else:
+        card = CARD_HTML.read_text(encoding='utf-8')
+        if CARD_HTML.stat().st_size < 10_000:
+            errors.append(f'card.html 檔案過小（{CARD_HTML.stat().st_size} bytes）')
+        for marker, desc in [('id="cardcv"',        '圖卡 canvas'),
+                             ('id="carddl"',        '下載 PNG 按鈕'),
+                             ('"geo"',              '內嵌地圖輪廓資料'),
+                             ('rel="canonical"',    'canonical 連結'),
+                             ('content="noindex',   'noindex（工具頁不進索引）'),
+                             ('href="index.html"',  '回總覽連結')]:
+            if marker not in card:
+                errors.append(f'card.html 缺少 {desc}（找不到「{marker}」）')
+        if '__DATA__' in card:
+            errors.append('card.html 仍含未替換的佔位字串 __DATA__（資料注入失敗）')
+        # 圖卡資料必須是 CSV 最後一列那天，否則線上圖卡會停在舊日期
+        if CSV_PATH.exists():
+            rows = list(csv.DictReader(CSV_PATH.open(encoding='utf-8-sig')))
+            if rows:
+                last = rows[-1]['date'].strip()
+                if f'"date": "{last}"' not in card and f'"date":"{last}"' not in card:
+                    errors.append(f'card.html 的資料日期不是最新的 {last}（build 未重跑？）')
+    if not GEO_JSON.exists():
+        errors.append('data/geo_card.json 不存在（分享圖卡地圖會畫不出來）')
+    # 首頁的圖卡入口（中文版才有；英文版沒有對應頁面，不該出現）
+    if INDEX_HTML.exists() and 'card.html' not in INDEX_HTML.read_text(encoding='utf-8'):
+        errors.append('index.html 缺少分享圖卡入口連結（card-cta）')
+    if EN_INDEX.exists() and 'card.html' in EN_INDEX.read_text(encoding='utf-8'):
+        errors.append('en/index.html 不應出現 card.html 連結（圖卡目前只有中文版）')
 
     # ── about.html（中文方法論頁）─────────────────────────────────────────────
     if not ABOUT_HTML.exists():
