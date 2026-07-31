@@ -33,6 +33,13 @@ nav a:hover{color:var(--tx)}
 nav a.active{color:var(--tx);background:var(--nav-active)}
 nav a.lang-toggle{border:0;border-left:1px solid var(--bdr);border-radius:0;
   margin-left:.15rem;padding-left:.9em}
+/* 分享圖卡：導覽列最後一項。窄螢幕只留圖示，避免導覽列被第七項擠爆 */
+nav a.nav-card{display:inline-flex;align-items:center;gap:.34em;color:var(--y);opacity:.9}
+nav a.nav-card:hover{color:var(--y);opacity:1}
+nav a.nav-card.active{color:var(--y);background:var(--nav-active);opacity:1}
+nav a.nav-card .nc-i{flex-shrink:0}
+@media (max-width:560px){nav a.nav-card .nc-t{display:none}
+  nav a.nav-card{padding-left:.6em;padding-right:.6em}}
 
 /* ── Main ── */
 main{max-width:900px;margin:0 auto;padding:1.5rem}
@@ -68,12 +75,6 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .delta-note{font-size:.68rem;color:var(--sub);opacity:.8;text-align:center;margin-top:.55rem;
   letter-spacing:.02em}
 
-/* ── 分享圖卡入口（首頁 SITREP 下方，僅中文版）── */
-.card-cta{text-align:right;margin:-.35rem 0 .9rem}
-.card-cta a{display:inline-flex;align-items:center;gap:.35rem;font-size:.76rem;
-  color:var(--sub);text-decoration:none;border:1px solid var(--bdr);
-  border-radius:999px;padding:.32rem .8rem;transition:color .2s,border-color .2s}
-.card-cta a:hover{color:var(--y);border-color:var(--y)}
 
 /* ── Badge ── */
 .badge{display:inline-block;padding:.2em .7em;border-radius:999px;font-size:.78rem;font-weight:700}
