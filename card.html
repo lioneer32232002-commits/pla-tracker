@@ -8,8 +8,8 @@
 <meta name="robots" content="noindex,follow">
 <link rel="canonical" href="https://pla-tracker.pages.dev/card.html">
 <meta name="theme-color" content="#0d1114">
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608010401">
-<link rel="stylesheet" href="style.css?v=202608010401">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608011417">
+<link rel="stylesheet" href="style.css?v=202608011417">
 <style>
 .card-main{max-width:640px;margin:0 auto;padding:1.6rem 1rem 3rem}
 .card-h{font-size:.78rem;font-weight:700;letter-spacing:.14em;color:var(--sub);
@@ -60,7 +60,7 @@ if(!C||!C.getContext)return;
 var x=C.getContext('2d');
 var W=1080,H=1350,P=72;
 var F='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif';
-var CO={bg:'#0d1114',tx:'#eaf0f4',hd:'#cbd6dd',sub:'#7f8f9a',dim:'#5b6a74',
+var CO={bg:'#0d1114',tx:'#eaf0f4',hd:'#cbd6dd',lbl:'#9fb0ba',sub:'#7f8f9a',dim:'#5b6a74',
         y:'#f5c842',r:'#e0575c',g:'#4dba6a',sea:'#0a0f12',land:'#191f25',tw:'#2a333a'};
 var LS='letterSpacing' in x;
 
@@ -78,7 +78,7 @@ x.fillStyle=CO.bg;x.fillRect(0,0,W,H);
 txt(D.title,P,98,31,CO.hd,500,'left',2);
 txt(D.sub,P,128,15,CO.dim,400,'left',4.2);
 txt(D.dl,W-P,100,27,CO.tx,700,'right',1);
-txt(D.wd,W-P,128,18,CO.sub,400,'right',1);
+txt(D.wd,W-P,130,20,CO.sub,400,'right',1);
 line(P,162,W-P,162,'#1d252b',1);
 
 // ── 當日三數字（標籤在上、數字在下）──────────────────────────────────────
@@ -88,16 +88,16 @@ var st=[[D.l_ac,String(D.ac),CO.y,D.s_ac],
         [D.l_sh,String(D.sh),CO.r,D.s_sh]];
 for(var i=0;i<3;i++){
   var cx0=P+cw*i;
-  txt(st[i][0],cx0,214,19,CO.sub,500,'left',1.6);
-  txt(st[i][1],cx0,330,116,st[i][2],900,'left',-2);
-  if(st[i][3])txt(st[i][3],cx0+4,368,20,CO.dim,500,'left',1);
+  txt(st[i][0],cx0,220,26,CO.lbl,500,'left',1.8);
+  txt(st[i][1],cx0,336,116,st[i][2],900,'left',-2);
+  if(st[i][3])txt(st[i][3],cx0+4,376,24,CO.sub,500,'left',1);
 }
 
 // ── 活動空域（一行，取公告原文到「空域」為止，架次已在上面的數字裡）──────
-var zy=430;
+var zy=434;
 if(D.zonetext){
-  x.fillStyle=CO.y;x.fillRect(P,zy-19,4,22);
-  txt(D.zonetext,P+18,zy,25,CO.y,700,'left',1.5);
+  x.fillStyle=CO.y;x.fillRect(P,zy-21,4,25);
+  txt(D.zonetext,P+18,zy,28,CO.y,700,'left',1.5);
 }
 
 // ── 地圖（滿版出血）────────────────────────────────────────────────────────
@@ -177,24 +177,24 @@ x.lineWidth=D.ml>0?3.5:2.4;x.stroke();x.setLineDash([]);
 
 // 地名與空域名稱
 x.shadowColor='rgba(0,0,0,0.85)';x.shadowBlur=12;
-txt(D.lbl.tw,pX(120.96),pY(24.28),29,'#f2f7fa',700,'left',3);
-txt(D.lbl.ph,pX(119.24),pY(23.36),17,'#a9b7c0',500,'left',1);
-txt(D.lbl.km,pX(118.06),pY(24.34),17,'#a9b7c0',500,'left',1);
-txt(D.lbl.mz,pX(119.62),pY(26.02),17,'#a9b7c0',500,'left',1);
-for(var zi=0;zi<zl.length;zi++){txt(zl[zi][0],zl[zi][1],zl[zi][2],23,CO.y,700,'left',1.5);}
+txt(D.lbl.tw,pX(120.96),pY(24.28),32,'#f2f7fa',700,'left',3);
+txt(D.lbl.ph,pX(119.24),pY(23.36),20,'#a9b7c0',500,'left',1);
+txt(D.lbl.km,pX(118.06),pY(24.34),20,'#a9b7c0',500,'left',1);
+txt(D.lbl.mz,pX(119.62),pY(26.02),20,'#a9b7c0',500,'left',1);
+for(var zi=0;zi<zl.length;zi++){txt(zl[zi][0],zl[zi][1],zl[zi][2],26,CO.y,700,'left',1.5);}
 x.shadowBlur=0;
 
 // 圖例：無底框，貼齊版面左邊界
-var ly=MTOP+118;
+var ly=MTOP+118,lc='rgba(220,229,236,0.85)';
 x.setLineDash([9,7]);x.strokeStyle=D.ml>0?'rgba(224,87,92,0.92)':'rgba(120,150,165,0.55)';
-x.lineWidth=3;x.beginPath();x.moveTo(P,ly-7);x.lineTo(P+38,ly-7);x.stroke();x.setLineDash([]);
-txt(D.leg.ml,P+50,ly,19,'rgba(215,225,232,0.78)',500,'left',1);
-ly+=30;
-x.fillStyle='rgba(77,186,106,0.32)';x.fillRect(P,ly-15,38,11);
-txt(D.leg.nm,P+50,ly,19,'rgba(215,225,232,0.78)',500,'left',1);
-if(D.hasZone){ly+=30;
-  x.fillStyle='rgba(245,200,66,0.34)';x.fillRect(P,ly-15,38,11);
-  txt(D.leg.zone,P+50,ly,19,'rgba(215,225,232,0.78)',500,'left',1);}
+x.lineWidth=3.5;x.beginPath();x.moveTo(P,ly-8);x.lineTo(P+46,ly-8);x.stroke();x.setLineDash([]);
+txt(D.leg.ml,P+60,ly,23,lc,500,'left',1);
+ly+=37;
+x.fillStyle='rgba(77,186,106,0.32)';x.fillRect(P,ly-17,46,13);
+txt(D.leg.nm,P+60,ly,23,lc,500,'left',1);
+if(D.hasZone){ly+=37;
+  x.fillStyle='rgba(245,200,66,0.34)';x.fillRect(P,ly-17,46,13);
+  txt(D.leg.zone,P+60,ly,23,lc,500,'left',1);}
 
 // 上下淡出，讓地圖融進版面而不是關在框裡
 var gt=x.createLinearGradient(0,MTOP,0,MTOP+80);
@@ -206,11 +206,11 @@ x.fillStyle=gb;x.fillRect(MX,MBOT-150,MW,150);
 x.restore();
 
 // ── 頁尾：月累計一行＋落款 ─────────────────────────────────────────────────
-txt(D.moline,P,1288,21,CO.sub,500,'left',1);
-txt(D.mapnote,W-P,1288,19,CO.dim,400,'right',1);
+txt(D.moline,P,1287,24,CO.lbl,500,'left',1);
+txt(D.mapnote,W-P,1287,21,CO.dim,400,'right',1);
 line(P,1306,W-P,1306,'#1d252b',1);
-txt(D.site,P,1334,22,CO.y,700,'left',1.5);
-txt(D.src,W-P,1334,19,CO.dim,400,'right',1);
+txt(D.site,P,1336,24,CO.y,700,'left',1.5);
+txt(D.src,W-P,1336,21,CO.sub,400,'right',1);
 
 // ── 下載 ──────────────────────────────────────────────────────────────────
 var btn=document.getElementById('carddl');
