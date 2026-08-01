@@ -4152,34 +4152,27 @@ function line(x1,y1,x2,y2,col,w){x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);
 // ── 背景 ──────────────────────────────────────────────────────────────────
 x.fillStyle=CO.bg;x.fillRect(0,0,W,H);
 
-// ── 抬頭 ──────────────────────────────────────────────────────────────────
-txt(D.title,P,98,31,CO.hd,500,'left',2);
-txt(D.sub,P,128,15,CO.dim,400,'left',4.2);
-txt(D.dl,W-P,100,27,CO.tx,700,'right',1);
-txt(D.wd,W-P,130,20,CO.sub,400,'right',1);
-line(P,162,W-P,162,'#1d252b',1);
+// ── 抬頭（置中海報式：標題置中、日期顯示為資料期間範圍）──────────────────
+txt(D.title,W/2,96,34,CO.hd,600,'center',3);
+txt(D.sub,W/2,126,16,CO.dim,400,'center',4.2);
+txt(D.dl.slice(0,4)+'.'+D.dr+' · '+D.wd,W/2,162,22,CO.sub,500,'center',1);
+line(W/2-56,186,W/2+56,186,'#2a343b',2);
 
-// ── 當日三數字（標籤在上、數字在下）──────────────────────────────────────
+// ── 當日三數字（置中對稱：數字在上、標籤在下）────────────────────────────
+// 當日活動空域不再另立一行——地圖上已有空域標籤，同一資訊寫兩次只是佔版面。
 var cw=(W-2*P)/3;
 var st=[[D.l_ac,String(D.ac),CO.y,D.s_ac],
         [D.l_ml,String(D.ml),CO.y,D.cr],
         [D.l_sh,String(D.sh),CO.r,D.s_sh]];
 for(var i=0;i<3;i++){
-  var cx0=P+cw*i;
-  txt(st[i][0],cx0,220,26,CO.lbl,500,'left',1.8);
-  txt(st[i][1],cx0,336,116,st[i][2],900,'left',-2);
-  if(st[i][3])txt(st[i][3],cx0+4,376,24,CO.sub,500,'left',1);
-}
-
-// ── 活動空域（一行，取公告原文到「空域」為止，架次已在上面的數字裡）──────
-var zy=434;
-if(D.zonetext){
-  x.fillStyle=CO.y;x.fillRect(P,zy-21,4,25);
-  txt(D.zonetext,P+18,zy,28,CO.y,700,'left',1.5);
+  var ccx=P+cw*i+cw/2;
+  txt(st[i][1],ccx,306,116,st[i][2],900,'center',-2);
+  txt(st[i][0],ccx,352,26,CO.lbl,500,'center',1.8);
+  if(st[i][3])txt(st[i][3],ccx,390,24,CO.sub,500,'center',1);
 }
 
 // ── 地圖（滿版出血）────────────────────────────────────────────────────────
-var MTOP=D.zonetext?472:452,MBOT=1252,MH=MBOT-MTOP,MX=0,MW=W;
+var MTOP=436,MBOT=1252,MH=MBOT-MTOP,MX=0,MW=W;
 // 取景：先讓北部空域框頂(26.5)與西南空域框底(21.0)都進得來，再以 MW/9.0 設
 // 經度視野下限——超過下限，左緣會露出 geo_card.json 被裁切出的直邊。
 var LONC=120.32,LATC=23.78,CS=Math.cos(LATC*Math.PI/180);
@@ -4262,18 +4255,6 @@ txt(D.lbl.mz,pX(119.62),pY(26.02),20,'#a9b7c0',500,'left',1);
 for(var zi=0;zi<zl.length;zi++){txt(zl[zi][0],zl[zi][1],zl[zi][2],26,CO.y,700,'left',1.5);}
 x.shadowBlur=0;
 
-// 圖例：無底框，貼齊版面左邊界
-var ly=MTOP+118,lc='rgba(220,229,236,0.85)';
-x.setLineDash([9,7]);x.strokeStyle=D.ml>0?'rgba(224,87,92,0.92)':'rgba(120,150,165,0.55)';
-x.lineWidth=3.5;x.beginPath();x.moveTo(P,ly-8);x.lineTo(P+46,ly-8);x.stroke();x.setLineDash([]);
-txt(D.leg.ml,P+60,ly,23,lc,500,'left',1);
-ly+=37;
-x.fillStyle='rgba(77,186,106,0.32)';x.fillRect(P,ly-17,46,13);
-txt(D.leg.nm,P+60,ly,23,lc,500,'left',1);
-if(D.hasZone){ly+=37;
-  x.fillStyle='rgba(245,200,66,0.34)';x.fillRect(P,ly-17,46,13);
-  txt(D.leg.zone,P+60,ly,23,lc,500,'left',1);}
-
 // 上下淡出，讓地圖融進版面而不是關在框裡
 var gt=x.createLinearGradient(0,MTOP,0,MTOP+80);
 gt.addColorStop(0,CO.bg);gt.addColorStop(1,'rgba(13,17,20,0)');
@@ -4283,12 +4264,36 @@ gb.addColorStop(0,'rgba(13,17,20,0)');gb.addColorStop(1,CO.bg);
 x.fillStyle=gb;x.fillRect(MX,MBOT-150,MW,150);
 x.restore();
 
-// ── 頁尾：月累計一行＋落款 ─────────────────────────────────────────────────
-txt(D.moline,P,1287,24,CO.lbl,500,'left',1);
-txt(D.mapnote,W-P,1287,21,CO.dim,400,'right',1);
-line(P,1306,W-P,1306,'#1d252b',1);
-txt(D.site,P,1336,24,CO.y,700,'left',1.5);
-txt(D.src,W-P,1336,21,CO.sub,400,'right',1);
+// ── 圖例：橫排置中貼地圖底緣（畫在淡出之後，才不會被洗淡）─────────────────
+var ly=MBOT-26,lc='rgba(220,229,236,0.85)';
+var w1=tw_(D.leg.ml,23,500,1),w2=tw_(D.leg.nm,23,500,1),w3=D.hasZone?tw_(D.leg.zone,23,500,1):0;
+var tot=(60+w1)+46+(60+w2)+(D.hasZone?46+60+w3:0);
+var lx=(W-tot)/2;
+x.setLineDash([9,7]);x.strokeStyle=D.ml>0?'rgba(224,87,92,0.92)':'rgba(120,150,165,0.55)';
+x.lineWidth=3.5;x.beginPath();x.moveTo(lx,ly-8);x.lineTo(lx+46,ly-8);x.stroke();x.setLineDash([]);
+txt(D.leg.ml,lx+60,ly,23,lc,500,'left',1);
+lx+=60+w1+46;
+x.fillStyle='rgba(77,186,106,0.32)';x.fillRect(lx,ly-17,46,13);
+txt(D.leg.nm,lx+60,ly,23,lc,500,'left',1);
+if(D.hasZone){lx+=60+w2+46;
+  x.fillStyle='rgba(245,200,66,0.34)';x.fillRect(lx,ly-17,46,13);
+  txt(D.leg.zone,lx+60,ly,23,lc,500,'left',1);}
+
+// ── 頁尾：月累計（標籤灰、數字白粗）＋一行置中落款 ────────────────────────
+var ms=D.moseg,mw=0;
+for(var si=0;si<ms.length;si++){var sb=ms[si][1]===1;mw+=tw_(ms[si][0],sb?23:22,sb?600:400,1);}
+var mx=(W-mw)/2;
+for(var si2=0;si2<ms.length;si2++){var sg=ms[si2],sb2=sg[1]===1;
+  txt(sg[0],mx,1292,sb2?23:22,sb2?'#dbe4ea':CO.sub,sb2?600:400,'left',1);
+  mx+=tw_(sg[0],sb2?23:22,sb2?600:400,1);}
+var s1=tw_(D.site,23,700,1.5),s2=tw_(D.src,20,400,1),s3=tw_(D.mapnote,20,400,1);
+var sp=26,sep=tw_('|',20,400,0);
+var fx=(W-(s1+sp+sep+sp+s2+sp+sep+sp+s3))/2,fy=1336;
+txt(D.site,fx,fy,23,CO.y,700,'left',1.5);fx+=s1+sp;
+txt('|',fx,fy,20,'#2a343b',400,'left',0);fx+=sep+sp;
+txt(D.src,fx,fy,20,CO.sub,400,'left',1);fx+=s2+sp;
+txt('|',fx,fy,20,'#2a343b',400,'left',0);fx+=sep+sp;
+txt(D.mapnote,fx,fy,20,CO.dim,400,'left',1);
 
 // ── 下載 ──────────────────────────────────────────────────────────────────
 var btn=document.getElementById('carddl');
@@ -4337,10 +4342,8 @@ def build_card(df, out_dir, s):
             return '與昨日持平'
         return f'較昨日 {"+" if d > 0 else "−"}{abs(d)}'
 
-    _BOILERPLATE = ['航跡圖', '故無提供', '未偵獲共機']
     raw_special = (latest['special_event']
                    if str(latest['special_event']) not in ('', 'nan') else '')
-    spec = '' if any(k in raw_special for k in _BOILERPLATE) else raw_special
     zones = zones_from_special(raw_special)
 
     today = latest['date']
@@ -4355,22 +4358,14 @@ def build_card(df, out_dir, s):
 
     geo = json.loads(GEO_FILE.read_text(encoding='utf-8'))
 
-    # 空域只留公告原文中「…空域」為止的那一段：括號裡的架次已經在上面的大數字裡，
-    # 重複寫一次只是把版面塞滿。抓不到就整段拿來截斷。
-    zonetext = ''
-    if spec:
-        m_zone = re.match(r'^([^（(]*空域)', spec.strip())
-        zonetext = m_zone.group(1) if m_zone else spec.strip()
-        if len(zonetext) > 26:
-            zonetext = zonetext[:25] + '…'
-
     data = {
         'date':  today,
         'title': '中國擾台趨勢數據分析',
         'sub':   'PLA ACTIVITY AROUND TAIWAN',
         'dl':    dt.strftime('%Y.%m.%d'),
         'wd':    wd,
-        'zonetext': zonetext,
+        # 國防部公告涵蓋前一日至發布日的活動，圖卡顯示資料期間而非單一發布日
+        'dr':    (dt - pd.Timedelta(days=1)).strftime('%m.%d') + ' – ' + dt.strftime('%m.%d'),
         'ac': ac_val, 'ml': ml_val, 'sh': sh_val,
         'cr': cr_str if ac_val else '',   # 零架次日不留一個孤零零的破折號
         'l_ac': '共機架次', 'l_ml': '逾越中線', 'l_sh': '共艦',
@@ -4383,8 +4378,10 @@ def build_card(df, out_dir, s):
         'lbl': {'tw': '台灣', 'ph': '澎湖', 'km': '金門', 'mz': '馬祖'},
         'leg': {'ml': '海峽中線', 'nm': '12 浬領海', 'zone': '當日活動空域'},
         'mapnote': '地圖為示意圖',
-        'moline': (f'{dt.month} 月至今 {len(df_mo)} 天 ｜ 共機 {mo_ac} 架次 ｜ '
-                   f'逾越中線 {mo_ml}（{mo_rate}）'),
+        # 月累計拆成 [文字, 是否強調] 分段，前端以灰標籤／白粗數字混排
+        'moseg': [[f'{dt.month} 月至今 ', 0], [str(len(df_mo)), 1], [' 天', 0],
+                  ['　｜　共機 ', 0], [str(mo_ac), 1], [' 架次', 0],
+                  ['　｜　逾越中線 ', 0], [str(mo_ml), 1], [f'（{mo_rate}）', 0]],
         'site': 'pla-tracker.pages.dev',
         'src':  '資料來源：中華民國國防部',
         'geo':  geo,
