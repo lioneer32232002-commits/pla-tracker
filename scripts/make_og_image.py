@@ -8,9 +8,12 @@ og.png（中文）與 og-en.png（英文）後 commit 即可。
 用法：python scripts/make_og_image.py
 """
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 
 ROOT = Path(__file__).parent.parent
+# 背景照片（愛國者飛彈發射車，Unsplash 授權，作者 Gabriel Vasiliu）。
+# 原檔 6000×4000 已縮到 2400 寬存進 repo，讓這支腳本可重跑。
+PHOTO = ROOT / 'assets' / 'og-source.jpg'
 
 W, H = 1200, 630
 BG   = (9, 13, 15)
@@ -54,45 +57,59 @@ def draw_emblem(d, cx, cy, r, ring=Y, width=5):
     d.line([cx - r * 1.5, cy, cx + r * 1.5, cy], fill=ring, width=width)
 
 
-def draw_shield(d, cx, top, h, outline, width=6):
-    """Stylized shield polygon (decorative watermark)."""
-    w = h * 0.86
-    pts = [
-        (cx - w / 2, top),
-        (cx + w / 2, top),
-        (cx + w / 2, top + h * 0.52),
-        (cx, top + h),
-        (cx - w / 2, top + h * 0.52),
-    ]
-    d.polygon(pts, outline=outline, width=width)
+def _ramp(stops, horizontal=True):
+    """由 (位置0~1, 不透明度0~255) 節點做出線性漸層遮罩，回傳 W×H 的 'L' 圖。"""
+    n = W if horizontal else H
+    g = Image.new('L', (n, 1) if horizontal else (1, n))
+    px = g.load()
+    for i in range(n):
+        t = i / (n - 1)
+        val = stops[-1][1]
+        for (p0, a0), (p1, a1) in zip(stops, stops[1:]):
+            if t <= p1:
+                k = 0 if p1 == p0 else min(1, max(0, (t - p0) / (p1 - p0)))
+                val = a0 + (a1 - a0) * k
+                break
+        if horizontal:
+            px[i, 0] = int(val)
+        else:
+            px[0, i] = int(val)
+    return g.resize((W, H), Image.BILINEAR)
 
 
-# 底部裝飾用的固定長條剪影（非真實資料，純品牌視覺）
-BARS = [4, 9, 23, 11, 4, 20, 9, 34, 26, 9, 5, 2, 13, 42, 11, 3,
-        14, 8, 2, 30, 8, 36, 12, 6, 16, 19, 11, 25, 22, 15, 29, 32]
+def photo_bg():
+    """照片底：cover 裁切 → 壓暗降彩 → 左側深色壓字條 + 上下暗角。"""
+    src = Image.open(PHOTO).convert('RGB')
+    sw, sh = src.size
+    # cover：以寬度為準裁掉上下，取景偏上以保留發射架、切掉底部機場雜物
+    ch = int(sw * H / W)
+    top = int((sh - ch) * 0.34)
+    img = src.crop((0, top, sw, top + ch)).resize((W, H), Image.LANCZOS)
+
+    img = ImageEnhance.Color(img).enhance(0.66)       # 降彩度（天空太藍會蓋過品牌色）
+    img = ImageEnhance.Brightness(img).enhance(0.86)  # 壓暗，但要留得住發射架輪廓
+    img = ImageEnhance.Contrast(img).enhance(1.14)
+    img = Image.blend(img, Image.new('RGB', (W, H), BG), 0.16)  # 往品牌深色調
+
+    dark = Image.new('RGB', (W, H), BG)
+    # 左半壓字條：文字區幾乎全暗，右側留照片
+    img = Image.composite(dark, img, _ramp(
+        [(0.0, 240), (0.44, 216), (0.64, 104), (0.82, 26), (1.0, 14)]))
+    # 上下暗角（標籤列與網址列的可讀性）
+    img = Image.composite(dark, img, _ramp(
+        [(0.0, 150), (0.16, 26), (0.80, 26), (0.90, 140), (1.0, 190)],
+        horizontal=False))
+    return img
 
 
 def render(out_name, lang):
-    img = Image.new('RGB', (W, H), BG)
+    img = photo_bg()
     d = ImageDraw.Draw(img)
 
     # 邊框
     d.rectangle([0, 0, W - 1, H - 1], outline=BDR, width=2)
 
-    # 右側大型盾牌浮水印（低對比）
-    draw_shield(d, cx=1055, top=120, h=300, outline=(30, 46, 54), width=10)
-    draw_emblem(d, 1055, 250, 46, ring=(40, 58, 50), width=7)
-
-    # 底部長條剪影（資料感）
     base_y = H - 70
-    bw, gap = 22, 12
-    total = len(BARS) * (bw + gap)
-    bx = (W - total) // 2
-    for hgt in BARS:
-        bh = int(hgt * 3.0)
-        d.rectangle([bx, base_y - bh, bx + bw, base_y], fill=(20, 28, 30))
-        bx += bw + gap
-
     margin = 80
 
     # 頂部分類標籤
