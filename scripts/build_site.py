@@ -4137,7 +4137,7 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
 
 # ── sitemap.xml / robots.txt ──────────────────────────────────────────────────
 
-# ── card.html：每日分享圖卡（1080×1350，客戶端 canvas 繪製 → 一鍵下載 PNG）────
+# ── card.html：每日分享圖卡（1080×1580，客戶端 canvas 繪製 → 一鍵下載 PNG）────
 #
 # 設計約束（動這段之前先讀）：
 # 1. 全部用 Canvas 2D 自己畫，不用 html2canvas、不用 Leaflet 圖磚。圖磚是跨域點陣圖，
@@ -4153,16 +4153,18 @@ var D=__DATA__;
 var C=document.getElementById('cardcv');
 if(!C||!C.getContext)return;
 var x=C.getContext('2d');
-var W=1080,H=1350,P=72;
+var W=1080,H=1580,P=72;
 var F='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif';
 var CO={bg:'#0d1114',tx:'#eaf0f4',hd:'#cbd6dd',lbl:'#9fb0ba',sub:'#7f8f9a',dim:'#5b6a74',
         y:'#f5c842',r:'#e0575c',g:'#4dba6a',sea:'#0a0f12',land:'#191f25',tw:'#2a333a'};
 var LS='letterSpacing' in x;
 
-// 戰損字型：只有拉丁字母與數字有這種字型，中文沒有，所以中文標題維持乾淨黑體，
+// 軍事風字型：只有拉丁字母與數字有，中文沒有，所以中文標題維持乾淨黑體，
 // 只有英文副標、日期與三個數字換成它（字級比照使用者 2026-08-05 在 Canva 母版的設定）。
+// 2026-08-05 使用者比過 Rubik Distressed／Dirt／Black Ops One 後選定 Black Ops One
+// （乾淨的軍用體，不做破損處理——在動態牆縮圖下比破損字型好讀）。
 // 字型由 card.html 的 <link> 從 Google Fonts 載入。
-var FD='"Rubik Distressed","Rubik",'+F;
+var FD='"Black Ops One",'+F;
 
 function ff(sz,w,sp,fam){x.font=(w||400)+' '+sz+'px '+(fam||F);if(LS)x.letterSpacing=(sp||0)+'px';}
 function txt(t,px_,py_,sz,col,w,al,sp,fam){ff(sz,w,sp,fam);x.fillStyle=col;x.textAlign=al||'left';
@@ -4306,20 +4308,16 @@ if(D.hasZone){lx+=60+w2+46;
   txt(D.leg.zone,lx+60,ly,23,lc,500,'left',1);}
 
 // ── 頁尾：月累計（標籤灰、數字白粗）＋一行置中落款 ────────────────────────
-var ms=D.moseg,mw=0;
-for(var si=0;si<ms.length;si++){var sb=ms[si][1]===1;mw+=tw_(ms[si][0],sb?23:22,sb?600:400,1);}
-var mx=(W-mw)/2;
-for(var si2=0;si2<ms.length;si2++){var sg=ms[si2],sb2=sg[1]===1;
-  txt(sg[0],mx,1292,sb2?23:22,sb2?'#dbe4ea':CO.sub,sb2?600:400,'left',1);
-  mx+=tw_(sg[0],sb2?23:22,sb2?600:400,1);}
-var s1=tw_(D.site,23,700,1.5),s2=tw_(D.src,20,400,1),s3=tw_(D.mapnote,20,400,1);
-var sp=26,sep=tw_('|',20,400,0);
-var fx=(W-(s1+sp+sep+sp+s2+sp+sep+sp+s3))/2,fy=1336;
-txt(D.site,fx,fy,23,CO.y,700,'left',1.5);fx+=s1+sp;
-txt('|',fx,fy,20,'#2a343b',400,'left',0);fx+=sep+sp;
-txt(D.src,fx,fy,20,CO.sub,400,'left',1);fx+=s2+sp;
-txt('|',fx,fy,20,'#2a343b',400,'left',0);fx+=sep+sp;
-txt(D.mapnote,fx,fy,20,CO.dim,400,'left',1);
+// 三行置中堆疊，字級比照使用者 Canva 母版（36／42／33，全部粗體）。
+// 「資料來源／國防部」與網址之間刻意拉開並夾一條分隔線——兩行貼太近會被誤讀成
+// 「國防部的網址是這個」（使用者 2026-08-05 指正）。
+var mtxt='';for(var mi2=0;mi2<D.moseg.length;mi2++)mtxt+=D.moseg[mi2][0];
+txt(mtxt,W/2,1312,36,CO.lbl,700,'center',0.5);
+txt(D.src,W/2,1404,42,CO.dim,700,'center',1);
+line(W/2-46,1452,W/2+46,1452,'#1e262b',2);
+txt(D.site,W/2,1520,33,CO.sub,700,'center',1.5);
+// 地圖免責標示改留在地圖內右下角（公告只給空域名稱、沒有邊界，框是推定的示意範圍）
+txt(D.mapnote,W-P,MBOT-14,19,CO.dim,400,'right',1);
 
 }
 
@@ -4328,7 +4326,7 @@ paint();
 // 而這支字型只出現在 canvas 裡。所以要用 fonts.load() 明確觸發下載，載完重畫一次。
 // paint() 開頭就重填背景，重畫是安全的（不會疊字）。
 if(document.fonts&&document.fonts.load){
-  document.fonts.load('400 116px "Rubik Distressed"').then(paint).catch(function(){});
+  document.fonts.load('400 116px "Black Ops One"').then(paint).catch(function(){});
 }
 
 // ── 下載 ──────────────────────────────────────────────────────────────────
@@ -4351,7 +4349,7 @@ if(btn)btn.addEventListener('click',function(){
 
 
 def build_card(df, out_dir, s):
-    """產生 card.html：當日分享圖卡（中文版；直式 1080×1350）。
+    """產生 card.html：當日分享圖卡（中文版；直式 1080×1580）。
 
     圖卡本身在瀏覽器端畫進 <canvas>，按鈕把 canvas 轉成 PNG 下載；
     手機也可長按 canvas 直接存圖。"""
@@ -4422,13 +4420,13 @@ def build_card(df, out_dir, s):
                   ['　｜　共機 ', 0], [str(mo_ac), 1], [' 架次', 0],
                   ['　｜　越過中線 ', 0], [str(mo_ml), 1], [f'（{mo_rate}）', 0]],
         'site': SITE_HOST,
-        'src':  '資料來源：中華民國國防部',
+        'src':  '資料來源 / 中華民國國防部',
         'geo':  geo,
     }
     js = _CARD_JS.replace('__DATA__', json.dumps(data, ensure_ascii=False))
 
     title = f'分享圖卡 {dt.strftime("%Y/%m/%d")} — 中國擾台趨勢數據分析'
-    desc  = ('把當日共機架次、逾越中線比例與活動空域做成 1080×1350 分享圖卡，'
+    desc  = ('把當日共機架次、逾越中線比例與活動空域做成 1080×1580 分享圖卡，'
              '一鍵下載 PNG。資料來源：國防部。')
     # 工具頁：內容全在 canvas 裡（爬蟲讀不到），故 noindex 避免薄內容頁；
     # follow 保留給站內連結傳遞。也因此不進 sitemap。
@@ -4443,9 +4441,9 @@ def build_card(df, out_dir, s):
 <meta name="robots" content="noindex,follow">
 <link rel="canonical" href="{canon_url('/card.html')}">
 <meta name="theme-color" content="#0d1114">
-<!-- 戰損字型：只給圖卡的英文與數字用，其他頁面不載（省一次外部請求）。
+<!-- 軍用體：只給圖卡的英文與數字用，其他頁面不載（省一次外部請求）。
      canvas 不會自動觸發字型下載，_CARD_JS 內另有 fonts.load() 明確載入後重畫。 -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik+Distressed&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap">
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v={_VER}">
 <link rel="stylesheet" href="style.css?v={_VER}">
 <style>
@@ -4480,13 +4478,13 @@ def build_card(df, out_dir, s):
 </header>
 <main class="card-main">
   <h1 class="card-h">{fmt_date_full(today, 'zh')} · 分享圖卡</h1>
-  <canvas id="cardcv" width="1080" height="1350" role="img"
+  <canvas id="cardcv" width="1080" height="1580" role="img"
     aria-label="{fmt_date_full(today, 'zh')} 共機 {ac_val} 架次，逾越中線 {ml_val} 架次（{cr_str}），中共艦艇 {sh_val} 艘"></canvas>
   <div class="card-actions">
     <button id="carddl" class="card-btn" type="button">下載 PNG</button>
     <span id="cardmsg" class="card-hint"></span>
   </div>
-  <p class="card-hint">直式 1080×1350，適合 Threads／IG；手機也可長按圖片儲存。
+  <p class="card-hint">直式 1080×1580，適合 Threads；手機也可長按圖片儲存。
   地圖為示意圖，非實際航跡，空域範圍依國防部公告文字判讀。</p>
 </main>
 <script>
