@@ -33,6 +33,7 @@
 | `card.html` | 每日分享圖卡（直式 1080×1350，canvas 客戶端繪製＋一鍵下載 PNG；只有中文版，noindex 不進 sitemap） |
 | `sitemap.xml` / `robots.txt` | build 產生；基準網址 = `https://pla-tracker.pages.dev` |
 | `version.txt` | build 時間戳，每次 build 必變 |
+| `_routes.json` | **配額命脈**（2026-08-05 加）。`functions/_middleware.js` 在 functions 根目錄，Pages 預設會讓全站每個請求都進 Function，連 CSS／圖片／CSV 都各算一次呼叫。免費方案 10 萬次／日是**整個帳號 13 個 Pages 專案共用**的，姊妹專案 flight-deck 8/04 一天燒了 74,213 次收到警告信。這支把靜態路徑排除掉。**新增靜態目錄要一起加進 exclude** |
 
 ## CSV 欄位
 
