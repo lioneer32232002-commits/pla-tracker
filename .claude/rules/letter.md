@@ -64,14 +64,12 @@
 
 - 2026-07-04 制度建立 session：交付 A–G 全部完成。無未完成項。
 - 2026-07-23 大改版 session：已上線項目見 project-reference「已知歷史事件」同日條目。
-  **待辦（使用者已批准、明天繼續）**：
-  1. 建「美製武器實戰檔案」區（/arsenal/，中英文＋導覽入口＋sitemap＋validate＋
-     CI 白名單，照「新增頁面 checklist」）。三篇已審核通過的研究稿在
-     `output/research_2026-07-23/arsenal_{harpoon,patriot,himars}.md`
-     （output/ 已 gitignore，勿 commit 草稿——repo 會被 Cloudflare 整包公開部署）。
-     稿內標「查無權威來源/建議人工核實」的段落，建頁時保守處理或不用。
-  2. pla-tracker × skyfaring 串接：調查報告在同資料夾 `landscape_survey.md`。
-     使用者尚未在 A/B/C 方案中選定（B＝pla-tracker 加 CSV 驅動「研究導讀」清單
-     區塊為推薦案）——動工前先問。
-  3. 日報信新版（對比段＋兩段式 Threads 草稿）明天中午 CI 首次實跑，
-     使用者看過後可能要調語氣措辭（scripts/send_daily_email.py 的 prompt）。
+  當時列的三項待辦，2026-08-05 清查結果：
+  1. ~~建「美製武器實戰檔案」區~~ **已完成**：`arsenal/{index,harpoon,patriot,himars}.html`
+     與 `en/arsenal/` 皆已上線，導覽列「軍購」為入口。原始草稿放在 gitignore 的
+     `output/research_2026-07-23/`，該資料夾已不存在——內容已在網站上，不需保留。
+  2. pla-tracker × skyfaring 串接：**調查報告 `landscape_survey.md` 已遺失**（同樣放在
+     已消失的 output/）。現存資訊只剩一句：A/B/C 三案中 **B＝在 pla-tracker 加 CSV 驅動
+     的「研究導讀」清單區塊**為當時推薦案，A/C 內容無存底。要推進的話：直接就 B 案
+     決定，或重做一次調查——**動工前先問使用者**（屬結構性變更）。
+  3. ~~日報信新版首次實跑~~ **已過**（2026-07-24 中午）。
