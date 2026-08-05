@@ -419,6 +419,7 @@ STRINGS = {
         'nav_about': '關於',
         'nav_card':  '圖卡',
         'footer_hub': '由 Skyfaring 製作',
+        'brand_hub': 'Skyfaring 作品',
         'sitrep_text':      '{date}：偵獲中共軍機 {ac} 架次，其中 {ml} 架次逾越海峽中線（越線率 {rate}）；中共艦艇 {sh} 艘。',
         'sitrep_text_zero': '{date}：當日未偵獲中共軍機；中共艦艇 {sh} 艘。',
         'nav_index': '總覽',
@@ -616,6 +617,7 @@ STRINGS = {
         'site_sub': 'Daily data from ROC MND public releases',
         'nav_about': 'About',
         'footer_hub': 'Made by Skyfaring',
+        'brand_hub': 'A Skyfaring project',
         'sitrep_text':      'On {date}, {ac} PLA aircraft sorties were detected, of which {ml} crossed the Taiwan Strait median line ({rate} crossing rate); {sh} PLA naval vessels.',
         'sitrep_text_zero': 'On {date}, no PLA aircraft were detected; {sh} PLA naval vessels.',
         'nav_index': 'Overview',
@@ -1163,6 +1165,10 @@ body{background:var(--bg);color:var(--tx);
   align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .site-title{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
 .site-sub{font-size:.65rem;color:var(--sub);letter-spacing:.05em;margin-top:.1rem}
+/* 回主站：放站名下方而非導覽列——導覽列是站內頁面，混入外站連結會被誤認 */
+.site-hub{display:inline-block;margin-top:.22rem;font-size:.6rem;color:var(--sub);
+  opacity:.62;text-decoration:none;letter-spacing:.04em}
+.site-hub:hover{color:var(--y);opacity:1}
 nav{display:flex;gap:.15rem;align-items:center;background:var(--sur);
   border:1px solid var(--bdr);border-radius:999px;padding:.22rem}
 nav a{color:var(--sub);text-decoration:none;font-size:.72rem;
@@ -1348,6 +1354,7 @@ html[lang="zh-Hant"] .def-card p{font-size:.9rem}
 /* ── zh-Hant 字型視覺校正（CJK 在相同 rem 下視覺較小，補齊至英文版水準）── */
 html[lang="zh-Hant"] .site-title{font-size:1.4rem}
 html[lang="zh-Hant"] .site-sub{font-size:.72rem}
+html[lang="zh-Hant"] .site-hub{font-size:.66rem}
 html[lang="zh-Hant"] nav a{font-size:.82rem;letter-spacing:.06em}
 html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 
@@ -2585,6 +2592,7 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
+      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('index', lang, 'index', s)}
   </div>
@@ -2976,6 +2984,7 @@ def build_about(df, lang, out_dir, s):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
+      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('about', lang, 'about', s)}
   </div>
@@ -3652,6 +3661,7 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
+      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('arsenal', lang, 'arsenal', s)}
   </div>
@@ -4061,6 +4071,7 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
+      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('arsenal', lang, page_name, s)}
   </div>
@@ -4452,6 +4463,7 @@ def build_card(df, out_dir, s):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
+      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('card', 'zh', 'card', s)}
   </div>

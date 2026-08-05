@@ -24,6 +24,10 @@ body{background:var(--bg);color:var(--tx);
   align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .site-title{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
 .site-sub{font-size:.65rem;color:var(--sub);letter-spacing:.05em;margin-top:.1rem}
+/* 回主站：放站名下方而非導覽列——導覽列是站內頁面，混入外站連結會被誤認 */
+.site-hub{display:inline-block;margin-top:.22rem;font-size:.6rem;color:var(--sub);
+  opacity:.62;text-decoration:none;letter-spacing:.04em}
+.site-hub:hover{color:var(--y);opacity:1}
 nav{display:flex;gap:.15rem;align-items:center;background:var(--sur);
   border:1px solid var(--bdr);border-radius:999px;padding:.22rem}
 nav a{color:var(--sub);text-decoration:none;font-size:.72rem;
@@ -209,6 +213,7 @@ html[lang="zh-Hant"] .def-card p{font-size:.9rem}
 /* ── zh-Hant 字型視覺校正（CJK 在相同 rem 下視覺較小，補齊至英文版水準）── */
 html[lang="zh-Hant"] .site-title{font-size:1.4rem}
 html[lang="zh-Hant"] .site-sub{font-size:.72rem}
+html[lang="zh-Hant"] .site-hub{font-size:.66rem}
 html[lang="zh-Hant"] nav a{font-size:.82rem;letter-spacing:.06em}
 html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 
