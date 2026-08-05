@@ -137,6 +137,8 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 - **母版 design id：`DAHRZtscuZM`**（標題 `20260805_PLA  TRACKER`，1080×1920 直式，
   給 Reels／Stories 用）。另有一份 4:5 舊版 `DAHRZTqPOY8`，非母版。
 - **母版不可直接改**。每天用 `copy-design` 複製一份再改，改壞不影響母版。
+- **資料夾：`共機擾台`（folder id `FAFzxKT6D0A`）**。母版放這裡；每天複製出來的當日設計
+  也要 `move-item-to-folder` 搬進去（複製預設不會落在母版所在資料夾）。
 - 產生編輯指令：`python -X utf8 scripts/make_canva_ops.py --top T --left L --width W --height H`
   T/L/W/H＝母版裡**地圖元素**（viewBox 1080×816 的形狀，最底下那個海域矩形）當下的
   位置與大小，用 `read-design` 讀出來後填進去。腳本會反推投影，所以使用者之後移動或
