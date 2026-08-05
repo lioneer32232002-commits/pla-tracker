@@ -129,6 +129,30 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 3. build → validate → commit 全部 → push（延宕理由寫進 CSV notes，
    顯示入口＝系統卡展開區；獨立延宕對照表已於 2026-07-24 移除勿復活）
 
+## Canva 每日圖卡（2026-08-05 起，使用者要求）
+
+使用者在 Canva 手工維護一份圖卡母版，**動畫與字型由他自己設定**；session 每天只負責
+換數字與活動空域，再交回給他套動畫、匯出 MP4。
+
+- **母版 design id：`DAHRZtscuZM`**（標題 `20260805_PLA  TRACKER`，1080×1920 直式，
+  給 Reels／Stories 用）。另有一份 4:5 舊版 `DAHRZTqPOY8`，非母版。
+- **母版不可直接改**。每天用 `copy-design` 複製一份再改，改壞不影響母版。
+- 產生編輯指令：`python -X utf8 scripts/make_canva_ops.py --top T --left L --width W --height H`
+  T/L/W/H＝母版裡**地圖元素**（viewBox 1080×816 的形狀，最底下那個海域矩形）當下的
+  位置與大小，用 `read-design` 讀出來後填進去。腳本會反推投影，所以使用者之後移動或
+  縮放地圖，算出來的空域仍然貼合。加 `--date` 可回填指定日期。
+- 每日流程：
+  1. `copy-design` 母版 → 取得當日設計 id
+  2. `read-design`（開 transaction）取得地圖元素與各文字元素的 locator id
+  3. 跑 `make_canva_ops.py` → 得到 `texts` 與 `zones`／`zone_labels`
+  4. `edit-design`：用 `replace_text` 換掉五處文字（三個數字、增減／百分比、日期區間、
+     月累計）；**刪掉舊的空域形狀與空域標籤，插入新的**（空域是形狀，Canva 的自動填入
+     換不了，只能重畫；因此新空域不會帶動畫，這是使用者已接受的取捨）
+  5. commit transaction → 把設計連結給使用者
+- **空域判斷不要另外寫一份**：`make_canva_ops.py` 直接 import `build_site.zones_from_special`。
+  公告實際寫的是「西南空域」而非「西南部」，自己重寫過一次就漏判（2026-08-05 踩過）。
+- 品牌範本（Brand Template）**不適用**：官方自動填入只能換文字與圖片，換不了形狀。
+
 ## 已知歷史事件（查問題時的線索）
 
 - 2026-08-05：網域遷移 `pla-tracker.pages.dev` → `pla-tracker.skyfaring.net`。
