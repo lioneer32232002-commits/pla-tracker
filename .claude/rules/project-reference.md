@@ -131,6 +131,16 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 
 ## 已知歷史事件（查問題時的線索）
 
+- 2026-08-05：網域遷移 `pla-tracker.pages.dev` → `pla-tracker.skyfaring.net`。
+  舊網域由 `functions/_middleware.js` 301 轉走；全站 canonical／og:url／sitemap／
+  JSON-LD 改走 `build_site.canon_url()`（去 `.html`，因為 Pages 會把 `/x.html`
+  308 到 `/x`）。Search Console：新資源（網址前置字元）靠 `skyfaring.net` 網域
+  資源自動驗證、sitemap 已提交；舊資源用 HTML 檔案驗證並於同日送出「變更網址」
+  遷移宣告（Google 保留 180 天，**期間不可拆掉 301**）。
+  ⚠️ `_middleware.js` 裡的 `GSC_VERIFY_PATH/BODY` 是舊資源的擁有權驗證檔，
+  **不可刪**——刪了 Google 會判定驗證失效、遷移宣告一併失效。它不是靜態檔的原因
+  寫在該檔註解裡（舊網域雙層轉址會擋掉驗證抓取）。
+
 - 2026-06-18 前：零架次且無航跡圖的日子，fetcher 誤判為「未發布」而漏資料
   （CI 仍 success）。已修（commit 741cff8）：無圖時改讀 `div.maincontent` 公告文字。
 - 2026-06-21：SEO 地基（95b84ca）＋媒體引用圖表（51e04e5）上線。
