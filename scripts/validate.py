@@ -45,7 +45,18 @@ ROBOTS     = ROOT / 'robots.txt'
 OG_IMG     = ROOT / 'og.png'
 OG_IMG_EN  = ROOT / 'og-en.png'
 ARSENAL_OG_IMG = ROOT / 'assets' / 'arsenal' / 'og-arsenal.jpg'
-BASE_URL   = 'https://pla-tracker.pages.dev'
+BASE_URL   = 'https://pla-tracker.skyfaring.net'
+OLD_HOST   = 'pla-tracker.pages.dev'   # 2026-08-05 遷出；產出頁不該再出現
+
+
+def canon_url(path, pfx=''):
+    """與 build_site.canon_url 同規則：.html 去尾、index.html 收成目錄，
+    對齊 Cloudflare Pages 實際回 200 的網址。"""
+    if path.endswith('/index.html'):
+        path = path[:-len('index.html')]
+    elif path.endswith('.html'):
+        path = path[:-len('.html')]
+    return f'{BASE_URL}{pfx}{path}'
 
 VALID_TYPES = {'manned', 'uav', 'mixed', 'zero',
                'Manned', 'UAV', 'Mixed', 'Zero',
@@ -444,8 +455,7 @@ def validate_html():
             for marker, desc in markers:
                 if marker not in content:
                     errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
-            expect_canon = (f'{BASE_URL}/en/arsenal/{wkey}.html' if is_en
-                            else f'{BASE_URL}/arsenal/{wkey}.html')
+            expect_canon = canon_url(f'/arsenal/{wkey}.html', '/en' if is_en else '')
             if f'href="{expect_canon}"' not in content:
                 errors.append(f'{label} canonical 未指向 {expect_canon}')
             if is_en:
@@ -463,17 +473,21 @@ def validate_html():
     else:
         sm = SITEMAP.read_text(encoding='utf-8')
         for page in ['index', 'records', 'monthly', 'about']:
-            if f'{BASE_URL}/{page}.html' not in sm:
+            if f'<loc>{canon_url(f"/{page}.html")}</loc>' not in sm:
                 errors.append(f'sitemap.xml 缺少中文 {page} 頁')
-            if f'{BASE_URL}/en/{page}.html' not in sm:
+            if f'<loc>{canon_url(f"/{page}.html", "/en")}</loc>' not in sm:
                 errors.append(f'sitemap.xml 缺少英文 {page} 頁')
-        for loc in [f'{BASE_URL}/arsenal/', f'{BASE_URL}/en/arsenal/']:
+        for loc in [canon_url('/arsenal/'), canon_url('/arsenal/', '/en')]:
             if loc not in sm:
                 errors.append(f'sitemap.xml 缺少 {loc}')
         for wkey in ARS_DETAIL_KEYS:
-            for loc in [f'{BASE_URL}/arsenal/{wkey}.html', f'{BASE_URL}/en/arsenal/{wkey}.html']:
+            for loc in [canon_url(f'/arsenal/{wkey}.html'),
+                        canon_url(f'/arsenal/{wkey}.html', '/en')]:
                 if loc not in sm:
                     errors.append(f'sitemap.xml 缺少 {loc}')
+        # canonical 不得指向會被 Pages 轉址的 .html 形式（見 build_site.canon_url）
+        if '.html</loc>' in sm:
+            errors.append('sitemap.xml 仍有 .html 結尾的 <loc>（Pages 會 308，canonical 應寫最終網址）')
 
     if not ROBOTS.exists():
         errors.append('robots.txt 不存在')
@@ -488,6 +502,17 @@ def validate_html():
             errors.append(f'{og.name} 不存在（請執行 scripts/make_og_image.py）')
         elif og.stat().st_size < 5_000:
             errors.append(f'{og.name} 檔案過小（{og.stat().st_size} bytes）')
+
+    # ── 舊網域殘留（2026-08-05 遷至 skyfaring.net 後的防迴歸）─────────────────
+    # 產出頁若還印著 pla-tracker.pages.dev，等於 canonical/OG 指向一個 301 到自己的
+    # 網址，Google 會忽略該 canonical。轉址規則本身（functions/）不在檢查範圍。
+    for html in sorted(ROOT.glob('*.html')) + sorted(ROOT.glob('en/**/*.html')) \
+            + sorted(ROOT.glob('arsenal/*.html')):
+        if OLD_HOST in html.read_text(encoding='utf-8'):
+            errors.append(f'{html.relative_to(ROOT).as_posix()} 仍含舊網域 {OLD_HOST}')
+    for extra in [SITEMAP, ROBOTS]:
+        if extra.exists() and OLD_HOST in extra.read_text(encoding='utf-8'):
+            errors.append(f'{extra.name} 仍含舊網域 {OLD_HOST}')
 
     # ── 軍購武器影像資產（assets/arsenal/，靜態檔不由 build 產生）──────────────
     if not ARSENAL_OG_IMG.exists():

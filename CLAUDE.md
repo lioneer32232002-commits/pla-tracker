@@ -1,6 +1,6 @@
 # PLA Tracker — Claude 工作規則
 
-每日追蹤解放軍在台灣周邊軍事活動的靜態網站（https://pla-tracker.pages.dev，
+每日追蹤解放軍在台灣周邊軍事活動的靜態網站（https://pla-tracker.skyfaring.net，
 push 到 main 即自動部署）。回覆一律用繁體中文。
 
 ## 你的角色

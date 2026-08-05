@@ -109,14 +109,18 @@ def render(out_name, lang):
     # 邊框
     d.rectangle([0, 0, W - 1, H - 1], outline=BDR, width=2)
 
-    base_y = H - 70
     margin = 80
+    # 版面節奏（2026-08-05 精簡）：只留四層——分類標籤／主標／英文副標／一行說明，
+    # 底部單獨一列網址＋出處。原本標題區還有一行「資料來源：中華民國國防部」，
+    # 與底部右下角重複，已刪。底部原本壓在 y=590（文字下緣幾乎貼到 630 的邊框），
+    # 現在改成以 BOT_BASE 為文字下緣，留 56px 下邊距。
+    RULE_Y  = 500          # 底部分隔線
+    URL_Y   = 530          # 網址列文字上緣
+    BOT_PAD = 56           # 文字下緣距離圖片底邊
 
-    # 頂部分類標籤
+    # 頂部分類標籤（原本還接「· TAIWAN STRAIT」，與副標的地理資訊重複，已刪）
     lbl = font(LAT_BD, 22)
-    tracked_text(d, (margin, 70),
-                 'UNCLASSIFIED  //  OPEN SOURCE  ·  TAIWAN STRAIT',
-                 lbl, SUB, spacing=3)
+    tracked_text(d, (margin, 70), 'UNCLASSIFIED  //  OPEN SOURCE', lbl, SUB, spacing=3)
     d.line([margin, 112, W - margin, 112], fill=BDR, width=1)
 
     # 標題區
@@ -126,13 +130,10 @@ def render(out_name, lang):
         title_f = font(LAT_BD, 72)
         sub_f   = font(LAT_BD, 38)
         tag_f   = font(LAT, 30)
-        d.text((margin + 60, 188), 'PLA Activity Tracker', font=title_f, fill=TX)
+        d.text((margin + 72, 188), 'PLA Activity Tracker', font=title_f, fill=TX)
         d.text((margin, 290), 'Taiwan Strait', font=sub_f, fill=Y)
-        d.text((margin, 350),
-               'Daily PLA sorties, median-line crossings',
-               font=tag_f, fill=SUB)
-        d.text((margin, 392),
-               '& naval activity — sourced from ROC MND',
+        d.text((margin, 352),
+               'Daily sorties · median-line crossings',
                font=tag_f, fill=SUB)
     else:
         title_f = font(JH_BD, 76)
@@ -140,22 +141,20 @@ def render(out_name, lang):
         tag_f   = font(JH, 30)
         d.text((margin + 64, 178), '中國擾台趨勢數據分析', font=title_f, fill=TX)
         d.text((margin, 290), 'PLA Activity Around Taiwan', font=sub_f, fill=Y)
-        d.text((margin, 348),
-               '每日追蹤共機架次・逾越海峽中線・共艦動態',
-               font=tag_f, fill=SUB)
-        d.text((margin, 390),
-               '資料來源：中華民國國防部',
+        d.text((margin, 350),
+               '每日追蹤共機架次・越過中線・共艦動態',
                font=tag_f, fill=SUB)
 
-    # 底部網址列
-    d.line([margin, base_y + 18, W - margin, base_y + 18], fill=BDR, width=1)
-    url_f = font(LAT_BD, 30)
-    d.text((margin, base_y + 30), 'pla-tracker.pages.dev', font=url_f, fill=Y)
-    cred_f = font(LAT, 24)
-    cred = 'Source: ROC MND' if lang == 'en' else '資料來源：國防部'
-    cred_f2 = font(JH, 24) if lang != 'en' else cred_f
-    cw = d.textlength(cred, font=cred_f2)
-    d.text((W - margin - cw, base_y + 34), cred, font=cred_f2, fill=SUB)
+    # 底部網址列：以文字下緣對齊 H-BOT_PAD，不再貼著邊框
+    d.line([margin, RULE_Y, W - margin, RULE_Y], fill=BDR, width=1)
+    url_f = font(LAT_BD, 28)
+    cred  = 'Source: ROC MND' if lang == 'en' else '資料來源：國防部'
+    cred_f = font(LAT, 22) if lang == 'en' else font(JH, 22)
+    url_bot  = URL_Y + (url_f.getbbox('Ag')[3])
+    shift    = (H - BOT_PAD) - url_bot          # 把整列往下對齊到目標下緣
+    d.text((margin, URL_Y + shift), 'pla-tracker.skyfaring.net', font=url_f, fill=Y)
+    cw = d.textlength(cred, font=cred_f)
+    d.text((W - margin - cw, URL_Y + shift + 4), cred, font=cred_f, fill=SUB)
 
     img.save(ROOT / out_name)
     print(f'[OK] {out_name}')

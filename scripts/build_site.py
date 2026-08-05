@@ -22,11 +22,28 @@ SITE_DIR  = ROOT
 SITE_DIR.mkdir(exist_ok=True)
 
 # 正式部署網域（canonical / OG / sitemap / robots 的絕對網址基準）
-BASE_URL = 'https://pla-tracker.pages.dev'
+# 2026-08-05 由 pla-tracker.pages.dev 遷來；舊網域的轉址規則在 functions/_middleware.js。
+BASE_URL = 'https://pla-tracker.skyfaring.net'
+SITE_HOST = BASE_URL.split('//', 1)[1]     # 供頁面／圖卡顯示用（不含 scheme）
 # Skyfaring 作品集主站（頁尾回連）
 HUB_URL  = 'https://skyfaring.net/'
 # 相關發布（部落格）
 BLOG_URL = 'https://yi-tienpan.blogspot.com'
+
+
+def canon_url(path, pfx=''):
+    """站內路徑 → canonical 絕對網址。
+
+    Cloudflare Pages 會把 `/x.html` 308 到 `/x`、`/index.html` 308 到 `/`。
+    canonical／og:url／sitemap 若沿用 `.html`，等於宣告「本頁的規範網址是一個轉址」，
+    Google 會忽略它。因此對外的絕對網址一律走這裡轉成最終形式；
+    **站內 <a href> 不受影響**，維持 .html 相對連結即可（一樣會被轉到最終網址）。
+    """
+    if path.endswith('/index.html'):
+        path = path[:-len('index.html')]     # /index.html → /
+    elif path.endswith('.html'):
+        path = path[:-len('.html')]          # /records.html → /records
+    return f'{BASE_URL}{pfx}{path}'
 
 
 # ── 嚴重日自動配色 ────────────────────────────────────────────────────────────
@@ -2157,8 +2174,8 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
 
     # Absolute URLs for canonical / hreflang / OG (full domain, per SEO best practice)
     path     = page_path if page_path else f'/{page_name}.html'
-    canon_zh = f'{BASE_URL}{path}'
-    canon_en = f'{BASE_URL}/en{path}'
+    canon_zh = canon_url(path)
+    canon_en = canon_url(path, '/en')
     canonical = canon_en if lang == 'en' else canon_zh
 
     # Asset paths: en/ pages (and nested zh pages) use absolute paths to avoid
@@ -2232,12 +2249,12 @@ def dataset_jsonld(df, lang):
         desc = ("Daily structured record of People's Liberation Army (PLA) military activity "
                 "around Taiwan, compiled from ROC Ministry of National Defense public releases: "
                 "aircraft sorties, Taiwan Strait median-line crossings and naval vessel counts.")
-        page = f'{BASE_URL}/en/index.html'   # 與 canonical / og:url 一致
+        page = canon_url('/index.html', '/en')   # 與 canonical / og:url 一致
     else:
         name = '中國擾台每日數據集'
         desc = ('每日整理中國解放軍（PLA）在台灣周邊軍事活動的結構化資料，'
                 '來源為中華民國國防部每日公布：共機架次、逾越海峽中線數、共艦艘數。')
-        page = f'{BASE_URL}/index.html'      # 與 canonical / og:url 一致
+        page = canon_url('/index.html')          # 與 canonical / og:url 一致
 
     data = {
         "@context": "https://schema.org",
@@ -2283,8 +2300,8 @@ ARS_PUBLISHED = '2026-07-23'   # /arsenal/ 內容區上線日（TechArticle date
 def arsenal_jsonld(lang, s, df_ars, weapon_key=None):
     """arsenal 系列頁的 JSON-LD head_extra。"""
     pfx  = '/en' if lang == 'en' else ''
-    home = f'{BASE_URL}{pfx}/index.html'
-    ars  = f'{BASE_URL}{pfx}/arsenal/'
+    home = canon_url('/index.html', pfx)
+    ars  = canon_url('/arsenal/', pfx)
     ars_label = 'US Arms Deliveries to Taiwan' if lang == 'en' else '對美軍購交付追蹤'
     crumbs = [
         {"@type": "ListItem", "position": 1,
@@ -2300,7 +2317,7 @@ def arsenal_jsonld(lang, s, df_ars, weapon_key=None):
     if weapon_key:
         w    = ARSENAL_DETAIL[weapon_key]
         name = w['name_en'] if lang == 'en' else w['name_zh']
-        url  = f'{BASE_URL}{pfx}/arsenal/{weapon_key}.html'
+        url  = canon_url(f'/arsenal/{weapon_key}.html', pfx)
         crumbs.append({"@type": "ListItem", "position": 3, "name": name, "item": url})
         blocks.append({
             "@context": "https://schema.org",
@@ -2322,7 +2339,7 @@ def arsenal_jsonld(lang, s, df_ars, weapon_key=None):
             "itemListElement": [
                 {"@type": "ListItem", "position": i + 1,
                  "name": (d['name_en'] if lang == 'en' else d['name_zh']),
-                 "url": f'{BASE_URL}{pfx}/arsenal/{k}.html'}
+                 "url": canon_url(f'/arsenal/{k}.html', pfx)}
                 for i, (k, d) in enumerate(ARSENAL_DETAIL.items())
             ],
         })
@@ -4367,7 +4384,10 @@ def build_card(df, out_dir, s):
         'dr':    (dt - pd.Timedelta(days=1)).strftime('%m.%d') + ' – ' + dt.strftime('%m.%d'),
         'ac': ac_val, 'ml': ml_val, 'sh': sh_val,
         'cr': cr_str if ac_val else '',   # 零架次日不留一個孤零零的破折號
-        'l_ac': '共機架次', 'l_ml': '逾越中線', 'l_sh': '共艦',
+        # 圖卡標籤用「越過中線」而非站內慣用的「逾越中線」：canvas 逐字做字型
+        # fallback，「逾」在多數 Windows／iOS 的字型鏈裡掉到另一套字型，粗細與
+        # 其他三字對不上（使用者 2026-08-05 回報）。換字比追字型可靠。
+        'l_ac': '共機架次', 'l_ml': '越過中線', 'l_sh': '共艦',
         's_ac': _delta_text(latest['aircraft_total'], prev['aircraft_total']),
         's_sh': _delta_text(latest['ships_total'], prev['ships_total']),
         'zones': zones,
@@ -4375,13 +4395,15 @@ def build_card(df, out_dir, s):
         'zn':  {'n': '北部空域', 'c': '中部空域', 'sw': '西南部空域',
                 's': '南部空域', 'e': '東部空域', 'ne': '東北部空域'},
         'lbl': {'tw': '台灣', 'ph': '澎湖', 'km': '金門', 'mz': '馬祖'},
-        'leg': {'ml': '海峽中線', 'nm': '12 浬領海', 'zone': '當日活動空域'},
+        # 圖例同樣避開字型鏈會掉字的字：「浬」與「逾」一樣會換到別套字型（粗細不一致），
+        # 改用「海里」——意思相同且兩字都在主字型內。
+        'leg': {'ml': '海峽中線', 'nm': '12 海里領海', 'zone': '當日活動空域'},
         'mapnote': '地圖為示意圖',
         # 月累計拆成 [文字, 是否強調] 分段，前端以灰標籤／白粗數字混排
         'moseg': [[f'{dt.month} 月至今 ', 0], [str(len(df_mo)), 1], [' 天', 0],
                   ['　｜　共機 ', 0], [str(mo_ac), 1], [' 架次', 0],
-                  ['　｜　逾越中線 ', 0], [str(mo_ml), 1], [f'（{mo_rate}）', 0]],
-        'site': 'pla-tracker.pages.dev',
+                  ['　｜　越過中線 ', 0], [str(mo_ml), 1], [f'（{mo_rate}）', 0]],
+        'site': SITE_HOST,
         'src':  '資料來源：中華民國國防部',
         'geo':  geo,
     }
@@ -4401,7 +4423,7 @@ def build_card(df, out_dir, s):
 <title>{title}</title>
 <meta name="description" content="{desc}">
 <meta name="robots" content="noindex,follow">
-<link rel="canonical" href="{BASE_URL}/card.html">
+<link rel="canonical" href="{canon_url('/card.html')}">
 <meta name="theme-color" content="#0d1114">
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v={_VER}">
 <link rel="stylesheet" href="style.css?v={_VER}">
@@ -4470,8 +4492,8 @@ def build_sitemap(df):
     ]
     blocks = []
     for page, freq, prio, mod in pages:
-        zh = f'{BASE_URL}/{page}.html'
-        en = f'{BASE_URL}/en/{page}.html'
+        zh = canon_url(f'/{page}.html')
+        en = canon_url(f'/{page}.html', '/en')
         for loc in (zh, en):
             blocks.append(
                 '  <url>\n'
@@ -4486,8 +4508,8 @@ def build_sitemap(df):
             )
 
     # /arsenal/（目錄式路徑，非 .html）：zh + en。index 加 3 個武器內頁。
-    ars_zh = f'{BASE_URL}/arsenal/'
-    ars_en = f'{BASE_URL}/en/arsenal/'
+    ars_zh = canon_url('/arsenal/')
+    ars_en = canon_url('/arsenal/', '/en')
     for loc in (ars_zh, ars_en):
         blocks.append(
             '  <url>\n'
@@ -4501,8 +4523,8 @@ def build_sitemap(df):
             '  </url>'
         )
     for wkey in ARS_DETAIL_PAGES:
-        d_zh = f'{BASE_URL}/arsenal/{wkey}.html'
-        d_en = f'{BASE_URL}/en/arsenal/{wkey}.html'
+        d_zh = canon_url(f'/arsenal/{wkey}.html')
+        d_en = canon_url(f'/arsenal/{wkey}.html', '/en')
         for loc in (d_zh, d_en):
             blocks.append(
                 '  <url>\n'

@@ -6,7 +6,7 @@
 ## 系統全貌
 
 - **產品**：每日追蹤解放軍在台灣周邊軍事活動的靜態網站。資料來源＝中華民國國防部
-  每日發布的航跡圖／公告文字。發布管道：https://pla-tracker.pages.dev（Cloudflare
+  每日發布的航跡圖／公告文字。發布管道：https://pla-tracker.skyfaring.net（Cloudflare
   Pages，push 到 main 即自動部署）、Threads、部落格 https://yi-tienpan.blogspot.com。
   屬 Skyfaring 作品集（hub: https://skyfaring.net/）。
 - **每日更新是全自動的**：GitHub Actions（`.github/workflows/daily_update.yml`）在
@@ -31,7 +31,7 @@
 | `records.html` / `monthly.html` | 每日紀錄頁／月度頁 |
 | `about.html` / `en/about.html` | 方法論頁（build 產生，每日更新資料區間/筆數） |
 | `card.html` | 每日分享圖卡（直式 1080×1350，canvas 客戶端繪製＋一鍵下載 PNG；只有中文版，noindex 不進 sitemap） |
-| `sitemap.xml` / `robots.txt` | build 產生；基準網址 = `https://pla-tracker.pages.dev` |
+| `sitemap.xml` / `robots.txt` | build 產生；基準網址 = `https://pla-tracker.skyfaring.net`（2026-08-05 遷入）。canonical／sitemap 一律走 `build_site.canon_url()` 去掉 `.html`——Pages 會把 `/x.html` 308 到 `/x`，canonical 指向轉址等於無效；validate 會擋 `.html</loc>` 與舊網域殘留 |
 | `version.txt` | build 時間戳，每次 build 必變 |
 | `_routes.json` | **配額命脈**（2026-08-05 加）。`functions/_middleware.js` 在 functions 根目錄，Pages 預設會讓全站每個請求都進 Function，連 CSS／圖片／CSV 都各算一次呼叫。免費方案 10 萬次／日是**整個帳號 13 個 Pages 專案共用**的，姊妹專案 flight-deck 8/04 一天燒了 74,213 次收到警告信。這支把靜態路徑排除掉。**新增靜態目錄要一起加進 exclude** |
 
