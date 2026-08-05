@@ -4155,7 +4155,8 @@ x.fillStyle=CO.bg;x.fillRect(0,0,W,H);
 // ── 抬頭（置中海報式：標題置中、日期顯示為資料期間範圍）──────────────────
 txt(D.title,W/2,96,34,CO.hd,600,'center',3);
 txt(D.sub,W/2,126,16,CO.dim,400,'center',4.2);
-txt(D.dl.slice(0,4)+'.'+D.dr+' · '+D.wd,W/2,162,22,CO.sub,500,'center',1);
+// 不顯示星期：公告涵蓋前一日至發布日，跨兩天標一個星期會誤導。
+txt(D.dl.slice(0,4)+'.'+D.dr,W/2,162,23,CO.sub,500,'center',1.6);
 line(W/2-56,186,W/2+56,186,'#2a343b',2);
 
 // ── 當日三數字（置中對稱：數字在上、標籤在下）────────────────────────────
@@ -4348,7 +4349,6 @@ def build_card(df, out_dir, s):
 
     today = latest['date']
     dt    = pd.to_datetime(today)
-    wd    = '週' + '一二三四五六日'[dt.weekday()]
 
     df_mo  = df[df['date'].str.startswith(today[:7])]
     mo_ac  = int(df_mo['aircraft_total'].fillna(0).sum())
@@ -4363,7 +4363,6 @@ def build_card(df, out_dir, s):
         'title': '中國擾台趨勢數據分析',
         'sub':   'PLA ACTIVITY AROUND TAIWAN',
         'dl':    dt.strftime('%Y.%m.%d'),
-        'wd':    wd,
         # 國防部公告涵蓋前一日至發布日的活動，圖卡顯示資料期間而非單一發布日
         'dr':    (dt - pd.Timedelta(days=1)).strftime('%m.%d') + ' – ' + dt.strftime('%m.%d'),
         'ac': ac_val, 'ml': ml_val, 'sh': sh_val,
