@@ -11,8 +11,23 @@
 const REDIRECT_HOSTS = ["pla-tracker.pages.dev"];
 const CANONICAL_HOST = "pla-tracker.skyfaring.net";
 
+// Search Console 對舊網域 pla-tracker.pages.dev 的擁有權驗證檔（2026-08-05 加）。
+// 為什麼不放成靜態檔：舊網域整站被下面的規則 301 轉走，而就算把它加進
+// `_routes.json` 的 exclude 讓 Function 不跑，Pages 還會把 `/x.html` 308 到 `/x`
+// ——兩層轉址都可能讓驗證抓不到檔。這裡直接回 200，兩個主機都適用。
+// 驗證通過後**不可刪除**，Google 會定期重新檢查。
+const GSC_VERIFY_PATH = "/googlec0b8776e124d248c.html";
+const GSC_VERIFY_BODY = "google-site-verification: googlec0b8776e124d248c.html";
+
 export async function onRequest(context) {
   const url = new URL(context.request.url);
+
+  if (url.pathname === GSC_VERIFY_PATH) {
+    return new Response(GSC_VERIFY_BODY, {
+      headers: { "content-type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
+
   if (!REDIRECT_HOSTS.includes(url.hostname)) return context.next();
 
   url.hostname = CANONICAL_HOST;
