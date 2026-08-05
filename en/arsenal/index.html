@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,7 +9,7 @@
 <link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.pages.dev/arsenal/">
 <link rel="alternate" hreflang="en" href="https://pla-tracker.pages.dev/en/arsenal/">
 <link rel="alternate" hreflang="x-default" href="https://pla-tracker.pages.dev/arsenal/">
-<meta name="theme-color" content="#f5f4f0">
+<meta name="theme-color" content="#090d0f">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PLA Activity Tracker — Taiwan Strait">
 <meta property="og:title" content="Taiwan–US Arms Delivery Tracker — PLA Activity Tracker">
@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="Tracking Taiwan's US arms procurement since 2019: 49 cases, per-case value, delivery progress, delays and their official reasons — every entry traceable to an official US DSCA notification.">
 <meta name="twitter:image" content="https://pla-tracker.pages.dev/assets/arsenal/og-arsenal.jpg">
 <meta name="twitter:image:alt" content="Taiwan–US Arms Delivery Tracker — PLA Activity Tracker">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202608041417">
-<link rel="stylesheet" href="/style.css?v=202608041417">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202608050401">
+<link rel="stylesheet" href="/style.css?v=202608050401">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608041417')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608050401')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "ItemList", "name": "US Arms Deliveries to Taiwan", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Harpoon Anti-Ship Missile", "url": "https://pla-tracker.pages.dev/en/arsenal/harpoon.html"}, {"@type": "ListItem", "position": 2, "name": "Patriot Air-Defense System", "url": "https://pla-tracker.pages.dev/en/arsenal/patriot.html"}, {"@type": "ListItem", "position": 3, "name": "HIMARS Rocket Artillery", "url": "https://pla-tracker.pages.dev/en/arsenal/himars.html"}]}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://pla-tracker.pages.dev/en/index.html"}, {"@type": "ListItem", "position": 2, "name": "US Arms Deliveries to Taiwan", "item": "https://pla-tracker.pages.dev/en/arsenal/"}]}</script>
@@ -70,15 +70,15 @@
     <div class="ars-sec-title">Arms Sales by Year<span class="sub">US$ billion · by DSCA notice year</span></div>
     <div class="ars-chart-wrap"><div class="ars-chart-canvas"><canvas id="ars-year"></canvas></div></div><script>(function(){
 var Y=["2019", "2020", "2021", "2022", "2023", "2024", "2025"],V=[10.72, 5.86, 0.75, 2.14, 1.86, 3.63, 11.44],TOP=[["F-16C/D Block 70 Aircraft and Related Equipment US$8.00B", "M1A2T Abrams Main Battle Tanks and Related Equipment US$2.00B", "Continuation of F-16 Pilot Training Program (21st Fighter Squadron, Peace Fenghuang) US$0.50B"], ["Harpoon Coastal Defense System (RGM-84L-4 Harpoon Block II) US$2.37B", "AGM-84H SLAM-ER Missiles and Related Equipment US$1.01B", "PAC-3 Missile Repair and Recertification Support US$0.62B"], ["M109A6 Paladin 155mm Self-Propelled Howitzer System US$0.75B"], ["Surveillance Radar Program (SRP) Contract Logistics Support US$0.67B", "AGM-84L-1 Harpoon Block II Missiles (air-launched / F-16-compatible) US$0.35B", "Aircraft Standard Spare Parts – CLSSA Expansion (F-16/C-130/IDF and other U.S.-origin aircraft) US$0.33B"], ["F-16 Munitions (AGM-88B HARM / AIM-120C-8 AMRAAM) US$0.62B", "F-16 Infrared Search and Track (IRST) / AN/ASG-34 US$0.50B", "30mm Ammunition for CM34 Armored Vehicles US$0.33B"], ["National Advanced Surface-to-Air Missile System (NASAMS) US$1.16B", "AN/TPS-77 and AN/TPS-78 Radar Turnkey Systems US$0.83B", "Spare Parts and Support for F-16 Aircraft and Active Electronically Scanned Array Radars US$0.32B"], ["M142 HIMARS launchers, M57 ATACMS, and GMLRS-U/AW rockets US$4.05B", "M109A7 Self-Propelled Howitzers and related equipment US$4.03B", "ALTIUS-700M and ALTIUS-600 Systems and related equipment US$1.10B"]];
-var xA={grid:{display:false},ticks:{color:"#6b7a84",font:{size:11},maxRotation:0},border:{display:false}};
-var yA={grid:{color:function(c){return c.tick.value===0?"#cfc9ba":'transparent';}},ticks:{color:"#6b7a84",font:{size:10},maxTicksLimit:5,callback:function(v){return v;}},border:{display:false},beginAtZero:true};
+var xA={grid:{display:false},ticks:{color:"#96b0b8",font:{size:11},maxRotation:0},border:{display:false}};
+var yA={grid:{color:function(c){return c.tick.value===0?"#3a4448":'transparent';}},ticks:{color:"#96b0b8",font:{size:10},maxTicksLimit:5,callback:function(v){return v;}},border:{display:false},beginAtZero:true};
 var opts={animation:{duration:700,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,
   plugins:{legend:{display:false},tooltip:{callbacks:{
     label:function(c){return "US$"+c.parsed.y.toFixed(1)+"B";},
     afterBody:function(items){var i=items[0].dataIndex;return TOP[i]||[];}
   }}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('ars-year'),{type:'bar',data:{labels:Y,datasets:[
-  {data:V,backgroundColor:"#d99f00",hoverBackgroundColor:"#d99f00",borderRadius:3,maxBarThickness:54}
+  {data:V,backgroundColor:"#f5c842",hoverBackgroundColor:"#f5c842",borderRadius:3,maxBarThickness:54}
 ]},options:opts});
 })();</script>
   </section>
