@@ -27,8 +27,6 @@ BASE_URL = 'https://pla-tracker.skyfaring.net'
 SITE_HOST = BASE_URL.split('//', 1)[1]     # 供頁面／圖卡顯示用（不含 scheme）
 # Skyfaring 作品集主站（頁尾回連）
 HUB_URL  = 'https://skyfaring.net/'
-# 相關發布（部落格）
-BLOG_URL = 'https://yi-tienpan.blogspot.com'
 
 
 def canon_url(path, pfx=''):
@@ -2867,34 +2865,29 @@ def build_about(df, lang, out_dir, s):
     <h2>Source &amp; updates</h2>
     <ul>
       <li>Single source: the <a href="{MND}" target="_blank" rel="noopener">ROC MND "Real-time
-        Military Activity" bulletins</a> and their flight-path graphics. This site only
-        transcribes, structures and visualizes that data; nothing unconfirmed by the MND is added.</li>
-      <li>Fetched automatically once a day after the MND publishes around midday Taiwan time
-        (≈ 12:00–14:00), with backup retry runs.</li>
-      <li>If the MND does not publish on a given day, that day stays blank — never filled with an
-        estimate. Records are append-only and never rewritten, so cited figures stay stable.</li>
-      <li>Checked before writing: median-line crossings may not exceed total sorties; the crossing
-        rate must match the computed value (±1%); no duplicate dates; aircraft-type values must be
-        valid. Pages are not regenerated unless the checks pass.</li>
+        Military Activity" bulletins</a> and flight-path graphics — transcribed and visualized
+        only; nothing unconfirmed by the MND is added.</li>
+      <li>Fetched automatically after the MND publishes around midday Taiwan time (≈ 12:00–14:00);
+        if it does not publish, that day stays blank — never filled with an estimate.</li>
+      <li>Records are append-only and never rewritten, so cited figures stay stable; values are
+        checked for consistency before publishing.</li>
     </ul>
 
     <h2>Lines &amp; terms</h2>
     <div class="def-card">
       <div class="term">Taiwan Strait median line <span class="en">/ Davis Line</span></div>
-      <p>An informal line down the centre of the strait, never recognized by any treaty between
-        the two sides. For decades aircraft and vessels largely refrained from crossing it, so a
-        crossing is a strong political and military signal — but crossing it <strong>does not
-        constitute a violation of territory or sovereign airspace under international law</strong>
-        and does not trigger the right of self-defense. "Median-line crossings" here means the PLA
-        sorties that crossed this line that day.</p>
+      <p>An informal line down the centre of the strait, never recognized by any treaty. For
+        decades both sides largely refrained from crossing it, so a crossing is a strong political
+        signal — but it <strong>does not constitute a violation of sovereign airspace under
+        international law</strong> and does not trigger the right of self-defense. "Median-line
+        crossings" here means the PLA sorties that crossed it that day.</p>
     </div>
     <div class="def-card">
       <div class="term">12 NM territorial sea</div>
       <p>Under UNCLOS, the 12 nautical miles from the baseline are a state's territorial sea and
         the airspace above it is sovereign airspace — the boundary that actually carries legal
-        weight. Once PLA aircraft or vessels come inside this line, Taiwan may take defensive
-        action under international law and its Defense Act. A different order of event from a
-        median-line crossing.</p>
+        weight. PLA aircraft or vessels coming inside this line is a different order of event from
+        a median-line crossing.</p>
     </div>
     <div class="def-card">
       <div class="term">ADIZ <span class="en">Air Defense Identification Zone</span></div>
@@ -2903,18 +2896,16 @@ def build_about(df, lang, out_dir, s):
     </div>
     <div class="def-card">
       <div class="term">Sorties &amp; vessels</div>
-      <p>"Sorties" is the number of PLA aircraft missions detected that day, per the MND's own
-        count; "vessels" is the number of PLA Navy ships detected that day. Other activity such as
-        surveillance balloons is noted in the notes column of the daily records.</p>
+      <p>"Sorties" is the number of PLA aircraft missions detected that day; "vessels" the number
+        of PLA Navy ships — both per the MND's own count.</p>
     </div>
 
     <h2>The arms dataset</h2>
     <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset covering US
       Foreign Military Sales to Taiwan notified to Congress by the Defense Security Cooperation
-      Agency (DSCA) since 2019. A DSCA notification is the congressional-notification stage only:
-      it is <strong>not</strong> a signed contract and not a delivery, and notified values are
-      ceilings that signed amounts often fall below. Direct commercial sales and US-forces
-      transfers are excluded; every case is compiled by hand and carries its own source link.</p>
+      Agency (DSCA) since 2019. A DSCA notification is <strong>not</strong> a signed contract or a
+      delivery, and notified values are ceilings. Direct commercial sales are excluded; every case
+      is compiled by hand with its own source link.</p>
 
     <h2>Citation &amp; license</h2>
     <p>The underlying figures are public information from the MND. This site's compilation, field
@@ -2922,10 +2913,7 @@ def build_about(df, lang, out_dir, s):
       BY 4.0</a>. Please credit:</p>
     <p><strong>Source: ROC Ministry of National Defense; compilation &amp; charts: PLA Activity
       Tracker ({BASE_URL}).</strong></p>
-    <ul>
-      <li>Raw data (CSV): <a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></li>
-      <li>Related posts: <a href="{BLOG_URL}" target="_blank" rel="noopener">Blog</a></li>
-    </ul>
+    <p>Raw data (CSV): <a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></p>
   </article>"""
     else:
         body = f"""\
@@ -2942,25 +2930,22 @@ def build_about(df, lang, out_dir, s):
     <h2>資料來源與更新</h2>
     <ul>
       <li>唯一來源：<a href="{MND}" target="_blank" rel="noopener">國防部「即時軍事動態」</a>
-        的每日公告與航跡圖。本站只做轉錄、結構化與視覺化，不引用未經國防部證實的訊息。</li>
-      <li>每天國防部中午公布後自動擷取一次（台灣時間約 12:00–14:00），另有備援班次重試。</li>
-      <li>國防部當日沒發布就留空，不用估計值補；歷史資料只新增、不改寫，所以引用過的數字不會變。</li>
-      <li>寫入前自動檢查：逾越中線數不得大於總架次、越線率與計算值相符（±1%）、日期不重複、
-        機型值合法。檢查沒過就不會產生新頁面。</li>
+        的每日公告與航跡圖，只做轉錄與視覺化，不加入未經證實的訊息。</li>
+      <li>每天中午公布後自動擷取（台灣時間 12:00–14:00）；當日沒發布就留空，不用估計值補。</li>
+      <li>歷史資料只新增、不改寫，引用過的數字不會變；寫入前自動檢查數值一致性，沒過就不出版。</li>
     </ul>
 
     <h2>界線與名詞</h2>
     <div class="def-card">
       <div class="term">海峽中線 <span class="en">Taiwan Strait median line / Davis Line</span></div>
-      <p>海峽中央一條沒有任何條約承認的默契界線。長年雙方軍機艦多半不越線，所以越線是強烈的
-        政治與軍事訊號；但越線<strong>不構成國際法上的領土或領空侵犯</strong>，也不會觸發自衛權。
-        本站「逾越中線」＝當日越過此線的共機架次。</p>
+      <p>海峽中央一條沒有條約承認的默契界線。長年雙方多半不越線，越線因此是強烈的政治訊號；
+        但它<strong>不構成國際法上的領空侵犯</strong>，也不觸發自衛權。本站「逾越中線」＝當日
+        越線的共機架次。</p>
     </div>
     <div class="def-card">
       <div class="term">12 浬領海線 <span class="en">12 NM territorial sea</span></div>
-      <p>依《聯合國海洋法公約》，自基線起算 12 浬為領海、其上空為領空，這才是有法律效力的邊界。
-        共機艦進到這條線以內，台灣依國際法與《國防法》可採取防衛行動——與越中線是兩個不同
-        層級的事件。</p>
+      <p>依《聯合國海洋法公約》，自基線起算 12 浬為領海、其上空為領空，這才是有法律效力的
+        邊界。共機艦進到這條線以內，與越過中線是兩個不同層級的事件。</p>
     </div>
     <div class="def-card">
       <div class="term">防空識別區 <span class="en">ADIZ</span></div>
@@ -2968,24 +2953,19 @@ def build_about(df, lang, out_dir, s):
     </div>
     <div class="def-card">
       <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
-      <p>「架次」＝當日偵獲的共機出動次數（以國防部計數為準）；「共艦」＝當日偵獲的解放軍艦艇
-        艘數。空飄氣球等其他活動另記在每日紀錄的備註欄。</p>
+      <p>「架次」＝當日偵獲的共機出動次數，「共艦」＝艦艇艘數，均以國防部計數為準。</p>
     </div>
 
     <h2>軍購資料</h2>
-    <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起由美國國防安全合作署
-      （DSCA）通知美國國會的對台軍售案。DSCA 公告只是「通知國會」，<strong>不等於簽約、
-      也不等於交付</strong>，公告金額是上限、實際簽約常較低。不含商售案與美軍自用移撥；
-      每案人工整理、逐案附來源。</p>
+    <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起美國國防安全合作署
+      （DSCA）通知國會的對台軍售案。DSCA 公告<strong>不等於簽約或交付</strong>，金額是上限。
+      不含商售案；每案人工整理、逐案附來源。</p>
 
     <h2>引用與授權</h2>
     <p>底層數字屬國防部公開資訊。本站的整理、欄位結構與圖表以
       <a href="{CC}" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎引用，請註明：</p>
     <p><strong>資料來源：中華民國國防部；整理與圖表：解放軍擾台動態追蹤（{BASE_URL}）。</strong></p>
-    <ul>
-      <li>原始資料（CSV）：<a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></li>
-      <li>相關發布：<a href="{BLOG_URL}" target="_blank" rel="noopener">部落格</a></li>
-    </ul>
+    <p>原始資料（CSV）：<a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></p>
   </article>"""
 
     head = make_head(lang, 'about', s)

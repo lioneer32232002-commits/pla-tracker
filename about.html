@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。">
 <meta name="twitter:image" content="https://pla-tracker.skyfaring.net/og.png">
 <meta name="twitter:image:alt" content="中國擾台趨勢數據分析">
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608051701">
-<link rel="stylesheet" href="style.css?v=202608051701">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608051714">
+<link rel="stylesheet" href="style.css?v=202608051714">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608051701')location.reload(true);});</script>
+<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608051714')location.reload(true);});</script>
 
 </head>
 <body>
@@ -59,25 +59,22 @@
     <h2>資料來源與更新</h2>
     <ul>
       <li>唯一來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">國防部「即時軍事動態」</a>
-        的每日公告與航跡圖。本站只做轉錄、結構化與視覺化，不引用未經國防部證實的訊息。</li>
-      <li>每天國防部中午公布後自動擷取一次（台灣時間約 12:00–14:00），另有備援班次重試。</li>
-      <li>國防部當日沒發布就留空，不用估計值補；歷史資料只新增、不改寫，所以引用過的數字不會變。</li>
-      <li>寫入前自動檢查：逾越中線數不得大於總架次、越線率與計算值相符（±1%）、日期不重複、
-        機型值合法。檢查沒過就不會產生新頁面。</li>
+        的每日公告與航跡圖，只做轉錄與視覺化，不加入未經證實的訊息。</li>
+      <li>每天中午公布後自動擷取（台灣時間 12:00–14:00）；當日沒發布就留空，不用估計值補。</li>
+      <li>歷史資料只新增、不改寫，引用過的數字不會變；寫入前自動檢查數值一致性，沒過就不出版。</li>
     </ul>
 
     <h2>界線與名詞</h2>
     <div class="def-card">
       <div class="term">海峽中線 <span class="en">Taiwan Strait median line / Davis Line</span></div>
-      <p>海峽中央一條沒有任何條約承認的默契界線。長年雙方軍機艦多半不越線，所以越線是強烈的
-        政治與軍事訊號；但越線<strong>不構成國際法上的領土或領空侵犯</strong>，也不會觸發自衛權。
-        本站「逾越中線」＝當日越過此線的共機架次。</p>
+      <p>海峽中央一條沒有條約承認的默契界線。長年雙方多半不越線，越線因此是強烈的政治訊號；
+        但它<strong>不構成國際法上的領空侵犯</strong>，也不觸發自衛權。本站「逾越中線」＝當日
+        越線的共機架次。</p>
     </div>
     <div class="def-card">
       <div class="term">12 浬領海線 <span class="en">12 NM territorial sea</span></div>
-      <p>依《聯合國海洋法公約》，自基線起算 12 浬為領海、其上空為領空，這才是有法律效力的邊界。
-        共機艦進到這條線以內，台灣依國際法與《國防法》可採取防衛行動——與越中線是兩個不同
-        層級的事件。</p>
+      <p>依《聯合國海洋法公約》，自基線起算 12 浬為領海、其上空為領空，這才是有法律效力的
+        邊界。共機艦進到這條線以內，與越過中線是兩個不同層級的事件。</p>
     </div>
     <div class="def-card">
       <div class="term">防空識別區 <span class="en">ADIZ</span></div>
@@ -85,24 +82,19 @@
     </div>
     <div class="def-card">
       <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
-      <p>「架次」＝當日偵獲的共機出動次數（以國防部計數為準）；「共艦」＝當日偵獲的解放軍艦艇
-        艘數。空飄氣球等其他活動另記在每日紀錄的備註欄。</p>
+      <p>「架次」＝當日偵獲的共機出動次數，「共艦」＝艦艇艘數，均以國防部計數為準。</p>
     </div>
 
     <h2>軍購資料</h2>
-    <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起由美國國防安全合作署
-      （DSCA）通知美國國會的對台軍售案。DSCA 公告只是「通知國會」，<strong>不等於簽約、
-      也不等於交付</strong>，公告金額是上限、實際簽約常較低。不含商售案與美軍自用移撥；
-      每案人工整理、逐案附來源。</p>
+    <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起美國國防安全合作署
+      （DSCA）通知國會的對台軍售案。DSCA 公告<strong>不等於簽約或交付</strong>，金額是上限。
+      不含商售案；每案人工整理、逐案附來源。</p>
 
     <h2>引用與授權</h2>
     <p>底層數字屬國防部公開資訊。本站的整理、欄位結構與圖表以
       <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎引用，請註明：</p>
     <p><strong>資料來源：中華民國國防部；整理與圖表：解放軍擾台動態追蹤（https://pla-tracker.skyfaring.net）。</strong></p>
-    <ul>
-      <li>原始資料（CSV）：<a href="https://pla-tracker.skyfaring.net/data/records.csv" target="_blank" rel="noopener">https://pla-tracker.skyfaring.net/data/records.csv</a></li>
-      <li>相關發布：<a href="https://yi-tienpan.blogspot.com" target="_blank" rel="noopener">部落格</a></li>
-    </ul>
+    <p>原始資料（CSV）：<a href="https://pla-tracker.skyfaring.net/data/records.csv" target="_blank" rel="noopener">https://pla-tracker.skyfaring.net/data/records.csv</a></p>
   </article>
 </main>
 
