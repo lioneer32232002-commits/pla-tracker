@@ -150,22 +150,9 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   4. `edit-design`：用 `replace_text` 換掉五處文字（三個數字、增減／百分比、日期區間、
      月累計）；**刪掉舊的空域形狀與空域標籤，插入新的**（空域是形狀，Canva 的自動填入
      換不了，只能重畫；因此新空域不會帶動畫，這是使用者已接受的取捨）
-  5. commit transaction → `move-item-to-folder` 搬進資料夾 → 把設計連結給使用者
-- **昨日與今日重疊的空域不要刪掉重畫**：先比對兩天的空域集合，只刪掉今日沒有的、只插入
-  昨日沒有的。母版座標固定，所以重疊空域的形狀完全相同，留著就**保住使用者套好的動畫**
-  （2026-08-06：中部／西南部留用，只重畫東部）。
-- `add_text` 插出來的空域標籤是黑色 16px 左對齊，**必插完再補一次 `format_text`**
-  （黃 `#F5C842`／25px／bold／center），否則深色底上等於看不見。
+  5. commit transaction → 把設計連結給使用者
 - **空域判斷不要另外寫一份**：`make_canva_ops.py` 直接 import `build_site.zones_from_special`。
   公告實際寫的是「西南空域」而非「西南部」，自己重寫過一次就漏判（2026-08-05 踩過）。
-- **`data/canva_zone_ops.json`＝六個空域全部算好的對照表**（2026-08-06 加，使用者要求）。
-  用途：讓**沒有本機 repo／不能跑 Python 的環境**（手機 app、雲端 session）也能做圖卡——
-  今日數字與空域名稱從 https://pla-tracker.skyfaring.net 首頁讀得到，形狀指令直接查這張表。
-  裡面另含母版／資料夾 id、八格文字的 locator id（母版與其複製品的 locator id 相同，
-  2026-08-06 實測）、標籤格式。**套用前必須先核對 read-design 讀到的地圖元素
-  top/left/width/height 等於表裡的 `map_element`**；不等於代表使用者移動過地圖，
-  必須改跑腳本重算，並用 `--atlas` 重生這張表（指令寫在檔案的 `_regenerate` 欄）。
-  本機有 repo 時仍以跑腳本為準，這張表是備援不是主路徑。
 - 品牌範本（Brand Template）**不適用**：官方自動填入只能換文字與圖片，換不了形狀。
 
 ## 已知歷史事件（查問題時的線索）
