@@ -70,16 +70,41 @@ TEXT_SLOTS = {                      # 語意名稱 → (locator id, 這格旁邊
 # 新插入的空域標籤要跟母版既有標籤同款式（add_text 建出來是黑色 16px，必須補這步）
 LABEL_FORMAT = {'color': ZONE_COLOR, 'font_size': 25,
                 'font_weight': 'bold', 'text_align': 'center'}
+
+# 母版（2026-08-06 起）已備齊六個空域，每天只刪不插，動畫因此完整保留。
+# 這裡登記母版裡每個空域的元素 id：5 個形狀（由外而內 L5→L1）＋1 個標籤。
+# 使用者若把某個形狀刪掉重畫，該 id 會失效 → 改用 zones[].shapes 的
+# top/left/width/height 去比對認人（座標是同一份，不會變）。
+ZONE_MASTER_IDS = {
+    'n':  (['LBtF9gvRhrb6QppX', 'LBmg7m4tdn5pmT0q', 'LBc7V8zswQlsk1Pp',
+            'LBQXs1Wtpb8gTvrB', 'LBzRwtr9PY6CfR1L'], 'LB1k6y178CNhwtfT'),
+    'c':  (['LB5cf4rtbWRnPG1M', 'LBvCkSwHK77R1NbM', 'LBcTdrh5G0CkkydK',
+            'LBsnywGRJj02SFWg', 'LBJCN1TKygTYqQrK'], 'LBF5FwJTvs0qX9BJ'),
+    'sw': (['LBgh6rYMGNPSV86Q', 'LBMdkhZ0V46qSRrC', 'LB7d9JxVD0yx2PqL',
+            'LBk9F8Bgg4gZFqLf', 'LB86vlJrVVm5wBHv'], 'LBB9WSBSYmCsp5LB'),
+    's':  (['LBN9qSTXKYNzySdc', 'LBvS27Cq4fY95pVM', 'LB2Xfy8yf0ntFTZm',
+            'LBNWsk5mvwyhLGlL', 'LBGBywnmYSLSyNTF'], 'LBk0nmvHQ1Gy5C3r'),
+    'e':  (['LBsfd5kSCTKJzHTD', 'LBx0y8ZSF5bB3114', 'LB756f6Vj4cMJbJ6',
+            'LBvSG9YkP3jmHrRm', 'LBwwMGZcKktQv7bL'], 'LBCZqpMs6CXD511n'),
+    'ne': (['LBx9S40xlx02jnHW', 'LBSRrcd42nWX7qZ6', 'LBRFpDBkYZkk0lpy',
+            'LBJHwkp6qS1WjLyB', 'LByW3q82bh33HHf4'], 'LBfLsCS0Hn2lKKHl'),
+}
 ATLAS_README = (
-    '六個空域的 insert_shape 指令對照表，讓沒有本機 repo 的環境（手機、雲端）也能更新 '
-    'Canva 每日圖卡。用法：copy-design 母版 → read-design（open_transaction）→ '
-    '先核對地圖元素 %s 的 top/left/width/height 是否等於下面的 map_element；'
-    '相符才可直接套用本表，不符代表使用者移動過地圖，必須改跑 '
-    'python -X utf8 scripts/make_canva_ops.py 重算。'
-    '每日只需：換掉 text_slots 的八格文字、刪掉昨日空域的形狀與標籤、'
-    '插入今日空域的 5 個 shapes 與 1 個 label（label 插完要再套 label_format）。'
-    '完成後 commit，並把設計 move-item-to-folder 到 folder_id。'
-) % 'map_element_id'
+    'Canva 每日圖卡的完整作業資料，讓沒有本機 repo 的環境（手機、雲端、另一台電腦）'
+    '也能做。母版自 2026-08-06 起已備齊六個空域且都套好動畫，所以每日流程是'
+    '「只刪不插」：'
+    '(1) copy-design master_design_id；'
+    '(2) read-design（open_transaction）；'
+    '(3) 核對地圖元素 map_element_id 的 top/left/width/height 等於 map_element'
+    '——不等於代表使用者移動過地圖，停手改跑腳本重算，不要硬套；'
+    '(4) 用 text_slots 的 element_id 換掉八格文字；'
+    '(5) 把「今日沒有的空域」的 master_shape_ids（5 個）與 master_label_id 刪掉，'
+    '今日有的原封不動留著（動畫就保住了）；'
+    '(6) commit → move-item-to-folder 到 folder_id → 把連結給使用者。'
+    '只有在母版真的缺某個空域時才需要 zones[].shapes/label 那組插入指令，'
+    '插完標籤要再補一次 label_format。'
+    '找不到某個 master id＝該元素被刪掉重畫過，改用 shapes 的 top/left/width/height '
+    '比對認人，並回報使用者這張表該更新了。')
 
 
 def build_zones(top, left, width, height, zone_keys):
@@ -160,9 +185,13 @@ def main():
             'text_slots': {k: {'element_id': f'{PAGE_ID}-{eid}', 'note': note}
                            for k, (eid, note) in TEXT_SLOTS.items()},
             'label_format': LABEL_FORMAT,
+            # master_shape_ids 與 shapes 同序（都是 L1 內圈 → L5 外圈）
             'zones': {zk: {'name': ZONE_NAMES[zk],
                            'shapes': shapes[n * per:(n + 1) * per],
-                           'label': labels[n]}
+                           'label': labels[n],
+                           'master_shape_ids': [f'{PAGE_ID}-{i}' for i in
+                                                reversed(ZONE_MASTER_IDS[zk][0])],
+                           'master_label_id': f'{PAGE_ID}-{ZONE_MASTER_IDS[zk][1]}'}
                       for n, zk in enumerate(ZP)},
         }, ensure_ascii=False, indent=1))
         return

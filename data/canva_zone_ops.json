@@ -1,5 +1,5 @@
 {
- "_readme": "六個空域的 insert_shape 指令對照表，讓沒有本機 repo 的環境（手機、雲端）也能更新 Canva 每日圖卡。用法：copy-design 母版 → read-design（open_transaction）→ 先核對地圖元素 map_element_id 的 top/left/width/height 是否等於下面的 map_element；相符才可直接套用本表，不符代表使用者移動過地圖，必須改跑 python -X utf8 scripts/make_canva_ops.py 重算。每日只需：換掉 text_slots 的八格文字、刪掉昨日空域的形狀與標籤、插入今日空域的 5 個 shapes 與 1 個 label（label 插完要再套 label_format）。完成後 commit，並把設計 move-item-to-folder 到 folder_id。",
+ "_readme": "Canva 每日圖卡的完整作業資料，讓沒有本機 repo 的環境（手機、雲端、另一台電腦）也能做。母版自 2026-08-06 起已備齊六個空域且都套好動畫，所以每日流程是「只刪不插」：(1) copy-design master_design_id；(2) read-design（open_transaction）；(3) 核對地圖元素 map_element_id 的 top/left/width/height 等於 map_element——不等於代表使用者移動過地圖，停手改跑腳本重算，不要硬套；(4) 用 text_slots 的 element_id 換掉八格文字；(5) 把「今日沒有的空域」的 master_shape_ids（5 個）與 master_label_id 刪掉，今日有的原封不動留著（動畫就保住了）；(6) commit → move-item-to-folder 到 folder_id → 把連結給使用者。只有在母版真的缺某個空域時才需要 zones[].shapes/label 那組插入指令，插完標籤要再補一次 label_format。找不到某個 master id＝該元素被刪掉重畫過，改用 shapes 的 top/left/width/height 比對認人，並回報使用者這張表該更新了。",
  "_regenerate": "python -X utf8 scripts/make_canva_ops.py --atlas --top T --left L --width W --height H > data/canva_zone_ops.json",
  "master_design_id": "DAHRZtscuZM",
  "folder_id": "FAFzxKT6D0A",
@@ -137,7 +137,15 @@
     "width": 195.8,
     "type": "add_text",
     "page_id": "PBrY48DlSrkTrB5h"
-   }
+   },
+   "master_shape_ids": [
+    "PBrY48DlSrkTrB5h-LBzRwtr9PY6CfR1L",
+    "PBrY48DlSrkTrB5h-LBQXs1Wtpb8gTvrB",
+    "PBrY48DlSrkTrB5h-LBc7V8zswQlsk1Pp",
+    "PBrY48DlSrkTrB5h-LBmg7m4tdn5pmT0q",
+    "PBrY48DlSrkTrB5h-LBtF9gvRhrb6QppX"
+   ],
+   "master_label_id": "PBrY48DlSrkTrB5h-LB1k6y178CNhwtfT"
   },
   "c": {
    "name": "中部空域",
@@ -220,7 +228,15 @@
     "width": 195.8,
     "type": "add_text",
     "page_id": "PBrY48DlSrkTrB5h"
-   }
+   },
+   "master_shape_ids": [
+    "PBrY48DlSrkTrB5h-LBJCN1TKygTYqQrK",
+    "PBrY48DlSrkTrB5h-LBsnywGRJj02SFWg",
+    "PBrY48DlSrkTrB5h-LBcTdrh5G0CkkydK",
+    "PBrY48DlSrkTrB5h-LBvCkSwHK77R1NbM",
+    "PBrY48DlSrkTrB5h-LB5cf4rtbWRnPG1M"
+   ],
+   "master_label_id": "PBrY48DlSrkTrB5h-LBF5FwJTvs0qX9BJ"
   },
   "sw": {
    "name": "西南部空域",
@@ -303,7 +319,15 @@
     "width": 195.8,
     "type": "add_text",
     "page_id": "PBrY48DlSrkTrB5h"
-   }
+   },
+   "master_shape_ids": [
+    "PBrY48DlSrkTrB5h-LB86vlJrVVm5wBHv",
+    "PBrY48DlSrkTrB5h-LBk9F8Bgg4gZFqLf",
+    "PBrY48DlSrkTrB5h-LB7d9JxVD0yx2PqL",
+    "PBrY48DlSrkTrB5h-LBMdkhZ0V46qSRrC",
+    "PBrY48DlSrkTrB5h-LBgh6rYMGNPSV86Q"
+   ],
+   "master_label_id": "PBrY48DlSrkTrB5h-LBB9WSBSYmCsp5LB"
   },
   "s": {
    "name": "南部空域",
@@ -386,7 +410,15 @@
     "width": 195.8,
     "type": "add_text",
     "page_id": "PBrY48DlSrkTrB5h"
-   }
+   },
+   "master_shape_ids": [
+    "PBrY48DlSrkTrB5h-LBGBywnmYSLSyNTF",
+    "PBrY48DlSrkTrB5h-LBNWsk5mvwyhLGlL",
+    "PBrY48DlSrkTrB5h-LB2Xfy8yf0ntFTZm",
+    "PBrY48DlSrkTrB5h-LBvS27Cq4fY95pVM",
+    "PBrY48DlSrkTrB5h-LBN9qSTXKYNzySdc"
+   ],
+   "master_label_id": "PBrY48DlSrkTrB5h-LBk0nmvHQ1Gy5C3r"
   },
   "e": {
    "name": "東部空域",
@@ -469,7 +501,15 @@
     "width": 195.8,
     "type": "add_text",
     "page_id": "PBrY48DlSrkTrB5h"
-   }
+   },
+   "master_shape_ids": [
+    "PBrY48DlSrkTrB5h-LBwwMGZcKktQv7bL",
+    "PBrY48DlSrkTrB5h-LBvSG9YkP3jmHrRm",
+    "PBrY48DlSrkTrB5h-LB756f6Vj4cMJbJ6",
+    "PBrY48DlSrkTrB5h-LBx0y8ZSF5bB3114",
+    "PBrY48DlSrkTrB5h-LBsfd5kSCTKJzHTD"
+   ],
+   "master_label_id": "PBrY48DlSrkTrB5h-LBCZqpMs6CXD511n"
   },
   "ne": {
    "name": "東北部空域",
@@ -552,7 +592,15 @@
     "width": 195.8,
     "type": "add_text",
     "page_id": "PBrY48DlSrkTrB5h"
-   }
+   },
+   "master_shape_ids": [
+    "PBrY48DlSrkTrB5h-LByW3q82bh33HHf4",
+    "PBrY48DlSrkTrB5h-LBJHwkp6qS1WjLyB",
+    "PBrY48DlSrkTrB5h-LBRFpDBkYZkk0lpy",
+    "PBrY48DlSrkTrB5h-LBSRrcd42nWX7qZ6",
+    "PBrY48DlSrkTrB5h-LBx9S40xlx02jnHW"
+   ],
+   "master_label_id": "PBrY48DlSrkTrB5h-LBfLsCS0Hn2lKKHl"
   }
  }
 }
