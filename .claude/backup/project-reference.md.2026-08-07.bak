@@ -177,14 +177,6 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   排程只在**這台主機開機時**會跑；漏跑了就在任何一台有這個 repo 的機器上說
   「做今天的 canva」，流程一模一樣。**排程任務本身不在版控裡**
   （`~/.claude/scheduled-tasks/`），換機器要重建，但作業知識全在本節與對照表裡。
-- [2026-08-07] 症狀：排程有觸發（`list_scheduled_tasks` 的 `lastRunAt` 是當天 14:47）、
-  資料也讀對了，但資料夾裡沒有當日設計，且沒有任何錯誤通知。根因：使用者全域設定是
-  `"defaultMode": "dontAsk"` 且 allow 清單裡**沒有任何 MCP 工具**——互動 session 會跳確認框
-  按一下就過，無人值守的排程 session 直接被拒（第一個 Canva 呼叫 `list-folder-items` 就死）。
-  規則：Canva 連接器已加進 `.claude/settings.local.json` 的 allow（`mcp__<連接器 id>`，
-  該檔被全域 gitignore 擋掉、不進版控，所以換機器要重建）。**若連接器在 claude.ai 被移除重連，
-  id 會變、這條 allow 就失效，症狀一樣是靜默失敗**——排程連兩天沒產出就先查
-  `~/.claude/projects/E--repos-pla-tracker/*.jsonl` 裡當次執行的權限錯誤，不要先懷疑 Canva 掛了。
 - 品牌範本（Brand Template）**不適用**：官方自動填入只能換文字與圖片，換不了形狀。
 
 ## 已知歷史事件（查問題時的線索）
