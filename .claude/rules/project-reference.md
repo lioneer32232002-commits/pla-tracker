@@ -158,6 +158,14 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   4. `edit-design`：`update_title` 改成 `YYYYMMDD_PLA  TRACKER`；`replace_text` 換掉
      八格文字；`delete_element` 刪掉**今日沒有**的空域（每個 5 形狀＋1 標籤）
   5. commit transaction → `move-item-to-folder` 搬進資料夾 → 把設計連結給使用者
+- **母版頂部有一張半透明航機照＋一張漸層遮罩（2026-08-07 加）**，兩者都不參與每日流程，
+  別動也別刪：照片 `PBrY48DlSrkTrB5h-LBXP7J8g5Y5wZSrW`（F-16＋F-35，使用者要表達美日共同防衛，
+  **不可壓暗機身**）；遮罩 `PBrY48DlSrkTrB5h-LBpX25hdgp4MrLdT`（Canva 素材 `MAHRmT5eVak`，
+  y 540→690、1092×150）負責讓照片下緣淡入地圖底色。圖層順序**必須是**底色→照片→遮罩→地圖→文字，
+  順序跑掉的症狀是數字被壓暗或漸層失效。教訓兩條：(1) Canva API **沒有漸層填色**，用純色窄帶疊
+  出來的假漸層在照片上會看成百葉窗（使用者退件），要漸層就自製 alpha PNG 匯進來；
+  (2) `insert_fill` 匯入的圖預設用「填滿」裁切，長寬比不符時只會露出中間一小段，
+  插完必須用 `crop_media` 把 imageBox 設成和元素同尺寸。
 - 只有在母版真的缺某個空域時才需要插入（`zones[].shapes` / `label`）。`add_text` 插出來的
   標籤是黑色 16px 左對齊，**插完必須再補一次 `format_text`**（黃 `#F5C842`／25px／
   bold／center），否則深色底上等於看不見。插入的形狀不會有動畫，要回報使用者。
