@@ -195,7 +195,38 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   `~/.claude/projects/E--repos-pla-tracker/*.jsonl` 裡當次執行的權限錯誤，不要先懷疑 Canva 掛了。
 - 品牌範本（Brand Template）**不適用**：官方自動填入只能換文字與圖片，換不了形狀。
 
+## API 費用（2026-08-09 查證）
+
+- 付費的只有 CI：`fetch_and_update.py`（Opus）＋`send_daily_email.py`（Sonnet），
+  用 GitHub Secrets 的 `ANTHROPIC_API_KEY`（Console 上是 `adam-first-key`）。
+  約 $0.085/天、$2.6/月（早退檢查上線後應降到 $0.6/月上下）。
+  **互動 session 與排程 session（含 Canva 圖卡）不走這把 key**，算訂閱額度；
+  本機沒有 `ANTHROPIC_API_KEY` 環境變數。查帳走 Console → **Cost 頁**（不是 Usage
+  頁，後者含快取讀取會高估）→ Group by API key。
+- 每次擷取呼叫 ≈ prompt 1,077 字 ＋ 航跡圖 1,180 token（圖固定 794×1115，
+  依 `w*h/750` 計）≈ 2,300 token。**航跡圖長邊 1115px < 1568px**，所以升級
+  Opus 5（上限 2576px）圖片 token 不會變多，費用不變。
+- **改用公告文字取代圖片判讀：評估後不做**（2026-08-09）。文字公告只有 140–160 字，
+  含 date／aircraft_total／median_line_cross／ships_total（共艦＋公務船相加）與越線空域，
+  但**完全沒有機型詞、活動時間、航跡圖的 ①② 編號**。省的是每次呼叫的一半（不是九成，
+  圖片本來就只佔一半），代價是 `aircraft_type` 只能推出 Zero／非 Zero，
+  歷史上 23/219 天（Mixed 19、UAV 2、Helicopter 2）會被誤標成 Manned。
+  附帶事實：`activity_start`/`activity_end` 全站零引用、全檔只有 12 筆有值
+  （最後一筆 2026-05-30），實質是死欄位。
+- **升級模型時必做兩件事**（尚未升級）：加 `thinking={"type":"disabled"}`
+  （否則 `max_tokens=512` 會被思考吃掉、JSON 被截斷）；取值不可寫死 `content[0]`
+  （已於 2026-08-09 改成找第一個 `type=text` 區塊，兩支腳本都改了）。
+
 ## 已知歷史事件（查問題時的線索）
+
+- [2026-08-09] 症狀：每天 API 帳單約 10,000 input token，但真正有用的擷取只有一次。
+  根因：每天有**五班**會抓到同一則公告（三班 cron ＋ 兩班來源不明的外部
+  `workflow_dispatch`，以使用者帳號在 UTC 04:00／06:00 準點觸發，repo 內沒有任何東西
+  會 dispatch 它），而 `append_to_csv` 的去重發生在 API 呼叫**之後**，四次是白花的。
+  另註：GitHub 的 cron 每天延遲 30–50 分鐘，真正搶到當日公告的往往是那兩班準點
+  dispatch。規則：任何「先花錢才判斷要不要用」的流程，把可用純字串／本地資料做的
+  判斷提到花錢之前；本例＝`parse_bulletin_end_date()` 先解析公告日期，已在 CSV
+  就 `outcome=exists` 早退（解析失敗回空字串照原路徑走，`FORCE_REBUILD=true` 不早退）。
 
 - 2026-08-05：網域遷移 `pla-tracker.pages.dev` → `pla-tracker.skyfaring.net`。
   舊網域由 `functions/_middleware.js` 301 轉走；全站 canonical／og:url／sitemap／
