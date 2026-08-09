@@ -201,11 +201,25 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   不等於代表使用者移動過地圖，停手改跑腳本重算，並用 `--atlas` 重生這張表
   （指令在 `_regenerate` 欄）。同理，某個 master id 找不到＝該元素被刪掉重畫過，
   改用座標比對認人並回報使用者這張表該更新。
-- **自動排程**（2026-08-06 起）：本機排程任務 `pla-tracker-canva-daily`，每天台灣時間
-  14:40 跑，**16:40 有一班備援**（cron `40 14,16 * * *`，2026-08-09 加）。它是冪等的——
-  資料夾裡已有當日設計就跳過，所以正常日子 16:40 那班什麼都不會做。備援班的用意：
-  GitHub cron 遲到嚴重時（例如 2026-08-03 第一班拖到台灣 14:49）資料會晚於 14:40 才進版，
-  14:40 那班會撲空。
+- **自動排程＝雲端主班＋本機備援班**（2026-08-09 改制）：
+  - **主班（雲端）**：claude.ai 的 routine `trig_01RbV4ojgTax7DoEUEy2euWW`
+    「PLA Tracker Canva 每日圖卡（雲端）」，cron `40 6 * * *` UTC＝**台灣 14:40**，
+    model sonnet-5，掛 Canva 連接器（`connector_uuid` df40f712-07ae-46d1-9ef9-8ea2809c16ff、
+    url `https://mcp.canva.com/mcp`）。**不依賴任何一台本機開機**。管理頁：
+    https://claude.ai/code/routines/trig_01RbV4ojgTax7DoEUEy2euWW
+    ⚠️ 雲端環境**沒預裝 pandas**，所以 prompt 第 0 步是 `pip install -r requirements.txt`
+    （2026-08-09 實測：不裝的話 `make_canva_ops.py` 在 import 就 ModuleNotFoundError）。
+  - **備援班（本機）**：排程任務 `pla-tracker-canva-daily`，cron `40 16 * * *`＝台灣 16:40，
+    只在雲端班沒做成時才會真的做事。
+  - **兩班不會做出兩份**：兩邊開工前都做冪等檢查（`list-folder-items` 查資料夾裡有沒有
+    當日標題），且相隔兩小時、不會同時開跑。
+  - **怎麼分辨是誰做的**：看設計的 `created_at`——約 14:4x＝雲端班，約 16:4x＝本機備援班
+    （這是刻意把兩班錯開兩小時換來的可辨識性）。雲端班的完整執行紀錄在上面那個 routine 頁。
+  - 備援班的存在理由：GitHub cron 遲到嚴重時（例如 2026-08-03 第一班拖到台灣 14:49）
+    資料會晚於 14:40 才進版，主班會撲空。
+  - **claude.ai 的連接器清單有時會回報「No available MCP connectors found」**——那是清單
+    沒抓到，不代表不能用。手動在 routine 的 `mcp_connections` 指定 uuid＋url 就通了
+    （2026-08-09 實測成功列出資料夾內容）。
   排程只在**這台主機開機時**會跑；漏跑了就在任何一台有這個 repo 的機器上說
   「做今天的 canva」，流程一模一樣。**排程任務本身不在版控裡**
   （`~/.claude/scheduled-tasks/`），換機器要重建，但作業知識全在本節與對照表裡。
