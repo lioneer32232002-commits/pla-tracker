@@ -27,7 +27,7 @@ HTML 長怎樣」。
 ## 風險二（最容易失焦）：誤解「誰在做每日更新」
 
 **事實**：每日更新自 2026-06-22 起由 GitHub Actions 全自動執行
-（`.github/workflows/daily_update.yml`：台灣時間 12:00/14:00 抓取、20:00 最終檢查，
+（`.github/workflows/daily_update.yml`：台灣時間 12:17/14:17 抓取、20:17 最終檢查，
 `fetch_and_update.py` 用 Claude API 讀國防部圖片或公告文字 → validate → commit → 寄信）。
 但舊版 CLAUDE.md 把「使用者提供圖片 → 手動輸入」寫成主流程，弱模型會誤以為
 每個 session 都要做每日更新，或不知道資料缺漏時該去查 CI 而不是重做一遍。

@@ -5,7 +5,7 @@ push 到 main 即自動部署）。回覆一律用繁體中文。
 
 ## 你的角色
 
-**每日更新已由 GitHub Actions 全自動執行**（每天台灣時間 12:00/14:00/20:00）。
+**每日更新已由 GitHub Actions 全自動執行**（每天台灣時間 12:17/14:17/20:17，GitHub 排程常遲到數十分鐘）。
 Session 的工作是：開發功能、修 bug、回填資料、SEO/內容。
 只有使用者明確提供國防部圖片、或要求補某日資料時，才走下面的手動更新流程。
 某日資料缺漏 → 先查 CI 紀錄（`gh run list --workflow daily_update.yml --limit 5`），

@@ -10,9 +10,20 @@
   Pages，push 到 main 即自動部署）、Threads、部落格 https://yi-tienpan.blogspot.com。
   屬 Skyfaring 作品集（hub: https://skyfaring.net/）。
 - **每日更新是全自動的**：GitHub Actions（`.github/workflows/daily_update.yml`）在
-  台灣時間 12:00、14:00 抓取國防部公告，`scripts/fetch_and_update.py` 用 Claude API
+  台灣時間 12:17、14:17 抓取國防部公告（分鐘用 :17 是為了避開整點壅塞，見下方
+  「排程準時性」；實際發車還會再延遲數十分鐘），`scripts/fetch_and_update.py` 用 Claude API
   從圖片（無圖時退回公告文字）擷取數據 → 寫入 CSV → build → validate → commit →
-  寄報告信；20:00 是最終檢查班，當日仍無資料才寄一封提醒信。
+  寄報告信；20:17 是最終檢查班，當日仍無資料才寄一封提醒信。
+  ⚠️ `IS_FINAL_CHECK` 是拿 **cron 字串本身**比對（`github.event.schedule == '17 12 * * *'`），
+  改 cron 一定要同步改它，否則晚間提醒信永遠不寄、CI 還是綠燈。
+
+### 排程準時性（2026-08-09 實測 12 天 36 班）
+
+GitHub 的 schedule 是盡力而為：整點班平均延遲 **121 分鐘**（最長 179），**沒有一班在
+10 分鐘內發車**。真正準時抓到當日公告的，往往是 repo 外那兩班以使用者帳號在
+UTC 04:00／06:00 準點觸發的 `workflow_dispatch`（repo 內沒有任何東西會 dispatch 它，
+來源不明、不在版控——**它是整條線的關鍵零件，壞了不會有人通知**）。
+2026-08-09 起 cron 分鐘改 :17 避開整點壅塞（成本為零，效果待觀察）。
 - **互動 session 的角色**：開發新功能、修 bug、回填資料、SEO/內容工作。不是每日更新。
 
 ## 檔案地圖
@@ -181,7 +192,10 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   （指令在 `_regenerate` 欄）。同理，某個 master id 找不到＝該元素被刪掉重畫過，
   改用座標比對認人並回報使用者這張表該更新。
 - **自動排程**（2026-08-06 起）：本機排程任務 `pla-tracker-canva-daily`，每天台灣時間
-  14:40 跑（CI 的 12:00／14:00 抓取班之後）。它是冪等的——資料夾裡已有當日設計就跳過。
+  14:40 跑，**16:40 有一班備援**（cron `40 14,16 * * *`，2026-08-09 加）。它是冪等的——
+  資料夾裡已有當日設計就跳過，所以正常日子 16:40 那班什麼都不會做。備援班的用意：
+  GitHub cron 遲到嚴重時（例如 2026-08-03 第一班拖到台灣 14:49）資料會晚於 14:40 才進版，
+  14:40 那班會撲空。
   排程只在**這台主機開機時**會跑；漏跑了就在任何一台有這個 repo 的機器上說
   「做今天的 canva」，流程一模一樣。**排程任務本身不在版控裡**
   （`~/.claude/scheduled-tasks/`），換機器要重建，但作業知識全在本節與對照表裡。
