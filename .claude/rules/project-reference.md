@@ -40,6 +40,12 @@ classic token 一把都沒有 → **不會有 token 到期導致靜默死亡的�
 `gept-prep` 只有 fetch handler，**都沒有 `scheduled()` export**，不可能掛 Cron Trigger）、
 20 個可存取 repo 的 workflow 全讀過（含 `ichentsaitw/*` 4 個私有協作 repo，無一 dispatch 本 repo）、
 本機工作排程器／啟動項／Run 鍵／WSL crontab／Claude 本機與雲端 routine（皆無）。
+主控台裡的兩個 job（2026-08-09 使用者截圖確認），都是 POST 到
+`https://api.github.com/repos/lioneer32232002-commits/pla-tracker/actions/workflows/daily_update.yml/dispatches`：
+「PLA Tracker 每日12:00更新」與「PLA Tracker 每日14:00備用更新」。
+另：晚間最終檢查班（寄「今日仍無資料」提醒信）目前**只有** GitHub cron 那班，
+因為 `IS_FINAL_CHECK` 認的是 cron 字串；若要讓它也準時，得在 cron-job.org 再加一個
+20:00 的 job，POST body 帶 `{"ref":"main","inputs":{"final_check":"true"}}`。
 2026-08-09 起 cron 分鐘改 :17 避開整點壅塞（成本為零，效果待觀察）。
 - **互動 session 的角色**：開發新功能、修 bug、回填資料、SEO/內容工作。不是每日更新。
 
