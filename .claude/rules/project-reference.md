@@ -27,9 +27,12 @@ UTC 04:00／06:00 準點觸發的 `workflow_dispatch`（**它是整條線的關�
 使用者名下 16 個 repo（程式碼搜尋無結果）、本機 Windows 工作排程器與 Claude 排程任務
 （都沒有呼叫 gh/github/curl 的動作）。特徵：**2026-07-21T04:00:25Z 起**每天兩班、
 秒數固定在 :25～:29，以使用者帳號的 token 觸發 → 極可能是外部 cron 服務或另一台機器。
-要指認它：GitHub Settings → Developer settings → Personal access tokens 看哪一把的
-「Last used」是每天台灣 12:00／14:00。若那把是有期限的 token，**到期當天觸發器會靜默死亡**，
-症狀是網站改成每天晚兩小時才更新。
+**已知它用哪把鑰匙**（2026-08-09 查 GitHub 設定頁）：fine-grained PAT
+**`pla-tracker-cron`**（id 13520926，Last used within the last week，**無到期日**）。
+classic token 一把都沒有；另一把 `skyfaring cowork publish` 從未使用。
+所以**不會有 token 到期導致靜默死亡的問題**，但持有這把 token 的那個外部服務是什麼仍未知
+（token 詳情頁要 email 二次驗證才看得到，且那頁也不會顯示呼叫方）。
+症狀若出現——網站改成每天晚兩小時才更新——就是那個服務掛了。
 2026-08-09 起 cron 分鐘改 :17 避開整點壅塞（成本為零，效果待觀察）。
 - **互動 session 的角色**：開發新功能、修 bug、回填資料、SEO/內容工作。不是每日更新。
 
