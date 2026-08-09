@@ -254,6 +254,28 @@ def looks_like_bulletin(text):
     return '時止' in text and ('共機' in text or '共艦' in text)
 
 
+# 公告日期段格式穩定：「…115年8月8日（星期六）0600時至115年8月9日（星期日）0600時止」
+BULLETIN_DATE_RE = re.compile(
+    r'至\s*(?:民國)?\s*(\d{2,3})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日[^止]{0,40}?時止')
+
+
+def parse_bulletin_end_date(text):
+    """從公告內文解析統計結束日（民國年→西元），回傳 'YYYY-MM-DD'；解析不出回傳空字串。
+
+    取「至…時止」中間那個日期＝統計結束日，與 _EXTRACT_SPEC 給模型的 date 規則一致。
+    這是純字串解析，只用來判斷「這則公告是否已處理過」，不取代模型的資料擷取。
+    """
+    if not text:
+        return ''
+    m = BULLETIN_DATE_RE.search(text.replace('\n', ''))
+    if not m:
+        return ''
+    year, month, day = (int(x) for x in m.groups())
+    if not (1 <= month <= 12 and 1 <= day <= 31):
+        return ''
+    return f'{year + 1911}-{month:02d}-{day:02d}'
+
+
 def download_image(url):
     """下載圖片，回傳 (bytes, cache_path)，若已快取則直接讀快取"""
     url_hash = hashlib.md5(url.encode()).hexdigest()[:12]
@@ -320,9 +342,21 @@ def extract_data_from_text(article_text):
     return _parse_claude_json(resp)
 
 
+def first_text_block(resp):
+    """取回應中第一個文字區塊的內容。
+
+    不能寫死 content[0]：一旦模型預設開啟 thinking（Opus 5／Sonnet 5 的預設行為），
+    content[0] 會是 thinking 區塊，寫死索引會拿到空字串或直接報錯。
+    """
+    for block in resp.content:
+        if getattr(block, 'type', None) == 'text':
+            return block.text
+    raise ValueError('Claude 回應中沒有文字區塊')
+
+
 def _parse_claude_json(resp):
     """從 Claude 回應取出 JSON dict（去除可能的 markdown code block 包裝）。"""
-    raw = resp.content[0].text.strip()
+    raw = first_text_block(resp).strip()
     # 去除可能的 markdown code block
     if raw.startswith('```'):
         raw = raw.split('```')[1]
@@ -333,6 +367,18 @@ def _parse_claude_json(resp):
     data = json.loads(raw)
     log(f'提取結果：{data}')
     return data
+
+
+def date_already_recorded(date_str):
+    """該日期是否已在 records.csv。檔案不存在或讀取失敗一律回傳 False，讓流程照原路徑走。"""
+    if not DATA_FILE.exists():
+        return False
+    try:
+        df = pd.read_csv(DATA_FILE)
+    except Exception as exc:
+        log(f'讀取 records.csv 失敗（{exc}），略過早退檢查')
+        return False
+    return date_str in df['date'].astype(str).values
 
 
 def append_to_csv(data):
@@ -373,8 +419,23 @@ def run_script(script_name):
 def main():
     log('=== PLA Tracker 自動更新開始 ===')
 
-    # 1. 取最新公告頁，再找航跡圖
+    # 1. 取最新公告頁
     article_url, soup2 = get_mnd_latest_article()
+
+    # 1.5 早退檢查：這則公告已處理過就不呼叫 API。
+    # 每天有五班會抓到同一則公告（三班 cron ＋ 兩班外部 workflow_dispatch），
+    # 而 append_to_csv 的去重發生在 API 呼叫「之後」，等於每天多付四次判讀費。
+    # 這裡用純字串解析先擋掉；解析失敗（公告改版）回傳空字串，照原路徑走，行為不變。
+    # FORCE_REBUILD=true 時不早退，維持「強制重建」語意。
+    force_rebuild = os.environ.get('FORCE_REBUILD', 'false').lower() == 'true'
+    bulletin_date = parse_bulletin_end_date(extract_article_text(soup2))
+    if bulletin_date and not force_rebuild and date_already_recorded(bulletin_date):
+        log(f'公告日期 {bulletin_date} 已在 records.csv，略過 Claude API 呼叫')
+        log('=== 完成（無新數據）===')
+        set_output('outcome', 'exists')
+        return
+
+    # 2. 找航跡圖
     img_url = find_image_url(soup2)
 
     if img_url is None:
@@ -402,7 +463,7 @@ def main():
             set_output('error_detail', f'國防部圖片伺服器無法下載：{exc}')
             return
 
-        # 2. 用 Claude 解讀圖片
+        # 2.5 用 Claude 解讀圖片
         data = extract_data_from_image(img_bytes, img_url)
 
     # 3. 寫入 CSV

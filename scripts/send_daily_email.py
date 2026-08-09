@@ -446,7 +446,11 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
 - 兩則草稿之間用單獨一行「---」分隔，前後不要加其他文字
 - 人名、金額、日期等具體細節，輸入資料中沒有來源就不要寫死"""}],
         )
-        return msg.content[0].text
+        # 不寫死 content[0]：模型預設開啟 thinking 時 content[0] 會是 thinking 區塊。
+        for block in msg.content:
+            if getattr(block, 'type', None) == 'text':
+                return block.text
+        raise ValueError('Claude 回應中沒有文字區塊')
     except Exception as e:
         print(f'[email] Claude API 分析生成失敗: {e}')
         return '（今日情勢分析與 Threads 貼文草稿產生失敗，請查看 GitHub Actions 執行紀錄）'
