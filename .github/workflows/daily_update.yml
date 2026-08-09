@@ -2,12 +2,15 @@ name: Daily PLA Tracker Update
 
 on:
   schedule:
-    # 台灣時間 12:00 = UTC 04:00
-    - cron: '0 4 * * *'
-    # 台灣時間 14:00 = UTC 06:00 (備用，若12點MND尚未更新)
-    - cron: '0 6 * * *'
-    # 台灣時間 20:00 = UTC 12:00 (晚間最終檢查：仍無當日資料才寄一次提醒)
-    - cron: '0 12 * * *'
+    # 分鐘一律用 :17 而不是 :00——GitHub 的排程是盡力而為、整點最壅塞。
+    # 2026-08-09 實測（12 天 36 班）：整點班平均延遲 121 分鐘，沒有一班在 10 分鐘內發車。
+    # 改 cron 時間務必同步改下面的 IS_FINAL_CHECK（它比對的是 cron 字串本身）。
+    # 台灣時間 12:17 ≒ UTC 04:17
+    - cron: '17 4 * * *'
+    # 台灣時間 14:17 ≒ UTC 06:17 (備用，若12點MND尚未更新)
+    - cron: '17 6 * * *'
+    # 台灣時間 20:17 ≒ UTC 12:17 (晚間最終檢查：仍無當日資料才寄一次提醒)
+    - cron: '17 12 * * *'
   workflow_dispatch:  # 允許手動觸發
     inputs:
       force_rebuild:
@@ -28,7 +31,7 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       # 是否為「晚間最終檢查」班次：只有這一班會在今日無資料時寄提醒，
       # 確保失敗/未發布提醒一天最多一封。
-      IS_FINAL_CHECK: ${{ github.event.schedule == '0 12 * * *' || github.event.inputs.final_check == 'true' }}
+      IS_FINAL_CHECK: ${{ github.event.schedule == '17 12 * * *' || github.event.inputs.final_check == 'true' }}
 
     steps:
       - name: Checkout repo
