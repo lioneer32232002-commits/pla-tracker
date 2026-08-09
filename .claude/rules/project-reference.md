@@ -31,18 +31,30 @@ UTC 04:00／06:00 準點觸發的 `workflow_dispatch`（**它是整條線的關�
 （**要用該 email 登入才看得到任務**；瀏覽器平常沒登入狀態）。
 用的鑰匙：fine-grained PAT **`pla-tracker-cron`**（id 13520926，**無到期日**），
 classic token 一把都沒有 → **不會有 token 到期導致靜默死亡的問題**。
+那天其實建了**兩把**同名 PAT：`13520259`（08:09:58Z，**已刪除**）與 `13520926`
+（08:29:32Z，**現用中**，Last used within the last week）。GitHub 清單上只剩後者，
+所以「備援的第二把」不存在，**只有一把鑰匙，沒有備援**。查證方法：token 清單頁
+（`/settings/personal-access-tokens`）的連結 href 就帶 id，不需要 sudo；點進**詳情頁**
+才會要 email 二次驗證。security log 只留 90 天，4 月的建立／刪除事件已被清掉。
 04:00／06:00 UTC＝台灣 12:00／14:00，刻意對齊 repo 原本的 cron 來繞過 GitHub 排程遲到。
 秒數會漂（4 月 :18～:21、6 月底 :34、8 月 :27～:29），那是 GitHub 端排隊落地的延遲，
 不是設定變過，**不要拿秒數當指紋去追**。
-⚠️ 信箱裡只有註冊信、一封失敗通知都沒有 → 代表它從沒失敗過，但也代表**壞了不會通知**。
-症狀：網站改成每天晚兩小時才更新。要先去 cron-job.org 看 job 是否還在／是否 401。
+⚠️ **通知設定實查（2026-08-09）**：兩個 job 都只開了「the cronjob will be disabled
+because of too many failures」，「execution of the cronjob fails」是**關的**。
+所以單日失敗＝完全靜默，要連續失敗到被停用才會收到信。信箱裡除了註冊信沒有任何
+cron-job.org 來信，代表至今沒失敗過。症狀：網站改成每天晚兩小時才更新。
+要先去 cron-job.org 看 job 是否還在／是否 401。
 查過並排除（別重查）：Cloudflare（`lioneers-web`／`lioneers-web-01` 只有 Hello world、
 `gept-prep` 只有 fetch handler，**都沒有 `scheduled()` export**，不可能掛 Cron Trigger）、
 20 個可存取 repo 的 workflow 全讀過（含 `ichentsaitw/*` 4 個私有協作 repo，無一 dispatch 本 repo）、
 本機工作排程器／啟動項／Run 鍵／WSL crontab／Claude 本機與雲端 routine（皆無）。
-主控台裡的兩個 job（2026-08-09 使用者截圖確認），都是 POST 到
+主控台裡的兩個 job（2026-08-09 登入實查），都是 POST 到
 `https://api.github.com/repos/lioneer32232002-commits/pla-tracker/actions/workflows/daily_update.yml/dispatches`：
-「PLA Tracker 每日12:00更新」與「PLA Tracker 每日14:00備用更新」。
+「PLA Tracker 每日12:00更新」＝job **7487911**、「PLA Tracker 每日14:00備用更新」＝job **7487935**
+（時區設定為 Asia/Taipei，所以介面顯示的 12:00／14:00 就是台灣時間）。
+該帳號原本還有 7 個別的 job（lioneers-web 爬蟲 ×3、skyfaring 產生賽後文章 ×4），
+**已於 2026-08-09 依使用者指示刪除**；那兩個 repo 的 workflow 只有 `workflow_dispatch:`
+沒有 `schedule:`，所以它們現在完全不會自動跑了（這是使用者要的）。
 另：晚間最終檢查班（寄「今日仍無資料」提醒信）目前**只有** GitHub cron 那班，
 因為 `IS_FINAL_CHECK` 認的是 cron 字串；若要讓它也準時，得在 cron-job.org 再加一個
 20:00 的 job，POST body 帶 `{"ref":"main","inputs":{"final_check":"true"}}`。
