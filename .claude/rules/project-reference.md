@@ -22,17 +22,24 @@
 GitHub 的 schedule 是盡力而為：整點班平均延遲 **121 分鐘**（最長 179），**沒有一班在
 10 分鐘內發車**。真正準時抓到當日公告的，往往是 repo 外那兩班以使用者帳號在
 UTC 04:00／06:00 準點觸發的 `workflow_dispatch`（**它是整條線的關鍵零件，壞了不會有人通知**）。
-**來源仍未確認**，2026-08-09 查過並排除：Cloudflare（帳號下 5 個 Worker 都不相關、
-最後修改 07-15 早於觸發器啟用日，且 Pages Functions 根本不支援 cron）、
-使用者名下 16 個 repo（程式碼搜尋無結果）、本機 Windows 工作排程器與 Claude 排程任務
-（都沒有呼叫 gh/github/curl 的動作）。特徵：**2026-07-21T04:00:25Z 起**每天兩班、
-秒數固定在 :25～:29，以使用者帳號的 token 觸發 → 極可能是外部 cron 服務或另一台機器。
-**已知它用哪把鑰匙**（2026-08-09 查 GitHub 設定頁）：fine-grained PAT
-**`pla-tracker-cron`**（id 13520926，Last used within the last week，**無到期日**）。
-classic token 一把都沒有；另一把 `skyfaring cowork publish` 從未使用。
-所以**不會有 token 到期導致靜默死亡的問題**，但持有這把 token 的那個外部服務是什麼仍未知
-（token 詳情頁要 email 二次驗證才看得到，且那頁也不會顯示呼叫方）。
-症狀若出現——網站改成每天晚兩小時才更新——就是那個服務掛了。
+
+**來源＝ cron-job.org**（2026-08-09 查證確定，證據在使用者 Gmail）：
+2026-04-15T08:09:58Z GitHub 寄出「fine-grained PAT `pla-tracker-cron` 已建立」通知 →
+08:14:02Z `info@cron-job.org` 寄出註冊啟用信 → 08:29:32Z 又建了一把同名 PAT（重做一次）→
+隔天 **2026-04-16T04:00:18Z** 第一班自動 dispatch 開跑，此後每天兩班未斷。
+帳號＝`wizard32232002@gmail.com`，主控台 https://console.cron-job.org/jobs
+（**要用該 email 登入才看得到任務**；瀏覽器平常沒登入狀態）。
+用的鑰匙：fine-grained PAT **`pla-tracker-cron`**（id 13520926，**無到期日**），
+classic token 一把都沒有 → **不會有 token 到期導致靜默死亡的問題**。
+04:00／06:00 UTC＝台灣 12:00／14:00，刻意對齊 repo 原本的 cron 來繞過 GitHub 排程遲到。
+秒數會漂（4 月 :18～:21、6 月底 :34、8 月 :27～:29），那是 GitHub 端排隊落地的延遲，
+不是設定變過，**不要拿秒數當指紋去追**。
+⚠️ 信箱裡只有註冊信、一封失敗通知都沒有 → 代表它從沒失敗過，但也代表**壞了不會通知**。
+症狀：網站改成每天晚兩小時才更新。要先去 cron-job.org 看 job 是否還在／是否 401。
+查過並排除（別重查）：Cloudflare（`lioneers-web`／`lioneers-web-01` 只有 Hello world、
+`gept-prep` 只有 fetch handler，**都沒有 `scheduled()` export**，不可能掛 Cron Trigger）、
+20 個可存取 repo 的 workflow 全讀過（含 `ichentsaitw/*` 4 個私有協作 repo，無一 dispatch 本 repo）、
+本機工作排程器／啟動項／Run 鍵／WSL crontab／Claude 本機與雲端 routine（皆無）。
 2026-08-09 起 cron 分鐘改 :17 避開整點壅塞（成本為零，效果待觀察）。
 - **互動 session 的角色**：開發新功能、修 bug、回填資料、SEO/內容工作。不是每日更新。
 
@@ -258,9 +265,10 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 ## 已知歷史事件（查問題時的線索）
 
 - [2026-08-09] 症狀：每天 API 帳單約 10,000 input token，但真正有用的擷取只有一次。
-  根因：每天有**五班**會抓到同一則公告（三班 cron ＋ 兩班來源不明的外部
+  根因：每天有**五班**會抓到同一則公告（三班 cron ＋ 兩班 cron-job.org 的外部
   `workflow_dispatch`，以使用者帳號在 UTC 04:00／06:00 準點觸發，repo 內沒有任何東西
-  會 dispatch 它），而 `append_to_csv` 的去重發生在 API 呼叫**之後**，四次是白花的。
+  會 dispatch 它，見上方「排程準時性」），而 `append_to_csv` 的去重發生在 API 呼叫**之後**，
+  四次是白花的。
   另註：GitHub 的 cron 每天延遲 30–50 分鐘，真正搶到當日公告的往往是那兩班準點
   dispatch。規則：任何「先花錢才判斷要不要用」的流程，把可用純字串／本地資料做的
   判斷提到花錢之前；本例＝`parse_bulletin_end_date()` 先解析公告日期，已在 CSV
