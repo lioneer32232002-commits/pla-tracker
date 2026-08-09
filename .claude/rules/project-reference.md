@@ -39,11 +39,11 @@ classic token 一把都沒有 → **不會有 token 到期導致靜默死亡的�
 04:00／06:00 UTC＝台灣 12:00／14:00，刻意對齊 repo 原本的 cron 來繞過 GitHub 排程遲到。
 秒數會漂（4 月 :18～:21、6 月底 :34、8 月 :27～:29），那是 GitHub 端排隊落地的延遲，
 不是設定變過，**不要拿秒數當指紋去追**。
-⚠️ **通知設定實查（2026-08-09）**：兩個 job 都只開了「the cronjob will be disabled
-because of too many failures」，「execution of the cronjob fails」是**關的**。
-所以單日失敗＝完全靜默，要連續失敗到被停用才會收到信。信箱裡除了註冊信沒有任何
-cron-job.org 來信，代表至今沒失敗過。症狀：網站改成每天晚兩小時才更新。
-要先去 cron-job.org 看 job 是否還在／是否 401。
+**通知設定（2026-08-09 起）**：三個 job 都已開「execution of the cronjob fails」
+（`Notify after 1 failure`）＋「will be disabled because of too many failures」，
+所以**單次失敗當天就會寄信到 `wizard32232002@gmail.com`**。原本前兩者只開後者＝單日
+失敗完全靜默，當天改掉。症狀若出現（網站每天晚兩小時才更新）先去 cron-job.org 看
+job 還在不在／是否 401。信箱裡在此之前除了註冊信沒有任何 cron-job.org 來信＝從沒失敗過。
 查過並排除（別重查）：Cloudflare（`lioneers-web`／`lioneers-web-01` 只有 Hello world、
 `gept-prep` 只有 fetch handler，**都沒有 `scheduled()` export**，不可能掛 Cron Trigger）、
 20 個可存取 repo 的 workflow 全讀過（含 `ichentsaitw/*` 4 個私有協作 repo，無一 dispatch 本 repo）、
