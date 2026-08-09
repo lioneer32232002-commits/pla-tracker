@@ -50,7 +50,7 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 |------|-----------|
 | `.claude/rules/00-diagnosis.md` | 每個 session 開工前掃一眼（本環境三大坑：大檔讀取、CI 誤解、Windows 陷阱） |
 | `.claude/rules/project-reference.md` | 要動 build_site.py／新增頁面／查檔案用途／查 CI 細節／改圖表 |
-| `.claude/rules/project-reference.md`「Canva 每日圖卡」節 | 使用者說「做今天的 canva／圖卡／貼文圖」時（流程與禁忌都在那節，不要自己發明） |
+| `.claude/rules/canva-daily-card.md` | 使用者說「做今天的 canva／圖卡／貼文圖」時（流程與禁忌都在這份，不要自己發明） |
 | `.claude/rules/model-dispatch.md` | 要派 subagent、大量讀檔掃 repo、查網頁、或任務連錯兩次 |
 | `.claude/rules/judgment.md` | 不確定「該不該問使用者」「算不算完成」「要不要換方法」時 |
 | `.claude/rules/delegation-templates.md` | 撰寫 subagent 派工 prompt 時直接套模板 |
