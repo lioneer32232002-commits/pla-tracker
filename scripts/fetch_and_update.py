@@ -307,8 +307,10 @@ def extract_data_from_image(img_bytes, img_url):
 
     log('呼叫 Claude API 解讀圖片…')
     resp = client.messages.create(
-        model='claude-opus-4-6',
+        model='claude-opus-5',
         max_tokens=512,
+        # Opus 5 預設開啟 thinking，max_tokens=512 會被思考吃掉導致 JSON 截斷，必須明確關閉
+        thinking={'type': 'disabled'},
         messages=[{
             'role': 'user',
             'content': [
@@ -329,8 +331,9 @@ def extract_data_from_text(article_text):
 
     log('呼叫 Claude API 解讀公告內文…')
     resp = client.messages.create(
-        model='claude-opus-4-6',
+        model='claude-opus-5',
         max_tokens=512,
+        thinking={'type': 'disabled'},
         messages=[{
             'role': 'user',
             'content': [

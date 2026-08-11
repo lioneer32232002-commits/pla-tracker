@@ -394,8 +394,11 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
     try:
         client = anthropic.Anthropic()
         msg = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=2000,
+            model="claude-sonnet-5",
+            # Sonnet 5 省略 thinking 參數＝預設 adaptive，會吃輸出額度，明確關閉；
+            # 新 tokenizer 同樣文字多約三成 token，額度從 2000 提高避免報告被截斷
+            max_tokens=3000,
+            thinking={"type": "disabled"},
             messages=[{"role": "user", "content": f"""你是台海情報分析官。你的任務是把今日 PLA 數據與各方新聞整合成一份情報簡報，找出因果關係並做事實查核，並草擬社群貼文。
 
 ## 輸入資料
