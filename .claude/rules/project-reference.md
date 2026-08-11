@@ -197,9 +197,14 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
   歷史上 23/219 天（Mixed 19、UAV 2、Helicopter 2）會被誤標成 Manned。
   附帶事實：`activity_start`/`activity_end` 全站零引用、全檔只有 12 筆有值
   （最後一筆 2026-05-30），實質是死欄位。
-- **升級模型時必做兩件事**（尚未升級）：加 `thinking={"type":"disabled"}`
-  （否則 `max_tokens=512` 會被思考吃掉、JSON 被截斷）；取值不可寫死 `content[0]`
-  （已於 2026-08-09 改成找第一個 `type=text` 區塊，兩支腳本都改了）。
+- **模型已於 2026-08-11 升級 Claude 5 家族**：`fetch_and_update.py` 兩處呼叫改
+  `claude-opus-5`（與 Opus 4.6 同價 $5/$25 per MTok），`send_daily_email.py` 改
+  `claude-sonnet-5`（牌價同 Sonnet 4.6）。當時必做的兩件事都已落實：
+  加 `thinking={"type":"disabled"}`（Opus 5／Sonnet 5 省略該參數＝預設 adaptive，
+  `max_tokens` 會被思考吃掉、JSON 被截斷）；取值不寫死 `content[0]`（2026-08-09
+  已改成找第一個 `type=text` 區塊）。附帶：email 的 `max_tokens` 2000→3000
+  （Sonnet 5 新 tokenizer 同樣文字多約三成 token，避免報告截斷）。
+  下次再升級時同樣先查當時模型的 thinking 預設與 tokenizer 是否又變了。
 
 ## 已知歷史事件（查問題時的線索）
 

@@ -7,13 +7,11 @@
 
 這個專案的核心價值不是網站本身，是**使用者不用管它也天天正確更新**。三個定時炸彈：
 
-1. **寫死的 API 型號**：`scripts/fetch_and_update.py` 用 `claude-opus-5`（兩處，
-   Grep `model=` 定位），`scripts/send_daily_email.py` 用 `claude-sonnet-5`
-   （2026-08-11 自 4.6 家族升級）。Anthropic 退役這些型號的那天，管線就死。
-   症狀會是 20:00 班寄來的失敗信（model not found 類錯誤）。修法：換成當時的
-   現役型號即可，擷取 prompt（`_EXTRACT_SPEC`）不用動；但要先查新模型的
-   thinking 預設（升 Claude 5 時就因預設開 thinking 而必須加
-   `thinking={"type":"disabled"}`）。若你知道退役公告已出，主動提醒使用者提前換。
+1. **寫死的 API 型號**：`scripts/fetch_and_update.py:288,310` 用 `claude-opus-4-6`，
+   `scripts/send_daily_email.py:356` 用 `claude-sonnet-4-6`。Anthropic 退役這些型號的
+   那天，管線就死。症狀會是 20:00 班寄來的失敗信（model not found 類錯誤）。
+   修法：換成當時的現役型號即可，擷取 prompt（`_EXTRACT_SPEC`）不用動。若你知道
+   退役公告已出，主動提醒使用者提前換。
 2. **`daily_update.yml` 的 git add 白名單**：新頁面沒加進去＝線上停更但 CI 綠燈。
    細節在 [project-reference.md](project-reference.md)。
 3. **ANTHROPIC_API_KEY / GMAIL secrets 過期或額度用盡**：你在本機查不到 secrets，
