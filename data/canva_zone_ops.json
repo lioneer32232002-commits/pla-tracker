@@ -608,24 +608,21 @@
     }
   },
   "activity_index": {
-    "_note": "活動強度指數列（2026-08-13 加）。取代原本抬頭下方那條 140×5 的裝飾分隔線，單行、佔高與原分隔線相當，沒有擠壓下方三個大數字（大數字字頂在 y≈429）。每日要做四件事：replace_text 換分數與分帶、format_text 換分帶色、resize_element 把填色條寬度改成 track_width×分數/100、recolor_element 換填色條顏色。分數與分帶由 make_canva_ops.py 的 texts.activity_index / activity_index 欄位提供；沒有本機環境時，網站首頁的指數卡上就有這兩個值與顏色。",
+    "_note": "活動強度指數列（2026-08-13 加）。取代原本抬頭下方那條 140×5 的裝飾分隔線。每日要做三件事：replace_text 換分數與分帶、format_text 只換顏色、resize_element 把填色條寬度改成 track.width×分數/100（另加 recolor_element 換色）。分數與分帶由 make_canva_ops.py 的 texts.activity_index / activity_index 欄位提供；沒有本機環境時，網站首頁的指數卡上就有這兩個值與顏色。",
     "label_element_id": "PBrY48DlSrkTrB5h-LBXMdRjCm4PP6lZN",
     "label_text": "活動強度指數",
     "value_element_id": "PBrY48DlSrkTrB5h-LBjlZ3cmj35ytj6D",
     "value_format": {
-      "font_size": 34,
-      "font_weight": "bold",
-      "text_align": "start"
+      "_note": "每日只改顏色，不要一併送 font_size／font_weight／text_align——寫死這些會把使用者之後在 Canva 手調的字級與對齊蓋掉。"
     },
     "track_element_id": "PBrY48DlSrkTrB5h-LB2Yg16qGFZCy0GG",
     "fill_element_id": "PBrY48DlSrkTrB5h-LBPw6XK1jnWWGrWg",
     "track": {
-      "top": 358,
-      "left": 404,
       "width": 340,
       "height": 14,
       "corner_rounding": 7,
-      "color": "#2a343b"
+      "color": "#2a343b",
+      "_note": "填色條寬度＝width×分數/100，最小值取 height（0 分時不要退化成一個點）"
     },
     "fill_height": 14,
     "band_colors": {
@@ -645,9 +642,6 @@
         "type": "format_text",
         "element_id": "PBrY48DlSrkTrB5h-LBjlZ3cmj35ytj6D",
         "formatting": {
-          "font_size": 34,
-          "font_weight": "bold",
-          "text_align": "start",
           "color": "#b8a06a"
         }
       },
@@ -664,6 +658,33 @@
         "color": "#b8a06a"
       }
     ],
-    "no_animation_warning": "這四個元素是 2026-08-13 用 API 插進母版的，沒有動畫。使用者若要動畫，需在 Canva 手動補上；補完後不要用 API 重新插入這些元素。"
+    "no_animation_warning": "這四個元素是 2026-08-13 用 API 插進母版的，本來沒有動畫；使用者已於同日自行調整過版面（並可能補了動畫）。**不要再用 API 重新插入或重新定位這些元素**，只做上面那四個操作。",
+    "positions_measured": {
+      "_note": "2026-08-13 使用者手動調整母版後實測。這些值只是給人核對用——每日的四個操作都不碰位置（resize 只給寬高、recolor 只給顏色，Canva 會保留元素原本的 top/left），所以使用者之後再移動這一列也不會壞掉。不相符只代表版面被調過，不需要停手。",
+      "measured_on": "2026-08-13",
+      "label": {
+        "top": 331.0,
+        "left": 116.5,
+        "width": 260,
+        "color": "#9fb0ba"
+      },
+      "track": {
+        "top": 345.0,
+        "left": 400.5,
+        "width": 340,
+        "height": 14
+      },
+      "fill": {
+        "top": 345.0,
+        "left": 400.5,
+        "height": 14
+      },
+      "value": {
+        "top": 328.0,
+        "left": 764.5,
+        "width": 200,
+        "font_size": 34
+      }
+    }
   }
 }

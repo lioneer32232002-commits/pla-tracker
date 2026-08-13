@@ -34,6 +34,8 @@
      `340×分數/100`、換填色條顏色）。**這一列不是純換字**——只做 `replace_text`
      會留下前一天的顏色與長條長度，看起來像資料沒更新。沒有本機環境時：分數與分帶
      從網站首頁的指數卡讀，顏色查 `canva_zone_ops.json` 的 `activity_index.band_colors`。
+     這四個操作**都不碰位置，`format_text` 也只送 color**——所以使用者之後在 Canva
+     移動這一列或改字級都不會被蓋掉。不要為了「對齊」而自作主張加 `position_element`。
   6. commit transaction → `move-item-to-folder` 搬進資料夾 → 把設計連結給使用者
 - **母版頂部有一張半透明航機照＋一張漸層遮罩（2026-08-07 加）**，兩者都不參與每日流程，
   別動也別刪：照片 `PBrY48DlSrkTrB5h-LBXP7J8g5Y5wZSrW`（F-16＋F-35，使用者要表達美日共同防衛，
@@ -48,10 +50,15 @@
   長條填色 `LBPw6XK1jnWWGrWg`、數值「84　極高」`LBjlZ3cmj35ytj6D`；
   全部登記在 `canva_zone_ops.json` 的 `activity_index`。它**取代了原本抬頭下方那條
   140×5 的裝飾分隔線**（已刪），佔高相當，所以沒有擠壓下面三個大數字（字頂在 y≈429）。
-  **這四個元素是用 API 插的，沒有動畫**——使用者要動畫得自己在 Canva 補，補完後
-  不要再用 API 重插它們。改動前的母版備份＝`DAHSIbVIcAk`；每日四個操作的實測樣本＝
-  `DAHSIZU4-W4`（標題「強度指數每日更新測試（可刪）」，放在 root 不在資料夾，
-  確認過後可刪）。
+  **這四個元素是用 API 插的，原本沒有動畫**——不要再用 API 重插或重新定位它們。
+  改動前的母版備份＝`DAHSIbVIcAk`；每日四個操作的實測樣本＝`DAHSIZU4-W4`
+  （標題「強度指數每日更新測試（可刪）」，放在 root 不在資料夾，確認過後可刪）。
+  **[2026-08-13] 使用者已自行調整過母版抬頭**：日期放大變亮（46.7→53.3px、
+  `#7f8f9a`→`#cbd6dd`），強度列整組上移約 13px、左移 3.5px（標籤色也改成 `#9fb0ba`）。
+  當日實測**地圖元素與三個大數字、六個空域全部沒動**（`map_element` 仍是
+  690/-22/1125×850），所以空域座標不需重算。強度列的實測座標記在
+  `canva_zone_ops.json` 的 `activity_index.positions_measured`，那組值**只供人核對，
+  不相符不必停手**——每日操作不碰位置。真正要停手的仍然只有 `map_element` 對不上。
   ⚠️ **雲端排程的 prompt 要同步加這一段，否則自動產的圖卡指數會停在母版的 84 極高**：
   「跑完 make_canva_ops.py 後，把輸出裡 `activity_index.ops` 的四個操作原樣加進
   edit-design 的 operations」。routine 管理頁在

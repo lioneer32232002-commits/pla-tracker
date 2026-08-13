@@ -260,9 +260,9 @@ def main():
             'ops': [
                 {'type': 'replace_text', 'element_id': _PAI_VALUE_ID,
                  'text': f'{pai["score"]}　{pai_band_zh}'},
+                # 只送顏色：一併送字級／字重／對齊會把使用者在 Canva 手調的樣式蓋掉
                 {'type': 'format_text', 'element_id': _PAI_VALUE_ID,
-                 'formatting': {'font_size': 34, 'font_weight': 'bold',
-                                'text_align': 'start', 'color': pai_color}},
+                 'formatting': {'color': pai_color}},
                 {'type': 'resize_element', 'element_id': _PAI_FILL_ID,
                  'width': fill_w, 'height': _PAI_TRACK_H, 'preserve_aspect_ratio': False},
                 {'type': 'recolor_element', 'element_id': _PAI_FILL_ID, 'color': pai_color},
