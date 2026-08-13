@@ -4646,19 +4646,24 @@ function paint(){
 x.fillStyle=CO.bg;x.fillRect(0,0,W,H);
 
 // ── 抬頭（置中海報式：標題置中、日期顯示為資料期間範圍）──────────────────
-txt(D.title,W/2,112,62,CO.hd,700,'center',2);
-txt(D.sub,W/2,154,28,CO.dim,400,'center',3,FD);
+// 抬頭三行的間距刻意不等距：中文標題與英文副標是同一個單位（貼近，19px），
+// 副標到日期拉開（26px），日期到強度列再拉開（30px）——等距排會讓四行讀起來
+// 像一團，是使用者 2026-08-13 回報「上方擠」的主因。
+txt(D.title,W/2,110,62,CO.hd,700,'center',2);
+txt(D.sub,W/2,148,28,CO.dim,400,'center',3,FD);
 // 不顯示星期：公告涵蓋前一日至發布日，跨兩天標一個星期會誤導。
-txt(D.dl.slice(0,4)+'.'+D.dr,W/2,196,30,CO.sub,400,'center',1.6,FD);
+txt(D.dl.slice(0,4)+'.'+D.dr,W/2,194,30,CO.sub,400,'center',1.6,FD);
 // ── 活動強度指數（原本這裡是一條 140px 的純裝飾分隔線）─────────────────────
-// 佔高與原本的分隔線相當（單行、約 24px），刻意不新增區塊——三個數字的字高
-// 116px、基線 336，字頂落在 y≈255，這一行必須收在 y<240 以內才不會擠到它。
+// 佔高與原本的分隔線相當（單行、約 24px），刻意不新增區塊。
+// 垂直位置的推算方式（改任何一個數字都要重算，別憑目測）：
+//   日期的墨跡底 ≈ 基線−1；強度列的墨跡 ≈ [pby−22, pby+2]；三個大數字的墨跡頂 ≈ 基線−75。
+// 目標是強度列上下各留 30px：日期基線 194 → pby 245 → 大數字基線 352。
 function rr(rx,ry,rw,rh,rd){x.beginPath();
   if(x.roundRect){x.roundRect(rx,ry,rw,rh,rd);}else{
     x.moveTo(rx+rd,ry);x.arcTo(rx+rw,ry,rx+rw,ry+rh,rd);x.arcTo(rx+rw,ry+rh,rx,ry+rh,rd);
     x.arcTo(rx,ry+rh,rx,ry,rd);x.arcTo(rx,ry,rx+rw,ry,rd);}
   x.fill();}
-var PB=D.pai,pbW=176,pbH=9,pgap=17,pby=238;
+var PB=D.pai,pbW=176,pbH=9,pgap=17,pby=245;
 var wpl=tw_(PB.label,24,500,1.6),wps=tw_(String(PB.score),32,400,0,FD),
     wpb=tw_(PB.band,25,700,2);
 var ptot=wpl+pgap+wps+pgap+pbW+pgap+wpb,psx=(W-ptot)/2;
@@ -4679,13 +4684,16 @@ for(var i=0;i<3;i++){
   var ccx=P+cw*i+cw/2;
   // 數字用戰損字型：它只有一種字重，指定 900 會觸發瀏覽器合成粗體、把破損紋理糊掉，
   // 所以這裡固定 400，字距也回到 0（-2 是給原本黑體收緊用的）。
-  txt(st[i][1],ccx,336,116,st[i][2],400,'center',0,FD);
-  txt(st[i][0],ccx,380,26,CO.lbl,500,'center',1.8);
-  if(st[i][3])txt(st[i][3],ccx,416,24,CO.sub,500,'center',1);
+  txt(st[i][1],ccx,352,116,st[i][2],400,'center',0,FD);
+  txt(st[i][0],ccx,396,26,CO.lbl,500,'center',1.8);
+  if(st[i][3])txt(st[i][3],ccx,432,24,CO.sub,500,'center',1);
 }
 
 // ── 地圖（滿版出血）────────────────────────────────────────────────────────
-var MTOP=436,MBOT=1252,MH=MBOT-MTOP,MX=0,MW=W;
+// MTOP 452（原 436）：三個數字下移 16px 後讓出來的位置。MH 因此 816→800，
+// 取景比例 K=MH/5.67*CS≈129 仍高於 MW/9.0=120 的下限，左緣不會露出 geo 裁切直邊。
+// 再往下壓地圖就會逼近下限，要加東西請改動別處。
+var MTOP=452,MBOT=1252,MH=MBOT-MTOP,MX=0,MW=W;
 // 取景：先讓北部空域框頂(26.5)與西南空域框底(21.0)都進得來，再以 MW/9.0 設
 // 經度視野下限——超過下限，左緣會露出 geo_card.json 被裁切出的直邊。
 var LONC=120.32,LATC=23.78,CS=Math.cos(LATC*Math.PI/180);
@@ -4799,7 +4807,12 @@ if(D.hasZone){lx+=60+w2+46;
 var mtxt='';for(var mi2=0;mi2<D.moseg.length;mi2++)mtxt+=D.moseg[mi2][0];
 txt(mtxt,W/2,1312,36,CO.lbl,700,'center',0.5);
 txt(D.src,W/2,1404,42,CO.dim,700,'center',1);
-line(W/2-46,1452,W/2+46,1452,'#1e262b',2);
+// 原本是 92px 寬、2px 粗的深色短線，在 #0d1114 上幾乎看不見，讀起來像中間空了一大行
+//（使用者 2026-08-13 回報）。改成 420px 寬的 1px 細線：筆觸更輕、但長度撐得起
+// 上下兩行的寬度，才看得出是一條刻意的分隔線而不是空白。
+// y 用 .5：canvas 的 1px 線畫在整數座標會跨兩列做反鋸齒，顏色被攤掉一半、看起來糊，
+// 半像素才會落成一條實心的髮絲線。
+line(W/2-210,1452.5,W/2+210,1452.5,'#2a343b',1);
 txt(D.site,W/2,1520,33,CO.sub,700,'center',1.5);
 // 地圖免責標示改留在地圖內右下角（公告只給空域名稱、沒有邊界，框是推定的示意範圍）
 txt(D.mapnote,W-P,MBOT-14,19,CO.dim,400,'right',1);
