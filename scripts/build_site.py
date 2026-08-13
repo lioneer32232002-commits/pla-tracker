@@ -1363,6 +1363,14 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   font-variant-numeric:tabular-nums;letter-spacing:-.03em}
 .pai-score em{font-size:1rem;font-weight:700;font-style:normal;opacity:.45;margin-left:.15rem}
 .pai-band{font-size:1.15rem;font-weight:800;letter-spacing:.08em;margin-top:.4rem}
+/* 強度條：軌道＋分帶刻度＋填色。刻度是 1px 細線，只在軌道上方半截，
+   避免與填色搶注意力（填色才是資訊，刻度是尺）。 */
+.pai-meter{position:relative;height:10px;border-radius:999px;background:var(--bdr);
+  margin:.6rem 0 .5rem;overflow:hidden}
+.pai-meter-fill{display:block;height:100%;border-radius:999px;background:currentColor;
+  min-width:10px}
+.pai-meter i{position:absolute;top:0;width:1px;height:4px;background:var(--sur);
+  opacity:.85}
 .pai-bdesc{font-size:.72rem;color:var(--sub);line-height:1.5;margin-top:.22rem}
 .pai-trend{font-size:.72rem;color:var(--sub);margin-top:.5rem;letter-spacing:.02em}
 .pai-trend.t-up{color:var(--r)}
@@ -2724,6 +2732,16 @@ def pai_section_html(df, lang, s):
         rows += (f'<div class="pai-c pai-boost">'
                  f'<span class="pai-cl">{s["pai_boost"].format(n=p["boost"])}</span></div>')
 
+    # 強度條：分帶門檻畫成刻度，讀者一眼看得出今天離下一帶還有多遠——
+    # 光一個數字看不出 38 在 0–100 的哪個位置，也看不出 50 跟 51 是兩個不同的帶。
+    # 刻度取自 PAI_BANDS，不寫死；分帶門檻改了刻度自動跟著移。
+    ticks = ''.join(f'<i style="left:{f}%"></i>' for f, _ in PAI_BANDS if f > 0)
+    meter_html = (
+        f'<div class="pai-meter" role="img" '
+        f'aria-label="{s["pai_label"]} {p["score"]}{s["pai_scale"]}">'
+        f'<span class="pai-meter-fill b-{band}" style="width:{p["score"]}%"></span>'
+        f'{ticks}</div>')
+
     # 走勢：近 PAI_SPARK_DAYS 個有資料日。摘要數字放在 SVG 外面用 HTML 排，
     # 一來 SVG 不必碰字型，二來手機上文字不會被非等比縮放拉扁。
     hist = [pai_score(r)['score'] for _, r in df.tail(PAI_SPARK_DAYS).iterrows()]
@@ -2748,6 +2766,7 @@ def pai_section_html(df, lang, s):
     <div class="pai-gauge">
       <div class="pai-score b-{band}"><span data-count="{p['score']}">{p['score']}</span><em>{s['pai_scale']}</em></div>
       <div class="pai-band b-{band}">{s['pai_bands'][band]}</div>
+      {meter_html}
       <div class="pai-bdesc">{s['pai_band_desc'][band]}</div>
       {trend_html}
     </div>

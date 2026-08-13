@@ -27,7 +27,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent))
 # 空域判斷共用 build_site 的同一份函式。不要在這裡重寫——實際公告寫的是
 # 「西南空域」而不是「西南部」，自己重寫過一次就漏判了（2026-08-05 踩過）。
-from build_site import zones_from_special  # noqa: E402
+from build_site import zones_from_special, pai_score, STRINGS, _PAI_COLORS  # noqa: E402
 
 ROOT = Path(__file__).parent.parent
 DATA = ROOT / 'data' / 'records.csv'
@@ -57,6 +57,11 @@ ZONE_NAMES = {'n': '北部空域', 'c': '中部空域', 'sw': '西南部空域',
 MASTER_DESIGN_ID = 'DAHRZtscuZM'
 FOLDER_ID = 'FAFzxKT6D0A'
 PAGE_ID = 'PBrY48DlSrkTrB5h'
+# 活動強度指數列（2026-08-13 加進母版，取代原本的裝飾分隔線）。
+# 軌道尺寸寫死是刻意的：它在母版裡是固定不動的背景條，每天只改填色條的寬與色。
+_PAI_TRACK_W, _PAI_TRACK_H = 340, 14
+_PAI_VALUE_ID = f'{PAGE_ID}-LBjlZ3cmj35ytj6D'   # 「84　極高」
+_PAI_FILL_ID  = f'{PAGE_ID}-LBPw6XK1jnWWGrWg'   # 長條的填色段（軌道是 LB2Yg16qGFZCy0GG）
 TEXT_SLOTS = {                      # 語意名稱 → (locator id, 這格旁邊的說明文字)
     'date_range':     ('LBlNdXK4RZgP3xXX', '標題下方的日期區間'),
     'aircraft':       ('LBb6ryCyhfc7vLLQ', '大數字：共機架次'),
@@ -226,6 +231,13 @@ def main():
     zones, labels = build_zones(args.top, args.left, args.width, args.height,
                                 [zk for zk, on in zones_on.items() if on])
 
+    # 活動強度指數：與網站共用 build_site.pai_score，不在這裡另算一份。
+    # 填色條寬度＝軌道寬 × 分數/100，最小 14（＝條高，避免 0 分時退化成一個點）。
+    pai = pai_score(row)
+    pai_band_zh = STRINGS['zh']['pai_bands'][pai['band']]
+    pai_color = _PAI_COLORS['dark'][pai['band']]
+    fill_w = max(_PAI_TRACK_H, round(_PAI_TRACK_W * pai['score'] / 100))
+
     out = {
         'date': row['date'],
         'texts': {
@@ -236,6 +248,25 @@ def main():
             'delta_ships': delta(row['ships_total'], prev['ships_total']),
             'month_line': (f'{dt.month} 月至今 {len(df_mo)} 天　｜　共機 {mo_ac} 架次'
                            f'　｜　越過中線 {mo_ml}（{mo_rate}）'),
+            'activity_index': f'{pai["score"]}　{pai_band_zh}',
+        },
+        # 指數列不是純換字：顏色與長條寬度也要跟著改，所以另外給一組現成的 ops，
+        # 直接丟進 edit-design 即可（element id 見 data/canva_zone_ops.json）。
+        'activity_index': {
+            'score': pai['score'],
+            'band': pai_band_zh,
+            'color': pai_color,
+            'fill_width': fill_w,
+            'ops': [
+                {'type': 'replace_text', 'element_id': _PAI_VALUE_ID,
+                 'text': f'{pai["score"]}　{pai_band_zh}'},
+                {'type': 'format_text', 'element_id': _PAI_VALUE_ID,
+                 'formatting': {'font_size': 34, 'font_weight': 'bold',
+                                'text_align': 'start', 'color': pai_color}},
+                {'type': 'resize_element', 'element_id': _PAI_FILL_ID,
+                 'width': fill_w, 'height': _PAI_TRACK_H, 'preserve_aspect_ratio': False},
+                {'type': 'recolor_element', 'element_id': _PAI_FILL_ID, 'color': pai_color},
+            ],
         },
         'zones': zones,
         'zone_labels': labels,

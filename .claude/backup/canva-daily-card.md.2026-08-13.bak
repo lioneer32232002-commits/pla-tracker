@@ -29,12 +29,7 @@
      `data/canva_zone_ops.json` ＋ 從網站首頁讀當日數字）
   4. `edit-design`：`update_title` 改成 `YYYYMMDD_PLA  TRACKER`；`replace_text` 換掉
      八格文字；`delete_element` 刪掉**今日沒有**的空域（每個 5 形狀＋1 標籤）
-  5. **活動強度指數列**（2026-08-13 加）：跑 `make_canva_ops.py` 出來的 `activity_index.ops`
-     四個操作原樣丟進同一個 `edit-design`（換字、換分帶色、把填色條寬度改成
-     `340×分數/100`、換填色條顏色）。**這一列不是純換字**——只做 `replace_text`
-     會留下前一天的顏色與長條長度，看起來像資料沒更新。沒有本機環境時：分數與分帶
-     從網站首頁的指數卡讀，顏色查 `canva_zone_ops.json` 的 `activity_index.band_colors`。
-  6. commit transaction → `move-item-to-folder` 搬進資料夾 → 把設計連結給使用者
+  5. commit transaction → `move-item-to-folder` 搬進資料夾 → 把設計連結給使用者
 - **母版頂部有一張半透明航機照＋一張漸層遮罩（2026-08-07 加）**，兩者都不參與每日流程，
   別動也別刪：照片 `PBrY48DlSrkTrB5h-LBXP7J8g5Y5wZSrW`（F-16＋F-35，使用者要表達美日共同防衛，
   **不可壓暗機身**）；遮罩 `PBrY48DlSrkTrB5h-LBpX25hdgp4MrLdT`（Canva 素材 `MAHRmT5eVak`，
@@ -43,20 +38,6 @@
   出來的假漸層在照片上會看成百葉窗（使用者退件），要漸層就自製 alpha PNG 匯進來；
   (2) `insert_fill` 匯入的圖預設用「填滿」裁切，長寬比不符時只會露出中間一小段，
   插完必須用 `crop_media` 把 imageBox 設成和元素同尺寸。
-- **母版的活動強度指數列（2026-08-13 加，四個元素）**：標籤「活動強度指數」
-  `LBXMdRjCm4PP6lZN`、長條軌道 `LB2Yg16qGFZCy0GG`（340×14，固定不動）、
-  長條填色 `LBPw6XK1jnWWGrWg`、數值「84　極高」`LBjlZ3cmj35ytj6D`；
-  全部登記在 `canva_zone_ops.json` 的 `activity_index`。它**取代了原本抬頭下方那條
-  140×5 的裝飾分隔線**（已刪），佔高相當，所以沒有擠壓下面三個大數字（字頂在 y≈429）。
-  **這四個元素是用 API 插的，沒有動畫**——使用者要動畫得自己在 Canva 補，補完後
-  不要再用 API 重插它們。改動前的母版備份＝`DAHSIbVIcAk`；每日四個操作的實測樣本＝
-  `DAHSIZU4-W4`（標題「強度指數每日更新測試（可刪）」，放在 root 不在資料夾，
-  確認過後可刪）。
-  ⚠️ **雲端排程的 prompt 要同步加這一段，否則自動產的圖卡指數會停在母版的 84 極高**：
-  「跑完 make_canva_ops.py 後，把輸出裡 `activity_index.ops` 的四個操作原樣加進
-  edit-design 的 operations」。routine 管理頁在
-  https://claude.ai/code/routines/trig_01RbV4ojgTax7DoEUEy2euWW
-  （**本機 session 改不了雲端 routine 的 prompt，要在 claude.ai 上改**）。
 - 只有在母版真的缺某個空域時才需要插入（`zones[].shapes` / `label`）。`add_text` 插出來的
   標籤是黑色 16px 左對齊，**插完必須再補一次 `format_text`**（黃 `#F5C842`／25px／
   bold／center），否則深色底上等於看不見。插入的形狀不會有動畫，要回報使用者。

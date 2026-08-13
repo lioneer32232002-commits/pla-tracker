@@ -70,6 +70,14 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   font-variant-numeric:tabular-nums;letter-spacing:-.03em}
 .pai-score em{font-size:1rem;font-weight:700;font-style:normal;opacity:.45;margin-left:.15rem}
 .pai-band{font-size:1.15rem;font-weight:800;letter-spacing:.08em;margin-top:.4rem}
+/* 強度條：軌道＋分帶刻度＋填色。刻度是 1px 細線，只在軌道上方半截，
+   避免與填色搶注意力（填色才是資訊，刻度是尺）。 */
+.pai-meter{position:relative;height:10px;border-radius:999px;background:var(--bdr);
+  margin:.6rem 0 .5rem;overflow:hidden}
+.pai-meter-fill{display:block;height:100%;border-radius:999px;background:currentColor;
+  min-width:10px}
+.pai-meter i{position:absolute;top:0;width:1px;height:4px;background:var(--sur);
+  opacity:.85}
 .pai-bdesc{font-size:.72rem;color:var(--sub);line-height:1.5;margin-top:.22rem}
 .pai-trend{font-size:.72rem;color:var(--sub);margin-top:.5rem;letter-spacing:.02em}
 .pai-trend.t-up{color:var(--r)}
