@@ -555,6 +555,10 @@ STRINGS = {
                       'flat': '與近 {n} 日平均相當',
                       'down': '低於近 {n} 日平均'},
         'pai_boost': '空飄氣球 +{n}',
+        'pai_spark':     '近 {n} 個發布日',
+        'pai_spark_hi':  '最高',
+        'pai_spark_avg': '平均',
+        'pai_spark_thr': '虛線＝深色門檻 {n}',
         'pai_note':  '本指數為本站依國防部公開數據自算的相對活動強度，非官方警戒等級。',
         'mo_prefix': '{m}月至今',
         'mo_days': '天',
@@ -638,13 +642,14 @@ STRINGS = {
         'monthly_records_count': '共 {n} 筆',
         'hm': {
             'title':    '每日強度日曆',
-            'sub':      '每格一天 · 橫向為該月 1 → 31 日 · 顏色深淺＝共機架次',
+            'sub':      '每格一天 · 橫向為該月 1 → 31 日 · 顏色深淺＝活動強度指數',
             'lg_none':  '未發布',
             'lg_zero':  '0 架次',
             'lg_cross': '紅點＝當日有逾越中線',
             'tip':      '{date}：共機 {ac} 架次，其中 {ml} 架次逾越中線；共艦 {sh} 艘',
             'tip_zero': '{date}：未偵獲共機；共艦 {sh} 艘',
             'tip_none': '{date}：國防部當日未發布，本站從缺',
+            'tip_pai':  '｜強度指數 {n}（{band}）',
         },
         'ars': {
             'topbar':      'ARMS PROCUREMENT TRACKER',
@@ -772,6 +777,10 @@ STRINGS = {
                       'flat': 'in line with the {n}-day average',
                       'down': 'below the {n}-day average'},
         'pai_boost': 'Balloon activity +{n}',
+        'pai_spark':     'Last {n} published days',
+        'pai_spark_hi':  'Peak',
+        'pai_spark_avg': 'Mean',
+        'pai_spark_thr': 'Dashed = dark-theme threshold {n}',
         'pai_note':  "This site's own composite of the MND's published figures — "
                      'not an official alert level.',
         'mo_prefix': '{m} MTD',
@@ -856,13 +865,14 @@ STRINGS = {
         'monthly_records_count': '{n} records',
         'hm': {
             'title':    'Daily intensity calendar',
-            'sub':      'One cell per day · columns run 1 → 31 of each month · darker = more sorties',
+            'sub':      'One cell per day · columns run 1 → 31 of each month · shade = activity index',
             'lg_none':  'No release',
             'lg_zero':  'No sorties',
             'lg_cross': 'Red dot = median line crossed that day',
             'tip':      '{date}: {ac} PLA sorties, {ml} crossed the median line; {sh} vessels',
             'tip_zero': '{date}: no PLA aircraft detected; {sh} vessels',
             'tip_none': '{date}: no MND release that day — left blank',
+            'tip_pai':  ' | activity index {n} ({band})',
         },
         'ars': {
             'topbar':      'ARMS PROCUREMENT TRACKER',
@@ -1376,6 +1386,22 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .pai-cw{text-align:right;font-size:.62rem;color:var(--sub);opacity:.55;
   font-variant-numeric:tabular-nums}
 .pai-boost .pai-cl{grid-column:1/-1;opacity:.8;padding-top:.15rem}
+/* ── 指數走勢 sparkline ── */
+.pai-spark-wrap{margin-top:1rem;border-top:1px solid var(--bdr);padding-top:.85rem}
+.pai-spark{display:block;width:100%;height:56px;overflow:visible}
+.ps-area{fill:currentColor;opacity:.13;stroke:none}
+.ps-line{fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linejoin:round;stroke-linecap:round}
+.ps-thr{stroke:var(--sub);stroke-width:1;stroke-dasharray:3 4;opacity:.45}
+.ps-now{stroke:currentColor;stroke-width:1.2;opacity:.55}
+.pai-spark-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .9rem;
+  margin-top:.5rem;font-size:.65rem;color:var(--sub);letter-spacing:.02em}
+.pai-spark-lg b{color:var(--tx);font-variant-numeric:tabular-nums;font-weight:700}
+.ps-thr-lg{margin-left:auto;opacity:.7}
+@media (max-width:620px){
+  .pai-spark{height:48px}
+  .ps-thr-lg{margin-left:0;flex-basis:100%}
+}
 .pai-note{font-size:.66rem;color:var(--sub);opacity:.75;line-height:1.6;
   margin-top:.85rem;border-top:1px solid var(--bdr);padding-top:.6rem}
 /* 分帶色：深色為基準值，淺色在檔尾的 data-theme="light" 區覆寫。
@@ -1595,11 +1621,18 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .hm-c{aspect-ratio:1;border-radius:2px;position:relative;display:block;min-width:0}
 .hm-c.e{background:none}
 .hm-c.n{background:none;box-shadow:inset 0 0 0 1px var(--bdr)}
+/* v1–v5＝活動強度指數的五個分帶。刻意維持單一色相的深淺斜坡，不套指數卡上那組
+   五色（綠/灰/黃/橘/紅）——8 個月 ×31 格的密集網格用五種色相會變成雜訊，
+   讀者只分得出深淺、分不出色相。
+   單一色相、亮度單調遞增（深色主題）／遞減（淺色主題）是熱圖能被讀懂的前提。
+   v5 不用紅或橘：格子右下角的「越線」標記本身就是紅點，底色再用紅橘系會蓋掉它。
+   v0（零架次）刻意是中性灰藍／灰米色，與 v1 起的暖色系分屬兩類，不只是深淺差。 */
 .hm-c.v0{background:#1a2830}
-.hm-c.v1{background:#5c4c17}
-.hm-c.v2{background:#8a7020}
-.hm-c.v3{background:#c9a52f}
-.hm-c.v4{background:#f5c842}
+.hm-c.v1{background:#4a4526}
+.hm-c.v2{background:#82691e}
+.hm-c.v3{background:#b8942a}
+.hm-c.v4{background:#e0b53a}
+.hm-c.v5{background:#f5c842}
 .hm-c.x::after{content:'';position:absolute;right:1px;bottom:1px;width:3px;height:3px;
   border-radius:50%;background:var(--r)}
 .hm-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .85rem;margin-top:.8rem;
@@ -1931,10 +1964,15 @@ html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
 
 /* 每日強度日曆淺色階（同一色相由淺到深，順序與深色版一致） */
 html[data-theme="light"] .hm-c.v0{background:#e9e5da}
-html[data-theme="light"] .hm-c.v1{background:#efdfae}
-html[data-theme="light"] .hm-c.v2{background:#ddc477}
-html[data-theme="light"] .hm-c.v3{background:#c09a25}
-html[data-theme="light"] .hm-c.v4{background:#8a6300}
+html[data-theme="light"] .hm-c.v1{background:#e9d590}
+html[data-theme="light"] .hm-c.v2{background:#d6bd6a}
+html[data-theme="light"] .hm-c.v3{background:#bd9a2b}
+html[data-theme="light"] .hm-c.v4{background:#94700c}
+html[data-theme="light"] .hm-c.v5{background:#5e4400}
+/* 越線紅點在淺色主題最深的兩格上幾乎看不見（深棕底 L≈69 vs 紅 L≈58），改用亮紅。
+   格子底色若再調深，這條要跟著往下延伸。 */
+html[data-theme="light"] .hm-c.v4.x::after,
+html[data-theme="light"] .hm-c.v5.x::after{background:#ff9e9e}
 
 /* ── Arsenal 淺色覆蓋（僅顏色，不動版面尺寸）── */
 html[data-theme="light"] .ars-chart-wrap{background:#fbfaf6;box-shadow:inset 0 0 0 1px var(--bdr)}
@@ -2626,6 +2664,33 @@ def footer_html(update_label, s):
 
 
 _PAI_ARROW = {'up': '▲', 'flat': '─', 'down': '▼'}
+PAI_SPARK_DAYS = 60
+
+
+def pai_spark_svg(scores, band):
+    """指數走勢 sparkline。SVG 內**一個字都沒有**（座標軸與數字都在外面的 HTML），
+    所以不牽涉字型——鐵律 7 針對的是 CI 無 CJK 字型時的圖片渲染，這裡與月統計頁的
+    純 CSS 日曆同類，不是 Chart.js 的替代品。
+    viewBox 用非等比縮放填滿寬度，所有線條加 vector-effect 才不會被拉粗。"""
+    if len(scores) < 2:
+        return ''
+    W, H = 600.0, 100.0
+    step = W / (len(scores) - 1)
+    pts = [(i * step, H - s) for i, s in enumerate(scores)]
+    line = 'M' + ' L'.join(f'{x:.1f} {y:.1f}' for x, y in pts)
+    area = f'{line} L{W:.1f} {H:.1f} L0 {H:.1f} Z'
+    tx = pts[-1][0]
+    thr = H - PAI_DARK
+    return (
+        f'<svg class="pai-spark" viewBox="0 0 {W:.0f} {H:.0f}" preserveAspectRatio="none" '
+        f'aria-hidden="true" focusable="false">'
+        f'<path class="ps-area b-{band}" d="{area}"/>'
+        f'<line class="ps-thr" x1="0" y1="{thr}" x2="{W:.0f}" y2="{thr}" '
+        f'vector-effect="non-scaling-stroke"/>'
+        f'<path class="ps-line b-{band}" d="{line}" vector-effect="non-scaling-stroke"/>'
+        f'<line class="ps-now b-{band}" x1="{tx:.1f}" y1="0" x2="{tx:.1f}" y2="{H:.0f}" '
+        f'vector-effect="non-scaling-stroke"/>'
+        f'</svg>')
 
 
 def pai_section_html(df, lang, s):
@@ -2659,6 +2724,20 @@ def pai_section_html(df, lang, s):
         rows += (f'<div class="pai-c pai-boost">'
                  f'<span class="pai-cl">{s["pai_boost"].format(n=p["boost"])}</span></div>')
 
+    # 走勢：近 PAI_SPARK_DAYS 個有資料日。摘要數字放在 SVG 外面用 HTML 排，
+    # 一來 SVG 不必碰字型，二來手機上文字不會被非等比縮放拉扁。
+    hist = [pai_score(r)['score'] for _, r in df.tail(PAI_SPARK_DAYS).iterrows()]
+    spark_html = ''
+    if len(hist) >= 2:
+        spark_html = (
+            f'<div class="pai-spark-wrap">{pai_spark_svg(hist, band)}'
+            f'<div class="pai-spark-lg">'
+            f'<span>{s["pai_spark"].format(n=len(hist))}</span>'
+            f'<span class="ps-k">{s["pai_spark_hi"]} <b>{max(hist)}</b></span>'
+            f'<span class="ps-k">{s["pai_spark_avg"]} <b>{sum(hist) / len(hist):.0f}</b></span>'
+            f'<span class="ps-k ps-thr-lg">{s["pai_spark_thr"].format(n=PAI_DARK)}</span>'
+            f'</div></div>')
+
     return f"""<section class="pai anim-ready">
   <div class="pai-head">
     <span class="pai-title">{s['pai_label']}</span>
@@ -2677,6 +2756,7 @@ def pai_section_html(df, lang, s):
       {rows}
     </div>
   </div>
+  {spark_html}
   <div class="pai-note">{s['pai_note']}</div>
 </section>"""
 
@@ -2987,16 +3067,19 @@ def build_records(df, lang, out_dir, s):
 #   n  = 有這一天但國防部當日未發布 → 只畫邊框（對應方法論頁「當日從缺不以估計值填補」）
 #   v0 = 有資料且為零架次 → 畫最淺的實色
 # 少了這個區分，「沒發布」會被讀成「零架次」，等於用視覺造假。
-_HM_BUCKETS = (5, 10, 20)   # v1: 1-4, v2: 5-9, v3: 10-19, v4: 20+
+# 2026-08-13 起格子的深淺改由「活動強度指數的分帶」決定（原本只看 aircraft_total 的
+# 4 段桶）。理由：日曆和首頁指數卡若各用一套強度定義，同一天會出現「指數說偏高、
+# 日曆畫得很淡」的矛盾。v0（零架次）維持獨立一格，不併進最低帶——零架次是一個
+# 具體事實，不是「分數低」。
+_HM_BAND_CLASS = {'low': 'v1', 'normal': 'v2', 'elevated': 'v3',
+                  'high': 'v4', 'extreme': 'v5'}
 
 
-def _hm_level(ac):
-    if ac == 0:
+def _hm_level(row):
+    """回傳日曆格的 class：零架次日固定 v0，其餘依活動強度指數的分帶 v1–v5。"""
+    if _pai_int(row, 'aircraft_total') == 0:
         return 'v0'
-    for i, b in enumerate(_HM_BUCKETS):
-        if ac < b:
-            return f'v{i + 1}'
-    return 'v4'
+    return _HM_BAND_CLASS[pai_score(row)['band']]
 
 
 def _monthly_heatmap_html(df, lang, s):
@@ -3027,16 +3110,21 @@ def _monthly_heatmap_html(df, lang, s):
             ac = int(r['aircraft_total']) if pd.notna(r['aircraft_total']) else 0
             ml = int(r['median_line_cross']) if pd.notna(r['median_line_cross']) else 0
             sh = int(r['ships_total']) if pd.notna(r['ships_total']) else 0
+            p  = pai_score(r)
             tip = (h['tip_zero'].format(date=iso, sh=sh) if ac == 0
                    else h['tip'].format(date=iso, ac=ac, ml=ml, sh=sh))
-            cls = _hm_level(ac) + (' x' if ml > 0 else '')
+            tip += h['tip_pai'].format(n=p['score'], band=s['pai_bands'][p['band']])
+            cls = _hm_level(r) + (' x' if ml > 0 else '')
             cells.append(f'<span class="hm-c {cls}" title="{html.escape(tip, quote=True)}"></span>')
         rows.append('<div class="hm-row">' + ''.join(cells) + '</div>')
 
+    # 圖例：未發布／零架次維持獨立兩格（合併＝視覺造假，validate 會擋），
+    # 其餘五格是活動強度指數的分帶，由低到高。
     swatches = ''.join(
         f'<span><i class="hm-c {c}"></i>{l}</span>'
-        for c, l in [('n', h['lg_none']), ('v0', h['lg_zero']), ('v1', '1–4'),
-                     ('v2', '5–9'), ('v3', '10–19'), ('v4', '20+')])
+        for c, l in [('n', h['lg_none']), ('v0', h['lg_zero'])]
+        + [(_HM_BAND_CLASS[k], s['pai_bands'][k])
+           for k in ('low', 'normal', 'elevated', 'high', 'extreme')])
     return (f'<section class="hm">'
             f'<div class="hm-h"><span class="hm-t">{h["title"]}</span>'
             f'<span class="hm-s">{h["sub"]}</span></div>'
@@ -4536,7 +4624,24 @@ txt(D.title,W/2,112,62,CO.hd,700,'center',2);
 txt(D.sub,W/2,154,28,CO.dim,400,'center',3,FD);
 // 不顯示星期：公告涵蓋前一日至發布日，跨兩天標一個星期會誤導。
 txt(D.dl.slice(0,4)+'.'+D.dr,W/2,196,30,CO.sub,400,'center',1.6,FD);
-line(W/2-70,220,W/2+70,220,'#2a343b',2);
+// ── 活動強度指數（原本這裡是一條 140px 的純裝飾分隔線）─────────────────────
+// 佔高與原本的分隔線相當（單行、約 24px），刻意不新增區塊——三個數字的字高
+// 116px、基線 336，字頂落在 y≈255，這一行必須收在 y<240 以內才不會擠到它。
+function rr(rx,ry,rw,rh,rd){x.beginPath();
+  if(x.roundRect){x.roundRect(rx,ry,rw,rh,rd);}else{
+    x.moveTo(rx+rd,ry);x.arcTo(rx+rw,ry,rx+rw,ry+rh,rd);x.arcTo(rx+rw,ry+rh,rx,ry+rh,rd);
+    x.arcTo(rx,ry+rh,rx,ry,rd);x.arcTo(rx,ry,rx+rw,ry,rd);}
+  x.fill();}
+var PB=D.pai,pbW=176,pbH=9,pgap=17,pby=238;
+var wpl=tw_(PB.label,24,500,1.6),wps=tw_(String(PB.score),32,400,0,FD),
+    wpb=tw_(PB.band,25,700,2);
+var ptot=wpl+pgap+wps+pgap+pbW+pgap+wpb,psx=(W-ptot)/2;
+txt(PB.label,psx,pby,24,CO.sub,500,'left',1.6);psx+=wpl+pgap;
+txt(String(PB.score),psx,pby+3,32,PB.color,400,'left',0,FD);psx+=wps+pgap;
+x.fillStyle='rgba(255,255,255,0.10)';rr(psx,pby-15,pbW,pbH,pbH/2);
+x.fillStyle=PB.color;rr(psx,pby-15,Math.max(pbH,pbW*PB.score/100),pbH,pbH/2);
+psx+=pbW+pgap;
+txt(PB.band,psx,pby,25,PB.color,700,'left',2);
 
 // ── 當日三數字（置中對稱：數字在上、標籤在下）────────────────────────────
 // 當日活動空域不再另立一行——地圖上已有空域標籤，同一資訊寫兩次只是佔版面。
@@ -4744,6 +4849,7 @@ def build_card(df, out_dir, s):
     mo_rate = f'{mo_ml / mo_ac * 100:.0f}%' if mo_ac > 0 else '—'
 
     geo = json.loads(GEO_FILE.read_text(encoding='utf-8'))
+    _pai = pai_score(latest)
 
     data = {
         'date':  today,
@@ -4775,6 +4881,12 @@ def build_card(df, out_dir, s):
                   ['　｜　越過中線 ', 0], [str(mo_ml), 1], [f'（{mo_rate}）', 0]],
         'site': SITE_HOST,
         'src':  '資料來源 / 中華民國國防部',
+        # 活動強度指數：取代原本抬頭下方那條純裝飾的分隔線，位置與佔高不變，
+        # 所以不會擠壓到下面的三個數字與地圖（版面高度是圖卡的硬約束）。
+        # 圖卡固定深色底，直接取 _PAI_COLORS['dark']。
+        'pai': {'label': '活動強度指數', 'score': _pai['score'],
+                'band':  STRINGS['zh']['pai_bands'][_pai['band']],
+                'color': _PAI_COLORS['dark'][_pai['band']]},
         'geo':  geo,
     }
     js = _CARD_JS.replace('__DATA__', json.dumps(data, ensure_ascii=False))

@@ -336,6 +336,10 @@ def validate_html():
         for marker, desc in [('class="hm-grid"', '每日強度日曆格線'),
                              ('hm-c n"',         '未發布格（無資料 ≠ 零架次）'),
                              ('hm-c v0',         '零架次格'),
+                             # v5＝指數最高分帶。日曆自 2026-08-13 改由活動強度指數
+                             # 著色（原本是 aircraft_total 的 4 段桶，只到 v4），
+                             # 少了 v5 代表日曆還停在舊的著色邏輯或沒重 build。
+                             ('hm-c v5',         '指數最高分帶格（日曆已改依指數著色）'),
                              ('class="hm-lg"',   '日曆圖例')]:
             if marker not in mo:
                 errors.append(f'{label} 缺少 {desc}（找不到「{marker}」）')
@@ -355,7 +359,8 @@ def validate_html():
                              ('rel="canonical"',    'canonical 連結'),
                              ('content="noindex',   'noindex（工具頁不進索引）'),
                              ('/index.html',        '回站內導覽'),
-                             ('nav-card',           '導覽列圖卡項（active）')]:
+                             ('nav-card',           '導覽列圖卡項（active）'),
+                             ('"label": "活動強度指數"', '圖卡的活動強度指數列')]:
             if marker not in card:
                 errors.append(f'card.html 缺少 {desc}（找不到「{marker}」）')
         if '__DATA__' in card:
@@ -400,6 +405,7 @@ def validate_html():
                         (f'class="pai-score b-{p["band"]}"',        f'指數分帶（應為 {p["band"]}）'),
                         (f'data-count="{p["score"]}"',              f'指數分數（應為 {p["score"]}）'),
                         ('class="pai-comps"',                       '指數組成拆解'),
+                        ('class="pai-spark"',                       '指數走勢 sparkline'),
                         ('class="pai-note"',                        '非官方警戒等級聲明'),
                         ('about.html#pai',                          '方法論連結'),
                     ]:

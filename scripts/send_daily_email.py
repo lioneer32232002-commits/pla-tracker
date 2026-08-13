@@ -5,6 +5,7 @@ send_daily_email.py — 每日更新後產生文字分析報告並寄送 Email
 import os
 import re
 import smtplib
+import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
@@ -19,6 +20,15 @@ from bs4 import BeautifulSoup
 
 ROOT      = Path(__file__).parent.parent
 DATA_FILE = ROOT / 'data' / 'records.csv'
+
+# 活動強度指數：直接沿用 build_site 的計分函式，不在這裡另寫一份——
+# 兩份計分邏輯遲早會不一致，而信裡的數字與網站對不上是最難查的那種錯。
+sys.path.insert(0, str(Path(__file__).parent))
+from build_site import (pai_score, PAI_TREND_WINDOW, PAI_VERSION,  # noqa: E402
+                        STRINGS as _S, _PAI_COLORS)
+
+PAI_BAND_ZH = _S['zh']['pai_bands']
+PAI_BAND_COLOR = _PAI_COLORS['dark']
 
 GMAIL_FROM = os.environ['GMAIL_FROM']
 GMAIL_TO   = os.environ['GMAIL_TO']
@@ -328,6 +338,19 @@ def compute_comparison(df: pd.DataFrame) -> list[dict]:
             value = str(cur_i)
             delta = f'+{d_i}' if d_i > 0 else (str(d_i) if d_i < 0 else '±0')
         rows.append({'label': label, 'value': value, 'delta': delta})
+
+    # 活動強度指數：與上面四項同樣是「今日 vs 昨日」，但它是本站自算的合成值，
+    # 所以 label 帶版本號，讀信的人一眼看得出它跟前四項的性質不同。
+    p_today = pai_score(today)
+    if has_yesterday:
+        d = p_today['score'] - pai_score(yesterday)['score']
+        delta = f'+{d}' if d > 0 else (str(d) if d < 0 else '±0')
+    else:
+        delta = '—'
+    rows.append({'label': f'強度指數 {PAI_VERSION}',
+                 'value': f'{p_today["score"]}（{PAI_BAND_ZH[p_today["band"]]}）',
+                 'delta': delta,
+                 'color': PAI_BAND_COLOR[p_today['band']]})
     return rows
 
 
@@ -341,6 +364,13 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
     prev_mon  = df[df['date'].dt.month == (today['date'].month - 1)]
 
     zero_cross_streak = int((last7['median_line_cross'] == 0)[::-1].cumprod().sum())
+
+    # 活動強度指數：把「今天在近期裡算什麼程度」直接算好餵給模型，
+    # 比讓它自己從原始數字去感覺可靠（模型對 5 架次算多算少沒有基準）。
+    pai_today = pai_score(today)
+    pai_hist  = [pai_score(r)['score']
+                 for _, r in df.tail(PAI_TREND_WINDOW + 1).iloc[:-1].iterrows()]
+    pai_prev_avg = round(sum(pai_hist) / len(pai_hist), 1) if pai_hist else None
 
     summary = {
         "today": {
@@ -357,6 +387,14 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
         },
         "last7_avg_aircraft":     round(last7['aircraft_total'].mean(), 1),
         "zero_cross_streak_days": zero_cross_streak,
+        "activity_index": {
+            "score":        pai_today['score'],
+            "band":         PAI_BAND_ZH[pai_today['band']],
+            "components":   {k: round(v) for k, v in pai_today['comp'].items()},
+            "prev_days_avg": pai_prev_avg,
+            "note": ('本站自算的 0–100 活動強度指數（架次 .35／越中線 .35／共艦 .20／'
+                     '空域廣度 .10），非官方警戒等級'),
+        },
         "this_month": {
             "days":           len(this_mon),
             "total_aircraft": int(this_mon['aircraft_total'].sum()),
@@ -416,6 +454,9 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
 
 **情勢摘要**
 今日 PLA 動態的客觀描述（2-3句），包含架次、越線、艦艇數字，與昨日及近7日均值比較。
+最後補一句活動強度指數：寫成「活動強度指數 {{分數}}（{{分帶}}），近{PAI_TREND_WINDOW}日平均 {{prev_days_avg}}」，
+並在同句內用「本站自算」四字標明它不是官方數據。指數是 activity_index 欄位算好的，
+直接引用，不要自己重算或改寫分帶名稱。
 
 **因果鏈**
 找出新聞與數據之間值得並置觀察的事件連結，每條屬於以下兩類之一：
@@ -447,7 +488,10 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
 - 每則不超過500字（含標點），語氣像資訊帳號分享觀察，不是新聞稿
 - 每則結尾另起一行附上：https://pla-tracker.skyfaring.net
 - 兩則草稿之間用單獨一行「---」分隔，前後不要加其他文字
-- 人名、金額、日期等具體細節，輸入資料中沒有來源就不要寫死"""}],
+- 人名、金額、日期等具體細節，輸入資料中沒有來源就不要寫死
+- 可以引用活動強度指數當作第(1)段的開場或收尾（例如「今天的活動強度指數 XX，屬 OO」），
+  但**必須寫明是本站自算的指數**，絕對不可寫成「警戒等級」「警報」或任何暗示官方發布的說法。
+  不確定怎麼寫就不要寫指數，寧可只用國防部的原始數字。"""}],
         )
         # 不寫死 content[0]：模型預設開啟 thinking 時 content[0] 會是 thinking 區塊。
         for block in msg.content:
@@ -465,12 +509,13 @@ def comparison_html(rows: list[dict]) -> str:
     """今日 vs 昨日對比列（純 Python 計算結果，與 LLM 分析內容獨立，確保數字可靠）。"""
     if not rows:
         return ''
-    items = ''.join(
-        f'<span style="margin-right:18px;white-space:nowrap">{r["label"]} '
-        f'<b>{r["value"]}</b> '
-        f'<span style="color:#8aa0b0;font-size:.85em">（{r["delta"]}）</span></span>'
-        for r in rows
-    )
+    items = ''
+    for r in rows:
+        # 活動強度指數那列帶分帶色（其餘四列是國防部原始數字，維持預設色）
+        style = f' style="color:{r["color"]}"' if r.get('color') else ''
+        items += (f'<span style="margin-right:18px;white-space:nowrap">{r["label"]} '
+                  f'<b{style}>{r["value"]}</b> '
+                  f'<span style="color:#8aa0b0;font-size:.85em">（{r["delta"]}）</span></span>')
     return (
         f'<div style="margin-bottom:14px;padding-bottom:12px;'
         f'border-bottom:1px solid #1a3040;font-size:.92em;line-height:2">'
@@ -547,7 +592,14 @@ def send_email(analysis: str, today_str: str, news: list[dict], comparison: list
 </body></html>"""
 
     msg = MIMEMultipart('alternative')
-    msg['Subject'] = f'PLA 擾台日報 · {today_str}'
+    # 主旨帶指數：手機通知列只看得到主旨，一個數字就能判斷今天要不要點開
+    subj_pai = ''
+    if comparison:
+        for r in comparison:
+            if r.get('color'):
+                subj_pai = f' · 強度 {r["value"]}'
+                break
+    msg['Subject'] = f'PLA 擾台日報 · {today_str}{subj_pai}'
     msg['From']    = GMAIL_FROM
     msg['To']      = GMAIL_TO
     msg.attach(MIMEText(html, 'html', 'utf-8'))

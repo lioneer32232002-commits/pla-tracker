@@ -93,6 +93,22 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .pai-cw{text-align:right;font-size:.62rem;color:var(--sub);opacity:.55;
   font-variant-numeric:tabular-nums}
 .pai-boost .pai-cl{grid-column:1/-1;opacity:.8;padding-top:.15rem}
+/* ── 指數走勢 sparkline ── */
+.pai-spark-wrap{margin-top:1rem;border-top:1px solid var(--bdr);padding-top:.85rem}
+.pai-spark{display:block;width:100%;height:56px;overflow:visible}
+.ps-area{fill:currentColor;opacity:.13;stroke:none}
+.ps-line{fill:none;stroke:currentColor;stroke-width:1.6;
+  stroke-linejoin:round;stroke-linecap:round}
+.ps-thr{stroke:var(--sub);stroke-width:1;stroke-dasharray:3 4;opacity:.45}
+.ps-now{stroke:currentColor;stroke-width:1.2;opacity:.55}
+.pai-spark-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .9rem;
+  margin-top:.5rem;font-size:.65rem;color:var(--sub);letter-spacing:.02em}
+.pai-spark-lg b{color:var(--tx);font-variant-numeric:tabular-nums;font-weight:700}
+.ps-thr-lg{margin-left:auto;opacity:.7}
+@media (max-width:620px){
+  .pai-spark{height:48px}
+  .ps-thr-lg{margin-left:0;flex-basis:100%}
+}
 .pai-note{font-size:.66rem;color:var(--sub);opacity:.75;line-height:1.6;
   margin-top:.85rem;border-top:1px solid var(--bdr);padding-top:.6rem}
 /* 分帶色：深色為基準值，淺色在檔尾的 data-theme="light" 區覆寫。
@@ -312,11 +328,18 @@ html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 .hm-c{aspect-ratio:1;border-radius:2px;position:relative;display:block;min-width:0}
 .hm-c.e{background:none}
 .hm-c.n{background:none;box-shadow:inset 0 0 0 1px var(--bdr)}
+/* v1–v5＝活動強度指數的五個分帶。刻意維持單一色相的深淺斜坡，不套指數卡上那組
+   五色（綠/灰/黃/橘/紅）——8 個月 ×31 格的密集網格用五種色相會變成雜訊，
+   讀者只分得出深淺、分不出色相。
+   單一色相、亮度單調遞增（深色主題）／遞減（淺色主題）是熱圖能被讀懂的前提。
+   v5 不用紅或橘：格子右下角的「越線」標記本身就是紅點，底色再用紅橘系會蓋掉它。
+   v0（零架次）刻意是中性灰藍／灰米色，與 v1 起的暖色系分屬兩類，不只是深淺差。 */
 .hm-c.v0{background:#1a2830}
-.hm-c.v1{background:#5c4c17}
-.hm-c.v2{background:#8a7020}
-.hm-c.v3{background:#c9a52f}
-.hm-c.v4{background:#f5c842}
+.hm-c.v1{background:#4a4526}
+.hm-c.v2{background:#82691e}
+.hm-c.v3{background:#b8942a}
+.hm-c.v4{background:#e0b53a}
+.hm-c.v5{background:#f5c842}
 .hm-c.x::after{content:'';position:absolute;right:1px;bottom:1px;width:3px;height:3px;
   border-radius:50%;background:var(--r)}
 .hm-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .85rem;margin-top:.8rem;
@@ -648,10 +671,15 @@ html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
 
 /* 每日強度日曆淺色階（同一色相由淺到深，順序與深色版一致） */
 html[data-theme="light"] .hm-c.v0{background:#e9e5da}
-html[data-theme="light"] .hm-c.v1{background:#efdfae}
-html[data-theme="light"] .hm-c.v2{background:#ddc477}
-html[data-theme="light"] .hm-c.v3{background:#c09a25}
-html[data-theme="light"] .hm-c.v4{background:#8a6300}
+html[data-theme="light"] .hm-c.v1{background:#e9d590}
+html[data-theme="light"] .hm-c.v2{background:#d6bd6a}
+html[data-theme="light"] .hm-c.v3{background:#bd9a2b}
+html[data-theme="light"] .hm-c.v4{background:#94700c}
+html[data-theme="light"] .hm-c.v5{background:#5e4400}
+/* 越線紅點在淺色主題最深的兩格上幾乎看不見（深棕底 L≈69 vs 紅 L≈58），改用亮紅。
+   格子底色若再調深，這條要跟著往下延伸。 */
+html[data-theme="light"] .hm-c.v4.x::after,
+html[data-theme="light"] .hm-c.v5.x::after{background:#ff9e9e}
 
 /* ── Arsenal 淺色覆蓋（僅顏色，不動版面尺寸）── */
 html[data-theme="light"] .ars-chart-wrap{background:#fbfaf6;box-shadow:inset 0 0 0 1px var(--bdr)}
