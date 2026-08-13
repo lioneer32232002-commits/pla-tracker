@@ -1022,11 +1022,16 @@ def _translate_airspace_block(part):
         region_str = _fmt_regions(en_regions) + ' airspace'
         cross_m = re.search(r'逾越中線.*?(\d+)架次', detail)
         sort_m  = re.search(r'(\d+)架次', detail)
-        if cross_m:
-            return f'Median line crossings: {region_str} ({cross_m.group(1)} sorties)'
-        elif '逾越中線' in detail:
-            return f'Median line crossings: {region_str}'
-        elif sort_m:
+        # 「逾越中線」可能寫在括號裡（「…空域(逾越中線17架次)」），也可能寫在區域前綴
+        # （「逾越中線進入中部及西南空域(4架次)」）。只看括號的話後者會被翻成
+        # 一般 Activity——本站整個題目就是越線，在英文版把它講輕是事實錯誤
+        # （2026-08-13 回填時發現，8/06 等既有列也一起修正）。
+        crossed = any('逾越中線' in s or '越線' in s for s in (detail, regions_zh))
+        num = cross_m or (sort_m if crossed else None)
+        if crossed:
+            return (f'Median line crossings: {region_str} ({num.group(1)} sorties)'
+                    if num else f'Median line crossings: {region_str}')
+        if sort_m:
             return f'Activity: {region_str} ({sort_m.group(1)} sorties)'
         return f'Activity: {region_str}'
 

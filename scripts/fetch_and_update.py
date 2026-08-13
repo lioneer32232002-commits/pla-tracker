@@ -255,6 +255,10 @@ def extract_article_text(soup2):
 #   偵獲共機18架次（逾越中線進入北部、中部、西南及東部空域15架次）、共艦11艘…
 # 抓「含『空域』二字的那一組括號內容」。全形半形括號都收。
 _ZONE_PAREN_RE = re.compile(r'[（(]([^（）()]*空域[^（）()]*)[）)]')
+# 把「…空域15架次」正規化成站內既有寫法「…空域(15架次)」。
+# 這不是美觀問題：build_site._extract_crossing_regions 的正則要求區域字串**以「空域」結尾**，
+# 沒括號的話英文版翻不出來，validate 會擋下「en 頁含中文字元」（2026-08-13 實際踩到）。
+_ZONE_COUNT_RE = re.compile(r'^(.*空域)\s*(\d+\s*架次)$')
 
 
 def zone_phrase_from_text(article_text):
@@ -267,7 +271,11 @@ def zone_phrase_from_text(article_text):
     if not article_text:
         return ''
     m = _ZONE_PAREN_RE.search(article_text)
-    return m.group(1).strip() if m else ''
+    if not m:
+        return ''
+    phrase = m.group(1).strip()
+    m2 = _ZONE_COUNT_RE.match(phrase)
+    return f'{m2.group(1)}({m2.group(2).replace(" ", "")})' if m2 else phrase
 
 
 def looks_like_bulletin(text):

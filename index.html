@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。">
 <meta name="twitter:image" content="https://pla-tracker.skyfaring.net/og.png">
 <meta name="twitter:image:alt" content="中國擾台趨勢數據分析">
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608130401">
-<link rel="stylesheet" href="style.css?v=202608130401">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608131412">
+<link rel="stylesheet" href="style.css?v=202608131412">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608130401')location.reload(true);});</script>
+<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608131412')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "中國擾台每日數據集", "description": "每日整理中國解放軍（PLA）在台灣周邊軍事活動的結構化資料，來源為中華民國國防部每日公布：共機架次、逾越海峽中線數、共艦艘數。", "url": "https://pla-tracker.skyfaring.net/", "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait", "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions", "PLAAF", "PLAN", "cross-strait tensions", "解放軍", "擾台", "海峽中線", "防空識別區"], "creator": {"@type": "Person", "name": "Adam Pan"}, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "temporalCoverage": "2026-01-01/2026-08-13", "dateModified": "2026-08-13", "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"}, "variableMeasured": [{"@type": "PropertyValue", "name": "aircraft_total", "description": "PLA aircraft sorties detected per day"}, {"@type": "PropertyValue", "name": "median_line_cross", "description": "Sorties crossing the Taiwan Strait median line per day"}, {"@type": "PropertyValue", "name": "ships_total", "description": "PLA naval vessels detected per day"}], "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist", "creditText": "Source: ROC Ministry of National Defense (MND)", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://pla-tracker.skyfaring.net/data/records.csv"}]}</script>
 </head>
@@ -52,7 +52,7 @@
 </header>
 
 <main>
-  
+  <div class="alert">⚡ 逾越中線進入北部、中部、西南及東部空域(15架次)</div>
 
   <div class="sitrep anim-ready">
     <div class="sitrep-label">SITREP &nbsp;·&nbsp; 8/13</div>
@@ -83,25 +83,25 @@
   </div>
   <div class="pai-body">
     <div class="pai-gauge">
-      <div class="pai-score b-high"><span data-count="72">72</span><em>/100</em></div>
-      <div class="pai-band b-high">高</div>
-      <div class="pai-meter" role="img" aria-label="共軍活動強度指數 72/100"><span class="pai-meter-fill b-high" style="width:72%"></span><i style="left:81%"></i><i style="left:66%"></i><i style="left:51%"></i><i style="left:31%"></i></div>
-      <div class="pai-bdesc">明顯高於常態的空中活動</div>
-      <div class="pai-trend t-up">▲ 高於近 7 日平均 <span class="pai-delta">(+26)</span></div>
+      <div class="pai-score b-extreme"><span data-count="81">81</span><em>/100</em></div>
+      <div class="pai-band b-extreme">極高</div>
+      <div class="pai-meter" role="img" aria-label="共軍活動強度指數 81/100"><span class="pai-meter-fill b-extreme" style="width:81%"></span><i style="left:81%"></i><i style="left:66%"></i><i style="left:51%"></i><i style="left:31%"></i></div>
+      <div class="pai-bdesc">大規模出動並伴隨高強度越線</div>
+      <div class="pai-trend t-up">▲ 高於近 7 日平均 <span class="pai-delta">(+34)</span></div>
     </div>
     <div class="pai-comps">
       <div class="pai-comps-hd">指數組成</div>
-      <div class="pai-c"><span class="pai-cl">共機架次</span><span class="pai-cv">18<em>架次</em></span><span class="pai-bar"><i class="b-high" style="width:76%"></i></span><span class="pai-cs">76</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">逾越中線</span><span class="pai-cv">15<em>架次</em></span><span class="pai-bar"><i class="b-high" style="width:81%"></i></span><span class="pai-cs">81</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">中共艦艇</span><span class="pai-cv">14<em>艘</em></span><span class="pai-bar"><i class="b-high" style="width:85%"></i></span><span class="pai-cs">85</span><span class="pai-cw">×0.20</span></div><div class="pai-c"><span class="pai-cl">活動空域</span><span class="pai-cv">0<em>處</em></span><span class="pai-bar"><i class="b-high" style="width:0%"></i></span><span class="pai-cs">0</span><span class="pai-cw">×0.10</span></div>
+      <div class="pai-c"><span class="pai-cl">共機架次</span><span class="pai-cv">18<em>架次</em></span><span class="pai-bar"><i class="b-extreme" style="width:76%"></i></span><span class="pai-cs">76</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">逾越中線</span><span class="pai-cv">15<em>架次</em></span><span class="pai-bar"><i class="b-extreme" style="width:81%"></i></span><span class="pai-cs">81</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">中共艦艇</span><span class="pai-cv">14<em>艘</em></span><span class="pai-bar"><i class="b-extreme" style="width:85%"></i></span><span class="pai-cs">85</span><span class="pai-cw">×0.20</span></div><div class="pai-c"><span class="pai-cl">活動空域</span><span class="pai-cv">4<em>處</em></span><span class="pai-bar"><i class="b-extreme" style="width:88%"></i></span><span class="pai-cs">88</span><span class="pai-cw">×0.10</span></div>
     </div>
   </div>
-  <div class="pai-spark-wrap"><svg class="pai-spark" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="ps-area b-high" d="M0.0 88.0 L10.2 94.0 L20.3 93.0 L30.5 90.0 L40.7 59.0 L50.8 66.0 L61.0 78.0 L71.2 18.0 L81.4 52.0 L91.5 46.0 L101.7 39.0 L111.9 82.0 L122.0 88.0 L132.2 93.0 L142.4 87.0 L152.5 77.0 L162.7 32.0 L172.9 61.0 L183.1 9.0 L193.2 60.0 L203.4 83.0 L213.6 68.0 L223.7 59.0 L233.9 46.0 L244.1 13.0 L254.2 83.0 L264.4 98.0 L274.6 94.0 L284.7 82.0 L294.9 58.0 L305.1 68.0 L315.3 59.0 L325.4 48.0 L335.6 85.0 L345.8 41.0 L355.9 72.0 L366.1 57.0 L376.3 51.0 L386.4 24.0 L396.6 46.0 L406.8 16.0 L416.9 76.0 L427.1 68.0 L437.3 84.0 L447.5 51.0 L457.6 40.0 L467.8 13.0 L478.0 66.0 L488.1 59.0 L498.3 80.0 L508.5 63.0 L518.6 16.0 L528.8 35.0 L539.0 46.0 L549.2 30.0 L559.3 57.0 L569.5 73.0 L579.7 74.0 L589.8 62.0 L600.0 28.0 L600.0 100.0 L0 100.0 Z"/><line class="ps-thr" x1="0" y1="34.0" x2="600" y2="34.0" vector-effect="non-scaling-stroke"/><path class="ps-line b-high" d="M0.0 88.0 L10.2 94.0 L20.3 93.0 L30.5 90.0 L40.7 59.0 L50.8 66.0 L61.0 78.0 L71.2 18.0 L81.4 52.0 L91.5 46.0 L101.7 39.0 L111.9 82.0 L122.0 88.0 L132.2 93.0 L142.4 87.0 L152.5 77.0 L162.7 32.0 L172.9 61.0 L183.1 9.0 L193.2 60.0 L203.4 83.0 L213.6 68.0 L223.7 59.0 L233.9 46.0 L244.1 13.0 L254.2 83.0 L264.4 98.0 L274.6 94.0 L284.7 82.0 L294.9 58.0 L305.1 68.0 L315.3 59.0 L325.4 48.0 L335.6 85.0 L345.8 41.0 L355.9 72.0 L366.1 57.0 L376.3 51.0 L386.4 24.0 L396.6 46.0 L406.8 16.0 L416.9 76.0 L427.1 68.0 L437.3 84.0 L447.5 51.0 L457.6 40.0 L467.8 13.0 L478.0 66.0 L488.1 59.0 L498.3 80.0 L508.5 63.0 L518.6 16.0 L528.8 35.0 L539.0 46.0 L549.2 30.0 L559.3 57.0 L569.5 73.0 L579.7 74.0 L589.8 62.0 L600.0 28.0" vector-effect="non-scaling-stroke"/><line class="ps-now b-high" x1="600.0" y1="0" x2="600.0" y2="100" vector-effect="non-scaling-stroke"/></svg><div class="pai-spark-lg"><span>近 60 個發布日</span><span class="ps-k">最高 <b>91</b></span><span class="ps-k">平均 <b>40</b></span><span class="ps-k ps-thr-lg">虛線＝深色門檻 66</span></div></div>
+  <div class="pai-spark-wrap"><svg class="pai-spark" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="ps-area b-extreme" d="M0.0 88.0 L10.2 94.0 L20.3 93.0 L30.5 90.0 L40.7 59.0 L50.8 66.0 L61.0 78.0 L71.2 18.0 L81.4 52.0 L91.5 46.0 L101.7 39.0 L111.9 82.0 L122.0 88.0 L132.2 93.0 L142.4 87.0 L152.5 77.0 L162.7 32.0 L172.9 61.0 L183.1 9.0 L193.2 60.0 L203.4 83.0 L213.6 68.0 L223.7 59.0 L233.9 46.0 L244.1 13.0 L254.2 83.0 L264.4 98.0 L274.6 94.0 L284.7 82.0 L294.9 58.0 L305.1 68.0 L315.3 59.0 L325.4 48.0 L335.6 85.0 L345.8 41.0 L355.9 72.0 L366.1 57.0 L376.3 51.0 L386.4 24.0 L396.6 46.0 L406.8 16.0 L416.9 76.0 L427.1 68.0 L437.3 84.0 L447.5 51.0 L457.6 40.0 L467.8 13.0 L478.0 66.0 L488.1 59.0 L498.3 80.0 L508.5 63.0 L518.6 16.0 L528.8 35.0 L539.0 46.0 L549.2 30.0 L559.3 57.0 L569.5 73.0 L579.7 74.0 L589.8 57.0 L600.0 19.0 L600.0 100.0 L0 100.0 Z"/><line class="ps-thr" x1="0" y1="34.0" x2="600" y2="34.0" vector-effect="non-scaling-stroke"/><path class="ps-line b-extreme" d="M0.0 88.0 L10.2 94.0 L20.3 93.0 L30.5 90.0 L40.7 59.0 L50.8 66.0 L61.0 78.0 L71.2 18.0 L81.4 52.0 L91.5 46.0 L101.7 39.0 L111.9 82.0 L122.0 88.0 L132.2 93.0 L142.4 87.0 L152.5 77.0 L162.7 32.0 L172.9 61.0 L183.1 9.0 L193.2 60.0 L203.4 83.0 L213.6 68.0 L223.7 59.0 L233.9 46.0 L244.1 13.0 L254.2 83.0 L264.4 98.0 L274.6 94.0 L284.7 82.0 L294.9 58.0 L305.1 68.0 L315.3 59.0 L325.4 48.0 L335.6 85.0 L345.8 41.0 L355.9 72.0 L366.1 57.0 L376.3 51.0 L386.4 24.0 L396.6 46.0 L406.8 16.0 L416.9 76.0 L427.1 68.0 L437.3 84.0 L447.5 51.0 L457.6 40.0 L467.8 13.0 L478.0 66.0 L488.1 59.0 L498.3 80.0 L508.5 63.0 L518.6 16.0 L528.8 35.0 L539.0 46.0 L549.2 30.0 L559.3 57.0 L569.5 73.0 L579.7 74.0 L589.8 57.0 L600.0 19.0" vector-effect="non-scaling-stroke"/><line class="ps-now b-extreme" x1="600.0" y1="0" x2="600.0" y2="100" vector-effect="non-scaling-stroke"/></svg><div class="pai-spark-lg"><span>近 60 個發布日</span><span class="ps-k">最高 <b>91</b></span><span class="ps-k">平均 <b>40</b></span><span class="ps-k ps-thr-lg">虛線＝深色門檻 66</span></div></div>
   <div class="pai-note">本指數為本站依國防部公開數據自算的相對活動強度，非官方警戒等級。</div>
 </section>
 
   <div class="sitrep anim-ready"><div class="sitrep-label">8月至今 &nbsp;·&nbsp; 13 天</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="107">107</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y" data-count="64">64</div><div class="stat-l">逾越中線&nbsp;<span class="stat-detail">60%</span></div></div><div class="stat"><div class="stat-n r">12.9</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
 
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><div class="map-note"><strong>12海里領海界線（綠色虛線）</strong>為實質法律邊界。解放軍機艦越過中線不觸發自衛權；一旦進入此界線內的領海或領空，依國際法及《國防法》，台灣方面可採取防衛行動。</div><script>(function(){
-var ML=15,AC=18,SH=14,ZONES={"n": false, "c": false, "sw": false, "e": false, "ne": false, "s": false};
+var ML=15,AC=18,SH=14,ZONES={"n": true, "c": true, "sw": true, "e": true, "ne": false, "s": false};
 
 var map=L.map('activity-map',{
   center:[23.8,120.5],zoom:6,
