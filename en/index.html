@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="Daily tracking of PLA military activity around Taiwan: aircraft sorties, Taiwan Strait median-line crossings, naval vessels and trends. Source: ROC Ministry of National Defense daily releases.">
 <meta name="twitter:image" content="https://pla-tracker.skyfaring.net/og-en.png">
 <meta name="twitter:image:alt" content="PLA Activity Tracker — Taiwan Strait">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202608120400">
-<link rel="stylesheet" href="/style.css?v=202608120400">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202608130919">
+<link rel="stylesheet" href="/style.css?v=202608130919">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608120400')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608130919')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "PLA Activity Around Taiwan — Daily Dataset", "description": "Daily structured record of People's Liberation Army (PLA) military activity around Taiwan, compiled from ROC Ministry of National Defense public releases: aircraft sorties, Taiwan Strait median-line crossings and naval vessel counts.", "url": "https://pla-tracker.skyfaring.net/en/", "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait", "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions", "PLAAF", "PLAN", "cross-strait tensions", "解放軍", "擾台", "海峽中線", "防空識別區"], "creator": {"@type": "Person", "name": "Adam Pan"}, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "temporalCoverage": "2026-01-01/2026-08-12", "dateModified": "2026-08-12", "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"}, "variableMeasured": [{"@type": "PropertyValue", "name": "aircraft_total", "description": "PLA aircraft sorties detected per day"}, {"@type": "PropertyValue", "name": "median_line_cross", "description": "Sorties crossing the Taiwan Strait median line per day"}, {"@type": "PropertyValue", "name": "ships_total", "description": "PLA naval vessels detected per day"}], "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist", "creditText": "Source: ROC Ministry of National Defense (MND)", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://pla-tracker.skyfaring.net/data/records.csv"}]}</script>
 </head>
@@ -74,6 +74,27 @@
     </div>
     <div class="delta-note">▲▼ compared with the previous day</div>
   </div>
+
+  <section class="pai anim-ready">
+  <div class="pai-head">
+    <span class="pai-title">PLA Activity Index</span>
+    <span class="pai-ver">v1</span>
+    <a class="pai-how" href="/en/about.html#pai">Method ↗</a>
+  </div>
+  <div class="pai-body">
+    <div class="pai-gauge">
+      <div class="pai-score b-normal"><span data-count="38">38</span><em>/100</em></div>
+      <div class="pai-band b-normal">Normal</div>
+      <div class="pai-bdesc">Routine activity at everyday scale</div>
+      <div class="pai-trend t-down">▼ below the 7-day average <span class="pai-delta">(-15)</span></div>
+    </div>
+    <div class="pai-comps">
+      <div class="pai-comps-hd">Index components</div>
+      <div class="pai-c"><span class="pai-cl">PLA sorties</span><span class="pai-cv">6<em>sorties</em></span><span class="pai-bar"><i class="b-normal" style="width:44%"></i></span><span class="pai-cs">44</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">Median-line crossings</span><span class="pai-cv">4<em>sorties</em></span><span class="pai-bar"><i class="b-normal" style="width:35%"></i></span><span class="pai-cs">35</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">PLA vessels</span><span class="pai-cv">8<em>vessels</em></span><span class="pai-bar"><i class="b-normal" style="width:50%"></i></span><span class="pai-cs">50</span><span class="pai-cw">×0.20</span></div><div class="pai-c"><span class="pai-cl">Active airspaces</span><span class="pai-cv">0<em>zones</em></span><span class="pai-bar"><i class="b-normal" style="width:0%"></i></span><span class="pai-cs">0</span><span class="pai-cw">×0.10</span></div>
+    </div>
+  </div>
+  <div class="pai-note">This site's own composite of the MND's published figures — not an official alert level.</div>
+</section>
 
   <div class="sitrep anim-ready"><div class="sitrep-label">August MTD &nbsp;·&nbsp; 12 days</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="89">89</div><div class="stat-l">PLA Sorties</div></div><div class="stat"><div class="stat-n y" data-count="49">49</div><div class="stat-l">Median Line Crossings&nbsp;<span class="stat-detail">55%</span></div></div><div class="stat"><div class="stat-n r">12.8</div><div class="stat-l">Avg Vessels/Day</div></div></div></div>
 

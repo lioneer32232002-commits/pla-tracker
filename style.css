@@ -54,6 +54,62 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   padding:.6rem 1rem;border-radius:var(--rad);
   font-size:.83rem;font-weight:700;margin-bottom:2rem;letter-spacing:.02em}
 
+/* ── 活動強度指數 ── */
+.pai{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:1rem 1.25rem 1.05rem;margin-bottom:1.25rem}
+.pai-head{display:flex;align-items:baseline;gap:.55rem;margin-bottom:.85rem}
+.pai-title{font-size:1rem;text-transform:uppercase;letter-spacing:.16em;color:var(--sub)}
+.pai-ver{font-size:.6rem;letter-spacing:.1em;color:var(--sub);opacity:.6;
+  border:1px solid var(--bdr);border-radius:999px;padding:.05rem .4rem}
+.pai-how{margin-left:auto;font-size:.68rem;color:var(--sub);text-decoration:none;
+  letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.pai-how:hover{color:var(--y)}
+.pai-body{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:1.1rem;align-items:start}
+.pai-gauge{border-right:1px solid var(--bdr);padding-right:1.1rem}
+.pai-score{font-size:3.9rem;font-weight:900;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.pai-score em{font-size:1rem;font-weight:700;font-style:normal;opacity:.45;margin-left:.15rem}
+.pai-band{font-size:1.15rem;font-weight:800;letter-spacing:.08em;margin-top:.4rem}
+.pai-bdesc{font-size:.72rem;color:var(--sub);line-height:1.5;margin-top:.22rem}
+.pai-trend{font-size:.72rem;color:var(--sub);margin-top:.5rem;letter-spacing:.02em}
+.pai-trend.t-up{color:var(--r)}
+.pai-trend.t-down{color:var(--grn)}
+.pai-delta{opacity:.65;font-variant-numeric:tabular-nums}
+.pai-comps-hd{font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--sub);opacity:.75;margin-bottom:.1rem;grid-column:1/-1}
+/* 一列一個分項，但格線定義在容器上、每列用 display:contents 併入——
+   若讓每個 .pai-c 各自當 grid，第一欄的 auto 寬度會各列不同，長條起點就會參差。
+   第一欄用 auto 而非固定寬：英文標籤（Median-line crossings）比中文長一倍，
+   寫死 em 值會讓英文版標籤溢出欄位、與右邊的數值疊字。 */
+.pai-comps{display:grid;grid-template-columns:auto 3.9em minmax(60px,1fr) 2em 2.6em;
+  align-items:center;gap:.4rem .5rem;font-size:.74rem}
+.pai-c{display:contents}
+.pai-cl{color:var(--sub);white-space:nowrap}
+.pai-cv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.pai-cv em{font-size:.62rem;font-style:normal;font-weight:500;color:var(--sub);margin-left:.28em}
+.pai-bar{background:var(--bdr);border-radius:999px;height:6px;overflow:hidden}
+.pai-bar i{display:block;height:100%;border-radius:999px}
+.pai-cs{text-align:right;font-variant-numeric:tabular-nums;color:var(--sub)}
+.pai-cw{text-align:right;font-size:.62rem;color:var(--sub);opacity:.55;
+  font-variant-numeric:tabular-nums}
+.pai-boost .pai-cl{grid-column:1/-1;opacity:.8;padding-top:.15rem}
+.pai-note{font-size:.66rem;color:var(--sub);opacity:.75;line-height:1.6;
+  margin-top:.85rem;border-top:1px solid var(--bdr);padding-top:.6rem}
+/* 分帶色：深色為基準值，淺色在檔尾的 data-theme="light" 區覆寫。
+   兩處的色碼須與 build_site.py 的 _PAI_COLORS 一致（圖卡等其他產物共用同一組）。*/
+.b-extreme{color:#e05555}  .pai-bar i.b-extreme{background:#e05555}
+.b-high{color:#ff9933}     .pai-bar i.b-high{background:#ff9933}
+.b-elevated{color:#f5c842} .pai-bar i.b-elevated{background:#f5c842}
+.b-normal{color:#8a9faa}   .pai-bar i.b-normal{background:#8a9faa}
+.b-low{color:#4dba6a}      .pai-bar i.b-low{background:#4dba6a}
+@media (max-width:620px){
+  .pai-body{grid-template-columns:1fr;gap:.9rem}
+  .pai-gauge{border-right:0;border-bottom:1px solid var(--bdr);
+    padding-right:0;padding-bottom:.85rem}
+  .pai-comps{grid-template-columns:auto 3.5em minmax(40px,1fr) 2em;gap:.4rem .45rem}
+  .pai-cw{display:none}
+}
+
 /* ── SITREP ── */
 .sitrep{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
   padding:1rem 1.25rem 1.1rem;margin-bottom:1.25rem}
@@ -156,6 +212,10 @@ html[lang="zh-Hant"] .sitrep-text{font-size:.9rem}
   word-break:break-word}
 .prose a:hover{color:#fff;border-bottom-color:var(--y)}
 .prose strong{color:var(--tx);font-weight:700}
+/* 方法論頁的刻度／分帶表：全站 table 是 nowrap，窄螢幕靠這層水平捲動，不讓頁面橫向溢出 */
+.pai-tbl{overflow-x:auto;margin:.9rem 0;border:1px solid var(--bdr);border-radius:var(--rad)}
+.pai-tbl td{white-space:nowrap}
+.pai-tbl tr:last-child td{border-bottom:0}
 .prose ul{margin:.6rem 0 .6rem 1.2rem}
 .prose li{font-size:.92rem;line-height:1.8;color:var(--tx);margin:.35rem 0}
 html[lang="zh-Hant"] .prose p,html[lang="zh-Hant"] .prose li{font-size:.95rem}
@@ -615,3 +675,14 @@ html[data-theme="light"] .ars-atag.nato   {background:#dbeaf6;color:#1f6fa8}
 html[data-theme="light"] .ars-atag.mnna   {background:#ece1f7;color:#7a4fb0}
 html[data-theme="light"] .ars-atag.partner{background:#f3ecc9;color:#7a5c00}
 html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}
+html[data-theme="light"] .b-extreme {color:#c23a3a}
+html[data-theme="light"] .b-high    {color:#cc7a1f}
+html[data-theme="light"] .b-elevated{color:#9a7500}
+html[data-theme="light"] .b-normal  {color:#6b7a84}
+html[data-theme="light"] .b-low     {color:#2f8f4f}
+html[data-theme="light"] .pai-bar i.b-extreme {background:#c23a3a}
+html[data-theme="light"] .pai-bar i.b-high    {background:#cc7a1f}
+html[data-theme="light"] .pai-bar i.b-elevated{background:#9a7500}
+html[data-theme="light"] .pai-bar i.b-normal  {background:#6b7a84}
+html[data-theme="light"] .pai-bar i.b-low     {background:#2f8f4f}
+html[data-theme="light"] .pai-bar{background:#e3dfd4}

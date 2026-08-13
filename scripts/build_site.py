@@ -44,13 +44,109 @@ def canon_url(path, pfx=''):
     return f'{BASE_URL}{pfx}{path}'
 
 
-# ── 嚴重日自動配色 ────────────────────────────────────────────────────────────
-# 顏色本身即資訊：平常日整站淺色、嚴重日整站深色，訪客一開頁就從色調得知態勢。
-# 門檻由 203 天歷史分布決定（aircraft_total 與 median_line_cross 的聯合分布，
-# 落在 P86 附近 → 約 14% 的日子被判為「嚴重」）。嚴重＝當日 aircraft_total ≥
-# SEVERE_AC 且 median_line_cross ≥ SEVERE_ML；零架次日必為淺色。
-SEVERE_AC = 15   # 當日共機總架次門檻
-SEVERE_ML = 10   # 當日逾越中線架次門檻
+# ── 共軍活動強度指數（PAI, PLA Activity Index）───────────────────────────────
+# 0–100 的單一數字，把當日四個觀測值壓成一個可比較、可引用的強度。
+#
+# 設計三原則（違反任一條，這個指數就不值得掛在站上）：
+#  1. **可重現**：任何人拿 records.csv ＋本節的常數就能算出完全一樣的分數，
+#     不含任何外部訊號、隨機性或人工判斷。
+#  2. **不漂移**：刻度是「校準一次後凍結的常數」，不是對當下歷史即時取百分位。
+#     若改用即時百分位，每天新資料進來都會讓昨天以前的分數微幅變動，
+#     與 about 頁「引用過的數字不會變」的承諾直接衝突。要重新校準＝版本號 +1，
+#     並在方法論頁公告，舊分數不追溯改寫。
+#  3. **描述而非警報**：這是本站自算的活動強度，不是官方警戒等級。分帶名稱一律
+#     用「極高／高／偏高／常態／低」這類描述詞，不得使用「警戒」「警報」等
+#     會被誤讀為官方發布的字眼（UI 文案見 STRINGS 的 pai_* 鍵）。
+#
+# v1 刻度校準自 2026-01-01～2026-08-12 共 223 天實際分布（下面每個轉折點的
+# 括號即當時的百分位）。分項採分段線性內插：0 一律得 0 分（沒有越線就是沒有
+# 威脅，不因「多數日子都是 0」而拿到基礎分），上方轉折點對齊歷史高標。
+PAI_VERSION = 'v1'
+PAI_KNOTS = {
+    # (原始值, 分數)；區間內線性內插，超出末端即封頂
+    'ac':   [(0, 0), (2, 20), (5, 40), (10, 60), (15, 70), (22, 85), (30, 95), (42, 100)],
+    'ml':   [(0, 0), (1, 15), (3, 30), (6, 45), (9, 60), (12, 70), (16, 85), (25, 95), (32, 100)],
+    'sh':   [(0, 0), (4, 20), (6, 35), (8, 50), (11, 70), (13, 80), (15, 90), (20, 100)],
+    'zone': [(0, 0), (1, 35), (2, 55), (3, 75), (4, 88), (5, 95), (6, 100)],
+}
+# 權重：空中活動（架次＋越線）佔七成——越線是最強的政治訊號，與總架次同權；
+# 共艦兩成（幾乎每天都有，實質是基準壓力）；空域廣度一成（同樣架次散佈越廣＝壓力越大）。
+PAI_WEIGHTS = {'ac': 0.35, 'ml': 0.35, 'sh': 0.20, 'zone': 0.10}
+# 空飄氣球加成：公告有偵獲即 +4（不隨顆數放大，歷史上 25 天出現、最多 2 顆）。
+PAI_BALLOON_BOOST = 4
+# 分帶（下限, key）；由高到低比對。名稱與說明在 STRINGS['pai_bands']。
+PAI_BANDS = [(81, 'extreme'), (66, 'high'), (51, 'elevated'), (31, 'normal'), (0, 'low')]
+# 趨勢箭頭門檻：與「近 7 個有資料日（不含當日）」的平均相比。
+# 不用「與前一日相比」——本站資料是脈衝式的（日間變動中位數 16 分），
+# 逐日比較幾乎每天都會亮箭頭，等於沒有資訊。
+PAI_TREND_WINDOW = 7
+PAI_TREND_EPS = 5
+# 整站深色主題門檻：指數 ≥ 66（高）。v1 校準下約 17% 的日子為深色，
+# 與舊的雙門檻規則（15 架次且 10 越線，14%）相當，但少了「35 架次全不越線
+# 卻判為平常日」這種破口。
+PAI_DARK = 66
+
+
+def _pai_interp(kind, value):
+    """分段線性內插：把單一原始觀測值換算成 0–100 分項分數。"""
+    knots = PAI_KNOTS[kind]
+    if value <= knots[0][0]:
+        return float(knots[0][1])
+    for (x0, y0), (x1, y1) in zip(knots, knots[1:]):
+        if value <= x1:
+            return y0 + (y1 - y0) * (value - x0) / (x1 - x0)
+    return float(knots[-1][1])
+
+
+def _pai_int(row, col):
+    """取整數欄位，空白／NaN／缺欄一律視為 0。
+    刻意容忍字串輸入——validate.py 用 csv.DictReader 的原始列重算指數來比對頁面，
+    走的是同一支函式（兩邊各寫一份計分邏輯，遲早會不一致）。"""
+    v = row[col] if col in row else None
+    if v is None or not pd.notna(v):
+        return 0
+    if isinstance(v, str) and not v.strip():
+        return 0
+    return int(float(v))
+
+
+def pai_band(score):
+    for floor, key in PAI_BANDS:
+        if score >= floor:
+            return key
+    return 'low'
+
+
+def pai_score(row):
+    """算單日指數。回傳 dict：score(0-100 整數)、band、raw（原始值）、
+    comp（各分項 0-100 分）、boost。row 需含 CSV 欄位（pandas Series 或 dict）。"""
+    special = row['special_event'] if pd.notna(row.get('special_event')) else ''
+    raw = {
+        'ac':   _pai_int(row, 'aircraft_total'),
+        'ml':   _pai_int(row, 'median_line_cross'),
+        'sh':   _pai_int(row, 'ships_total'),
+        'zone': sum(1 for v in zones_from_special(special).values() if v),
+    }
+    comp = {k: _pai_interp(k, v) for k, v in raw.items()}
+    boost = PAI_BALLOON_BOOST if '氣球' in str(special) else 0
+    base = sum(comp[k] * PAI_WEIGHTS[k] for k in PAI_WEIGHTS)
+    score = int(max(0, min(100, round(base + boost))))
+    return {'score': score, 'band': pai_band(score), 'raw': raw,
+            'comp': comp, 'boost': boost}
+
+
+def pai_trend(df):
+    """當日指數相對近 PAI_TREND_WINDOW 個有資料日（不含當日）平均的走向。
+    回傳 (key, delta)：key ∈ up/flat/down；資料不足回 (None, 0)。"""
+    if len(df) < 2:
+        return None, 0
+    window = df.iloc[max(0, len(df) - 1 - PAI_TREND_WINDOW):len(df) - 1]
+    prev = [pai_score(r)['score'] for _, r in window.iterrows()]
+    if not prev:
+        return None, 0
+    delta = pai_score(df.iloc[-1])['score'] - sum(prev) / len(prev)
+    key = 'up' if delta > PAI_TREND_EPS else 'down' if delta < -PAI_TREND_EPS else 'flat'
+    return key, delta
 
 # theme-color meta：深/淺各一（深色沿用原值，淺色為淺主題背景）
 THEME_COLOR = {'dark': '#090d0f', 'light': '#f5f4f0'}
@@ -75,6 +171,15 @@ _CHART_COLORS = {
               'cr_bar': '#c08c00', 'cr_today': '#8a6300',
               'nc_bar': '#e6dcc0', 'nc_today': '#d3c395',
               'avg_line': '#9aa7ae'},
+}
+
+# 活動強度指數的分帶色：由低到高走「綠→黃→橘→紅」，深淺主題各一組。
+# 刻意不用純紅綠燈（紅/黃/綠三色），因為分帶有五級，且「常態」不該被塗成警示色。
+_PAI_COLORS = {
+    'dark':  {'extreme': '#e05555', 'high': '#ff9933', 'elevated': '#f5c842',
+              'normal': '#8a9faa', 'low': '#4dba6a'},
+    'light': {'extreme': '#c23a3a', 'high': '#cc7a1f', 'elevated': '#9a7500',
+              'normal': '#6b7a84', 'low': '#2f8f4f'},
 }
 
 # 地圖注入色（直接以裸 hex 取代，因同一顏色在 _MAP_JS 中同時出現於 JS 字串與
@@ -377,16 +482,12 @@ THEME = 'dark'
 
 
 def resolve_theme(df):
-    """決定全站主題：嚴重日 → dark，平常日（含零架次）→ light。
-    嚴重＝當日 aircraft_total ≥ SEVERE_AC 且 median_line_cross ≥ SEVERE_ML。
+    """決定全站主題：當日活動強度指數 ≥ PAI_DARK → dark，其餘（含零架次）→ light。
     PLA_THEME_OVERRIDE=light|dark 可強制覆蓋——僅供本機視覺測試，CI 不設此變數。"""
     override = os.environ.get('PLA_THEME_OVERRIDE', '').strip().lower()
     if override in ('light', 'dark'):
         return override
-    latest = df.iloc[-1]
-    ac = int(latest['aircraft_total'])    if pd.notna(latest['aircraft_total'])    else 0
-    ml = int(latest['median_line_cross']) if pd.notna(latest['median_line_cross']) else 0
-    return 'dark' if (ac >= SEVERE_AC and ml >= SEVERE_ML) else 'light'
+    return 'dark' if pai_score(df.iloc[-1])['score'] >= PAI_DARK else 'light'
 
 
 # ── 字串對照表（UI 文字全部抽在這裡）────────────────────────────────────────────
@@ -434,6 +535,27 @@ STRINGS = {
         'stat_ships': '中共艦艇',
         'delta_title': '較前一日 {sign}{n}',
         'delta_note':  '▲▼ 為與前一日的比較',
+        # 活動強度指數（PAI）。措辭紀律：全部用描述性字眼，不得出現「警戒」「警報」
+        # 「威脅等級」——那是官方發布的用語，本站自算的數字借用會誤導讀者。
+        'pai_label': '共軍活動強度指數',
+        'pai_scale': '/100',
+        'pai_how':   '演算法',
+        'pai_detail': '指數組成',
+        'pai_bands': {'extreme': '極高', 'high': '高', 'elevated': '偏高',
+                      'normal': '常態', 'low': '低'},
+        'pai_band_desc': {'extreme': '大規模出動並伴隨高強度越線',
+                          'high':    '明顯高於常態的空中活動',
+                          'elevated': '活動高於平日基準',
+                          'normal':  '日常規模的例行活動',
+                          'low':     '空中活動稀少或僅有海上兵力'},
+        'pai_comp': {'ac': '共機架次', 'ml': '逾越中線',
+                     'sh': '中共艦艇', 'zone': '活動空域'},
+        'pai_unit': {'ac': '架次', 'ml': '架次', 'sh': '艘', 'zone': '處'},
+        'pai_trend': {'up':   '高於近 {n} 日平均',
+                      'flat': '與近 {n} 日平均相當',
+                      'down': '低於近 {n} 日平均'},
+        'pai_boost': '空飄氣球 +{n}',
+        'pai_note':  '本指數為本站依國防部公開數據自算的相對活動強度，非官方警戒等級。',
         'mo_prefix': '{m}月至今',
         'mo_days': '天',
         'mo_aircraft': '中共軍機架次',
@@ -632,6 +754,26 @@ STRINGS = {
         'stat_ships': 'PLA Vessels',
         'delta_title': '{sign}{n} vs. previous day',
         'delta_note':  '▲▼ compared with the previous day',
+        'pai_label': 'PLA Activity Index',
+        'pai_scale': '/100',
+        'pai_how':   'Method',
+        'pai_detail': 'Index components',
+        'pai_bands': {'extreme': 'Extreme', 'high': 'High', 'elevated': 'Elevated',
+                      'normal': 'Normal', 'low': 'Low'},
+        'pai_band_desc': {'extreme': 'Large-scale sortie with heavy median-line crossing',
+                          'high':    'Air activity clearly above the norm',
+                          'elevated': 'Activity above the everyday baseline',
+                          'normal':  'Routine activity at everyday scale',
+                          'low':     'Little or no air activity; naval presence only'},
+        'pai_comp': {'ac': 'PLA sorties', 'ml': 'Median-line crossings',
+                     'sh': 'PLA vessels', 'zone': 'Active airspaces'},
+        'pai_unit': {'ac': 'sorties', 'ml': 'sorties', 'sh': 'vessels', 'zone': 'zones'},
+        'pai_trend': {'up':   'above the {n}-day average',
+                      'flat': 'in line with the {n}-day average',
+                      'down': 'below the {n}-day average'},
+        'pai_boost': 'Balloon activity +{n}',
+        'pai_note':  "This site's own composite of the MND's published figures — "
+                     'not an official alert level.',
         'mo_prefix': '{m} MTD',
         'mo_days': 'days',
         'mo_aircraft': 'PLA Sorties',
@@ -1195,6 +1337,62 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   padding:.6rem 1rem;border-radius:var(--rad);
   font-size:.83rem;font-weight:700;margin-bottom:2rem;letter-spacing:.02em}
 
+/* ── 活動強度指數 ── */
+.pai{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
+  padding:1rem 1.25rem 1.05rem;margin-bottom:1.25rem}
+.pai-head{display:flex;align-items:baseline;gap:.55rem;margin-bottom:.85rem}
+.pai-title{font-size:1rem;text-transform:uppercase;letter-spacing:.16em;color:var(--sub)}
+.pai-ver{font-size:.6rem;letter-spacing:.1em;color:var(--sub);opacity:.6;
+  border:1px solid var(--bdr);border-radius:999px;padding:.05rem .4rem}
+.pai-how{margin-left:auto;font-size:.68rem;color:var(--sub);text-decoration:none;
+  letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.pai-how:hover{color:var(--y)}
+.pai-body{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:1.1rem;align-items:start}
+.pai-gauge{border-right:1px solid var(--bdr);padding-right:1.1rem}
+.pai-score{font-size:3.9rem;font-weight:900;line-height:1;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.pai-score em{font-size:1rem;font-weight:700;font-style:normal;opacity:.45;margin-left:.15rem}
+.pai-band{font-size:1.15rem;font-weight:800;letter-spacing:.08em;margin-top:.4rem}
+.pai-bdesc{font-size:.72rem;color:var(--sub);line-height:1.5;margin-top:.22rem}
+.pai-trend{font-size:.72rem;color:var(--sub);margin-top:.5rem;letter-spacing:.02em}
+.pai-trend.t-up{color:var(--r)}
+.pai-trend.t-down{color:var(--grn)}
+.pai-delta{opacity:.65;font-variant-numeric:tabular-nums}
+.pai-comps-hd{font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--sub);opacity:.75;margin-bottom:.1rem;grid-column:1/-1}
+/* 一列一個分項，但格線定義在容器上、每列用 display:contents 併入——
+   若讓每個 .pai-c 各自當 grid，第一欄的 auto 寬度會各列不同，長條起點就會參差。
+   第一欄用 auto 而非固定寬：英文標籤（Median-line crossings）比中文長一倍，
+   寫死 em 值會讓英文版標籤溢出欄位、與右邊的數值疊字。 */
+.pai-comps{display:grid;grid-template-columns:auto 3.9em minmax(60px,1fr) 2em 2.6em;
+  align-items:center;gap:.4rem .5rem;font-size:.74rem}
+.pai-c{display:contents}
+.pai-cl{color:var(--sub);white-space:nowrap}
+.pai-cv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.pai-cv em{font-size:.62rem;font-style:normal;font-weight:500;color:var(--sub);margin-left:.28em}
+.pai-bar{background:var(--bdr);border-radius:999px;height:6px;overflow:hidden}
+.pai-bar i{display:block;height:100%;border-radius:999px}
+.pai-cs{text-align:right;font-variant-numeric:tabular-nums;color:var(--sub)}
+.pai-cw{text-align:right;font-size:.62rem;color:var(--sub);opacity:.55;
+  font-variant-numeric:tabular-nums}
+.pai-boost .pai-cl{grid-column:1/-1;opacity:.8;padding-top:.15rem}
+.pai-note{font-size:.66rem;color:var(--sub);opacity:.75;line-height:1.6;
+  margin-top:.85rem;border-top:1px solid var(--bdr);padding-top:.6rem}
+/* 分帶色：深色為基準值，淺色在檔尾的 data-theme="light" 區覆寫。
+   兩處的色碼須與 build_site.py 的 _PAI_COLORS 一致（圖卡等其他產物共用同一組）。*/
+.b-extreme{color:#e05555}  .pai-bar i.b-extreme{background:#e05555}
+.b-high{color:#ff9933}     .pai-bar i.b-high{background:#ff9933}
+.b-elevated{color:#f5c842} .pai-bar i.b-elevated{background:#f5c842}
+.b-normal{color:#8a9faa}   .pai-bar i.b-normal{background:#8a9faa}
+.b-low{color:#4dba6a}      .pai-bar i.b-low{background:#4dba6a}
+@media (max-width:620px){
+  .pai-body{grid-template-columns:1fr;gap:.9rem}
+  .pai-gauge{border-right:0;border-bottom:1px solid var(--bdr);
+    padding-right:0;padding-bottom:.85rem}
+  .pai-comps{grid-template-columns:auto 3.5em minmax(40px,1fr) 2em;gap:.4rem .45rem}
+  .pai-cw{display:none}
+}
+
 /* ── SITREP ── */
 .sitrep{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
   padding:1rem 1.25rem 1.1rem;margin-bottom:1.25rem}
@@ -1297,6 +1495,10 @@ html[lang="zh-Hant"] .sitrep-text{font-size:.9rem}
   word-break:break-word}
 .prose a:hover{color:#fff;border-bottom-color:var(--y)}
 .prose strong{color:var(--tx);font-weight:700}
+/* 方法論頁的刻度／分帶表：全站 table 是 nowrap，窄螢幕靠這層水平捲動，不讓頁面橫向溢出 */
+.pai-tbl{overflow-x:auto;margin:.9rem 0;border:1px solid var(--bdr);border-radius:var(--rad)}
+.pai-tbl td{white-space:nowrap}
+.pai-tbl tr:last-child td{border-bottom:0}
 .prose ul{margin:.6rem 0 .6rem 1.2rem}
 .prose li{font-size:.92rem;line-height:1.8;color:var(--tx);margin:.35rem 0}
 html[lang="zh-Hant"] .prose p,html[lang="zh-Hant"] .prose li{font-size:.95rem}
@@ -1756,6 +1958,17 @@ html[data-theme="light"] .ars-atag.nato   {background:#dbeaf6;color:#1f6fa8}
 html[data-theme="light"] .ars-atag.mnna   {background:#ece1f7;color:#7a4fb0}
 html[data-theme="light"] .ars-atag.partner{background:#f3ecc9;color:#7a5c00}
 html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}
+html[data-theme="light"] .b-extreme {color:#c23a3a}
+html[data-theme="light"] .b-high    {color:#cc7a1f}
+html[data-theme="light"] .b-elevated{color:#9a7500}
+html[data-theme="light"] .b-normal  {color:#6b7a84}
+html[data-theme="light"] .b-low     {color:#2f8f4f}
+html[data-theme="light"] .pai-bar i.b-extreme {background:#c23a3a}
+html[data-theme="light"] .pai-bar i.b-high    {background:#cc7a1f}
+html[data-theme="light"] .pai-bar i.b-elevated{background:#9a7500}
+html[data-theme="light"] .pai-bar i.b-normal  {background:#6b7a84}
+html[data-theme="light"] .pai-bar i.b-low     {background:#2f8f4f}
+html[data-theme="light"] .pai-bar{background:#e3dfd4}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
@@ -2412,6 +2625,62 @@ def footer_html(update_label, s):
     )
 
 
+_PAI_ARROW = {'up': '▲', 'flat': '─', 'down': '▼'}
+
+
+def pai_section_html(df, lang, s):
+    """首頁的活動強度指數卡：大數字＋分帶＋趨勢＋四個分項的組成拆解。
+    拆解是刻意的——單一數字沒有拆解就是黑箱，讀者無法判斷它憑什麼是這個值。"""
+    p = pai_score(df.iloc[-1])
+    band = p['band']
+    trend_key, delta = pai_trend(df)
+    base = '/en' if lang == 'en' else ''
+
+    trend_html = ''
+    if trend_key:
+        txt = s['pai_trend'][trend_key].format(n=PAI_TREND_WINDOW)
+        sign = '+' if delta > 0 else ''
+        trend_html = (f'<div class="pai-trend t-{trend_key}">{_PAI_ARROW[trend_key]} '
+                      f'{txt} <span class="pai-delta">({sign}{delta:.0f})</span></div>')
+
+    rows = ''
+    for k in ('ac', 'ml', 'sh', 'zone'):
+        sub = p['comp'][k]
+        rows += (
+            f'<div class="pai-c">'
+            f'<span class="pai-cl">{s["pai_comp"][k]}</span>'
+            f'<span class="pai-cv">{p["raw"][k]}<em>{s["pai_unit"][k]}</em></span>'
+            f'<span class="pai-bar"><i class="b-{band}" style="width:{sub:.0f}%"></i></span>'
+            f'<span class="pai-cs">{sub:.0f}</span>'
+            f'<span class="pai-cw">×{PAI_WEIGHTS[k]:.2f}</span>'
+            f'</div>'
+        )
+    if p['boost']:
+        rows += (f'<div class="pai-c pai-boost">'
+                 f'<span class="pai-cl">{s["pai_boost"].format(n=p["boost"])}</span></div>')
+
+    return f"""<section class="pai anim-ready">
+  <div class="pai-head">
+    <span class="pai-title">{s['pai_label']}</span>
+    <span class="pai-ver">{PAI_VERSION}</span>
+    <a class="pai-how" href="{base}/about.html#pai">{s['pai_how']} ↗</a>
+  </div>
+  <div class="pai-body">
+    <div class="pai-gauge">
+      <div class="pai-score b-{band}"><span data-count="{p['score']}">{p['score']}</span><em>{s['pai_scale']}</em></div>
+      <div class="pai-band b-{band}">{s['pai_bands'][band]}</div>
+      <div class="pai-bdesc">{s['pai_band_desc'][band]}</div>
+      {trend_html}
+    </div>
+    <div class="pai-comps">
+      <div class="pai-comps-hd">{s['pai_detail']}</div>
+      {rows}
+    </div>
+  </div>
+  <div class="pai-note">{s['pai_note']}</div>
+</section>"""
+
+
 def monthly_stats_html(df, today_date, s):
     month_prefix = today_date[:7]
     df_mo = df[df['date'].str.startswith(month_prefix)].copy()
@@ -2568,6 +2837,7 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     streak_sh = s['ships_range'].format(lo=sh_lo, hi=sh_hi)
 
     alert_html   = f'<div class="alert">⚡ {special_display}</div>' if special_display else ''
+    pai_html     = pai_section_html(df, lang, s)
     monthly_html = monthly_stats_html(df, today_date, s)
     map_html     = map_section_html(ac_val, ml_val, sh_val, _raw_special, s)
 
@@ -2621,6 +2891,8 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     </div>
     {delta_note}
   </div>
+
+  {pai_html}
 
   {monthly_html}
 
@@ -2847,6 +3119,93 @@ def build_monthly(df, lang, out_dir, s):
 
 # ── about.html（方法論與資料來源）──────────────────────────────────────────────
 
+def pai_method_html(lang, s):
+    """方法論頁的指數說明。刻度表、權重、分帶全部由常數即時產生——
+    寫死一份人工表格遲早會跟程式碼對不上，而對不上的公開方法論比沒有更糟。"""
+    zh = lang != 'en'
+    order = ('ac', 'ml', 'sh', 'zone')
+
+    # 刻度表：一列一個分項，欄位是「原始值→分數」的轉折點
+    knot_rows = ''
+    for k in order:
+        pts = '　'.join(f'{x}→{y}' for x, y in PAI_KNOTS[k])
+        knot_rows += (f'<tr><td>{s["pai_comp"][k]}</td>'
+                      f'<td>{PAI_WEIGHTS[k]:.2f}</td>'
+                      f'<td style="white-space:normal">{pts}</td></tr>')
+
+    band_rows = ''
+    for floor, key in PAI_BANDS:
+        # PAI_BANDS 由高到低排列，所以「上界」要取所有大於 floor 的門檻中的最小者
+        hi = min((f for f, _ in PAI_BANDS if f > floor), default=101) - 1
+        band_rows += (f'<tr><td>{floor}–{hi}</td>'
+                      f'<td class="b-{key}"><strong>{s["pai_bands"][key]}</strong></td>'
+                      f'<td style="white-space:normal">{s["pai_band_desc"][key]}</td></tr>')
+
+    formula = ' + '.join(f'{PAI_WEIGHTS[k]:.2f}×{s["pai_comp"][k]}' for k in order)
+
+    if zh:
+        return f"""
+    <h2 id="pai">共軍活動強度指數（{PAI_VERSION}）</h2>
+    <p>首頁那個 0–100 的數字，是把當日四項觀測值壓成一個可以跨日比較的強度。它<strong>不是
+      官方警戒等級</strong>——國防部與國安單位才有權發布警戒；本站只是把自己已經公開的
+      數字換一種讀法，方便看出「今天相對於過去半年算什麼程度」。</p>
+    <p>三個設計原則：<strong>可重現</strong>（只用 records.csv 的欄位，任何人都能算出同一個
+      數字，不含外部訊號與人工判斷）、<strong>不漂移</strong>（刻度是校準一次後凍結的常數，
+      不隨新資料重算，所以引用過的分數不會變）、<strong>可拆解</strong>（首頁直接列出四個
+      分項各得幾分，不做黑箱）。</p>
+    <p>計算方式：每項觀測值先依下表的轉折點做分段線性內插，換成 0–100 的分項分數，再加權
+      相加：</p>
+    <p><strong>指數 = {formula}</strong>（公告有偵獲空飄氣球再 +{PAI_BALLOON_BOOST}，
+      四捨五入後夾在 0–100）</p>
+    <p>「0 一律得 0 分」是刻意的：沒有越線就是沒有越線，不因為「多數日子都是 0」而拿到基礎分。
+      刻度轉折點校準自 2026 年 1 月起的實際分布，上緣對齊歷史高標。</p>
+    <div class="pai-tbl"><table><thead><tr><th>分項</th><th>權重</th>
+      <th>刻度（原始值→分數）</th></tr></thead><tbody>{knot_rows}</tbody></table></div>
+    <div class="pai-tbl"><table><thead><tr><th>區間</th><th>分帶</th><th>意義</th></tr></thead>
+      <tbody>{band_rows}</tbody></table></div>
+    <p>首頁的 ▲▼ 箭頭比較的是<strong>當日指數與近 {PAI_TREND_WINDOW} 個有資料日的平均</strong>，
+      差距超過 {PAI_TREND_EPS} 分才顯示方向。不用「與前一日相比」，是因為本站資料是脈衝式的
+      （日間變動中位數約 16 分），逐日比較幾乎天天亮箭頭，等於沒有資訊。</p>
+    <p>整站配色也綁在這個指數上：指數 ≥ {PAI_DARK} 的日子全站轉為深色，其餘為淺色。</p>
+    <p>刻度日後若需重新校準（例如共軍活動規模長期上移，使刻度失去鑑別力），會把版本號往上加
+      並在此說明，<strong>不追溯改寫舊分數</strong>。</p>"""
+
+    return f"""
+    <h2 id="pai">PLA Activity Index ({PAI_VERSION})</h2>
+    <p>The 0–100 figure on the front page compresses the day's four observations into one
+      number that can be compared across days. It is <strong>not an official alert
+      level</strong> — only Taiwan's MND and national security bodies issue those. This is
+      simply another way of reading figures already published, so a reader can tell how today
+      compares with the past half-year.</p>
+    <p>Three design rules: <strong>reproducible</strong> (it uses only fields in records.csv,
+      no external signals and no human judgement, so anyone can recompute it),
+      <strong>non-drifting</strong> (the scale is a set of constants calibrated once and frozen,
+      never recomputed against fresh history, so a score that has been cited stays put), and
+      <strong>decomposable</strong> (the front page shows what each of the four components
+      scored — no black box).</p>
+    <p>Each observation is mapped to a 0–100 sub-score by piecewise-linear interpolation over
+      the knots below, then weighted:</p>
+    <p><strong>Index = {formula}</strong> (plus {PAI_BALLOON_BOOST} if the bulletin reports
+      balloon activity; rounded and clamped to 0–100)</p>
+    <p>Zero always scores zero, deliberately: no crossing means no crossing — it does not earn
+      a baseline score merely because most days are zero. The knots are calibrated on the actual
+      distribution since January 2026, with the top of each scale set at historical highs.</p>
+    <div class="pai-tbl"><table><thead><tr><th>Component</th><th>Weight</th>
+      <th>Scale (value→score)</th></tr></thead><tbody>{knot_rows}</tbody></table></div>
+    <div class="pai-tbl"><table><thead><tr><th>Range</th><th>Band</th><th>Meaning</th></tr></thead>
+      <tbody>{band_rows}</tbody></table></div>
+    <p>The ▲▼ arrow compares <strong>today's index with the average of the last
+      {PAI_TREND_WINDOW} days that have data</strong>, and only shows a direction when the gap
+      exceeds {PAI_TREND_EPS} points. Day-over-day comparison is not used: this data is bursty
+      (median day-to-day swing ≈ 16 points), so it would flag a direction almost every day and
+      carry no information.</p>
+    <p>The site's colour scheme follows the same index: days scoring {PAI_DARK} or above render
+      the whole site dark, everything else light.</p>
+    <p>Should the scale ever need recalibrating (for instance if PLA activity shifts upward
+      enough that the scale loses discrimination), the version number will increment and the
+      change will be documented here. <strong>Past scores are not rewritten.</strong></p>"""
+
+
 def build_about(df, lang, out_dir, s):
     """Methodology / data-source page. Bilingual via lang branch (en = no CJK)."""
     start = df['date'].min()
@@ -2908,6 +3267,8 @@ def build_about(df, lang, out_dir, s):
         of PLA Navy ships — both per the MND's own count.</p>
     </div>
 
+{pai_method_html(lang, s)}
+
     <h2>The arms dataset</h2>
     <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset covering US
       Foreign Military Sales to Taiwan notified to Congress by the Defense Security Cooperation
@@ -2963,6 +3324,8 @@ def build_about(df, lang, out_dir, s):
       <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
       <p>「架次」＝當日偵獲的共機出動次數，「共艦」＝艦艇艘數，均以國防部計數為準。</p>
     </div>
+
+{pai_method_html(lang, s)}
 
     <h2>軍購資料</h2>
     <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起美國國防安全合作署

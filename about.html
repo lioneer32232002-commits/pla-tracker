@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="本站方法論：資料來源（國防部每日公布）、更新頻率、海峽中線與12浬領海線的定義差異、數據整理流程與引用授權。">
 <meta name="twitter:image" content="https://pla-tracker.skyfaring.net/og.png">
 <meta name="twitter:image:alt" content="中國擾台趨勢數據分析">
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608120400">
-<link rel="stylesheet" href="style.css?v=202608120400">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608130919">
+<link rel="stylesheet" href="style.css?v=202608130919">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608120400')location.reload(true);});</script>
+<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608130919')location.reload(true);});</script>
 
 </head>
 <body>
@@ -85,6 +85,32 @@
       <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
       <p>「架次」＝當日偵獲的共機出動次數，「共艦」＝艦艇艘數，均以國防部計數為準。</p>
     </div>
+
+
+    <h2 id="pai">共軍活動強度指數（v1）</h2>
+    <p>首頁那個 0–100 的數字，是把當日四項觀測值壓成一個可以跨日比較的強度。它<strong>不是
+      官方警戒等級</strong>——國防部與國安單位才有權發布警戒；本站只是把自己已經公開的
+      數字換一種讀法，方便看出「今天相對於過去半年算什麼程度」。</p>
+    <p>三個設計原則：<strong>可重現</strong>（只用 records.csv 的欄位，任何人都能算出同一個
+      數字，不含外部訊號與人工判斷）、<strong>不漂移</strong>（刻度是校準一次後凍結的常數，
+      不隨新資料重算，所以引用過的分數不會變）、<strong>可拆解</strong>（首頁直接列出四個
+      分項各得幾分，不做黑箱）。</p>
+    <p>計算方式：每項觀測值先依下表的轉折點做分段線性內插，換成 0–100 的分項分數，再加權
+      相加：</p>
+    <p><strong>指數 = 0.35×共機架次 + 0.35×逾越中線 + 0.20×中共艦艇 + 0.10×活動空域</strong>（公告有偵獲空飄氣球再 +4，
+      四捨五入後夾在 0–100）</p>
+    <p>「0 一律得 0 分」是刻意的：沒有越線就是沒有越線，不因為「多數日子都是 0」而拿到基礎分。
+      刻度轉折點校準自 2026 年 1 月起的實際分布，上緣對齊歷史高標。</p>
+    <div class="pai-tbl"><table><thead><tr><th>分項</th><th>權重</th>
+      <th>刻度（原始值→分數）</th></tr></thead><tbody><tr><td>共機架次</td><td>0.35</td><td style="white-space:normal">0→0　2→20　5→40　10→60　15→70　22→85　30→95　42→100</td></tr><tr><td>逾越中線</td><td>0.35</td><td style="white-space:normal">0→0　1→15　3→30　6→45　9→60　12→70　16→85　25→95　32→100</td></tr><tr><td>中共艦艇</td><td>0.20</td><td style="white-space:normal">0→0　4→20　6→35　8→50　11→70　13→80　15→90　20→100</td></tr><tr><td>活動空域</td><td>0.10</td><td style="white-space:normal">0→0　1→35　2→55　3→75　4→88　5→95　6→100</td></tr></tbody></table></div>
+    <div class="pai-tbl"><table><thead><tr><th>區間</th><th>分帶</th><th>意義</th></tr></thead>
+      <tbody><tr><td>81–100</td><td class="b-extreme"><strong>極高</strong></td><td style="white-space:normal">大規模出動並伴隨高強度越線</td></tr><tr><td>66–80</td><td class="b-high"><strong>高</strong></td><td style="white-space:normal">明顯高於常態的空中活動</td></tr><tr><td>51–65</td><td class="b-elevated"><strong>偏高</strong></td><td style="white-space:normal">活動高於平日基準</td></tr><tr><td>31–50</td><td class="b-normal"><strong>常態</strong></td><td style="white-space:normal">日常規模的例行活動</td></tr><tr><td>0–30</td><td class="b-low"><strong>低</strong></td><td style="white-space:normal">空中活動稀少或僅有海上兵力</td></tr></tbody></table></div>
+    <p>首頁的 ▲▼ 箭頭比較的是<strong>當日指數與近 7 個有資料日的平均</strong>，
+      差距超過 5 分才顯示方向。不用「與前一日相比」，是因為本站資料是脈衝式的
+      （日間變動中位數約 16 分），逐日比較幾乎天天亮箭頭，等於沒有資訊。</p>
+    <p>整站配色也綁在這個指數上：指數 ≥ 66 的日子全站轉為深色，其餘為淺色。</p>
+    <p>刻度日後若需重新校準（例如共軍活動規模長期上移，使刻度失去鑑別力），會把版本號往上加
+      並在此說明，<strong>不追溯改寫舊分數</strong>。</p>
 
     <h2>軍購資料</h2>
     <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起美國國防安全合作署

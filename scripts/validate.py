@@ -375,6 +375,56 @@ def validate_html():
     if EN_INDEX.exists() and 'card.html' in EN_INDEX.read_text(encoding='utf-8'):
         errors.append('en/index.html 不應出現 card.html 連結（圖卡目前只有中文版）')
 
+    # ── 共軍活動強度指數（PAI）───────────────────────────────────────────────
+    # 這裡不是查「有沒有出現」而已：指數是頁面上唯一一個「算出來」的數字，
+    # 最容易壞的方式是資料更新了但頁面停在舊分數、或計分邏輯改了卻沒重 build。
+    # 所以直接用 build_site 的同一支計分函式重算 CSV 最後一列，逐字比對頁面。
+    # （import 放在函式內：validate.py csv 模式不該因此需要 pandas。）
+    if INDEX_HTML.exists() and CSV_PATH.exists():
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        try:
+            from build_site import pai_score, PAI_DARK, PAI_VERSION
+        except ImportError as e:
+            errors.append(f'無法載入 build_site 以驗證活動強度指數：{e}')
+        else:
+            rows = list(csv.DictReader(CSV_PATH.open(encoding='utf-8-sig')))
+            if rows:
+                p = pai_score(rows[-1])
+                idx_html = INDEX_HTML.read_text(encoding='utf-8')
+                for path, label in [(INDEX_HTML, 'index.html'), (EN_INDEX, 'en/index.html')]:
+                    if not path.exists():
+                        continue
+                    h = path.read_text(encoding='utf-8')
+                    for marker, desc in [
+                        ('class="pai anim-ready"',                  '活動強度指數卡'),
+                        (f'class="pai-score b-{p["band"]}"',        f'指數分帶（應為 {p["band"]}）'),
+                        (f'data-count="{p["score"]}"',              f'指數分數（應為 {p["score"]}）'),
+                        ('class="pai-comps"',                       '指數組成拆解'),
+                        ('class="pai-note"',                        '非官方警戒等級聲明'),
+                        ('about.html#pai',                          '方法論連結'),
+                    ]:
+                        if marker not in h:
+                            errors.append(f'{label} 缺少{desc}（找不到「{marker}」）')
+                    # 分帶名稱誤用官方警報語彙——這條是編輯紀律，不是排版問題
+                    for banned in ('警戒等級：', '警報等級', 'ALERT LEVEL'):
+                        if banned in h:
+                            errors.append(f'{label} 出現官方警報語彙「{banned}」，'
+                                          '活動強度指數只能用描述性字眼')
+                # 主題必須與指數一致：兩者脫鉤會出現「深色頁面配低分」的矛盾畫面
+                want = 'dark' if p['score'] >= PAI_DARK else 'light'
+                if f'data-theme="{want}"' not in idx_html:
+                    errors.append(f'index.html 主題與活動強度指數不一致：'
+                                  f'指數 {p["score"]} 應為 {want}')
+                # 方法論頁必須同步存在，否則首頁的「演算法」連結會指到不存在的錨點
+                for path, label in [(ABOUT_HTML, 'about.html'), (EN_ABOUT, 'en/about.html')]:
+                    if path.exists():
+                        a = path.read_text(encoding='utf-8')
+                        for marker, desc in [('id="pai"', '指數方法論章節'),
+                                             (PAI_VERSION, '指數版本號'),
+                                             ('class="pai-tbl"', '刻度／分帶表')]:
+                            if marker not in a:
+                                errors.append(f'{label} 缺少{desc}（找不到「{marker}」）')
+
     # ── about.html（中文方法論頁）─────────────────────────────────────────────
     if not ABOUT_HTML.exists():
         errors.append('about.html 不存在（build 可能未產出方法論頁）')

@@ -26,12 +26,12 @@
 <meta name="twitter:description" content="Methodology: data source (ROC MND daily releases), update frequency, the difference between the Taiwan Strait median line and the 12 NM territorial sea, data compilation and citation/licensing.">
 <meta name="twitter:image" content="https://pla-tracker.skyfaring.net/og-en.png">
 <meta name="twitter:image:alt" content="PLA Activity Tracker — Taiwan Strait">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202608120400">
-<link rel="stylesheet" href="/style.css?v=202608120400">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202608130919">
+<link rel="stylesheet" href="/style.css?v=202608130919">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608120400')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608130919')location.reload(true);});</script>
 
 </head>
 <body>
@@ -95,6 +95,41 @@
       <p>"Sorties" is the number of PLA aircraft missions detected that day; "vessels" the number
         of PLA Navy ships — both per the MND's own count.</p>
     </div>
+
+
+    <h2 id="pai">PLA Activity Index (v1)</h2>
+    <p>The 0–100 figure on the front page compresses the day's four observations into one
+      number that can be compared across days. It is <strong>not an official alert
+      level</strong> — only Taiwan's MND and national security bodies issue those. This is
+      simply another way of reading figures already published, so a reader can tell how today
+      compares with the past half-year.</p>
+    <p>Three design rules: <strong>reproducible</strong> (it uses only fields in records.csv,
+      no external signals and no human judgement, so anyone can recompute it),
+      <strong>non-drifting</strong> (the scale is a set of constants calibrated once and frozen,
+      never recomputed against fresh history, so a score that has been cited stays put), and
+      <strong>decomposable</strong> (the front page shows what each of the four components
+      scored — no black box).</p>
+    <p>Each observation is mapped to a 0–100 sub-score by piecewise-linear interpolation over
+      the knots below, then weighted:</p>
+    <p><strong>Index = 0.35×PLA sorties + 0.35×Median-line crossings + 0.20×PLA vessels + 0.10×Active airspaces</strong> (plus 4 if the bulletin reports
+      balloon activity; rounded and clamped to 0–100)</p>
+    <p>Zero always scores zero, deliberately: no crossing means no crossing — it does not earn
+      a baseline score merely because most days are zero. The knots are calibrated on the actual
+      distribution since January 2026, with the top of each scale set at historical highs.</p>
+    <div class="pai-tbl"><table><thead><tr><th>Component</th><th>Weight</th>
+      <th>Scale (value→score)</th></tr></thead><tbody><tr><td>PLA sorties</td><td>0.35</td><td style="white-space:normal">0→0　2→20　5→40　10→60　15→70　22→85　30→95　42→100</td></tr><tr><td>Median-line crossings</td><td>0.35</td><td style="white-space:normal">0→0　1→15　3→30　6→45　9→60　12→70　16→85　25→95　32→100</td></tr><tr><td>PLA vessels</td><td>0.20</td><td style="white-space:normal">0→0　4→20　6→35　8→50　11→70　13→80　15→90　20→100</td></tr><tr><td>Active airspaces</td><td>0.10</td><td style="white-space:normal">0→0　1→35　2→55　3→75　4→88　5→95　6→100</td></tr></tbody></table></div>
+    <div class="pai-tbl"><table><thead><tr><th>Range</th><th>Band</th><th>Meaning</th></tr></thead>
+      <tbody><tr><td>81–100</td><td class="b-extreme"><strong>Extreme</strong></td><td style="white-space:normal">Large-scale sortie with heavy median-line crossing</td></tr><tr><td>66–80</td><td class="b-high"><strong>High</strong></td><td style="white-space:normal">Air activity clearly above the norm</td></tr><tr><td>51–65</td><td class="b-elevated"><strong>Elevated</strong></td><td style="white-space:normal">Activity above the everyday baseline</td></tr><tr><td>31–50</td><td class="b-normal"><strong>Normal</strong></td><td style="white-space:normal">Routine activity at everyday scale</td></tr><tr><td>0–30</td><td class="b-low"><strong>Low</strong></td><td style="white-space:normal">Little or no air activity; naval presence only</td></tr></tbody></table></div>
+    <p>The ▲▼ arrow compares <strong>today's index with the average of the last
+      7 days that have data</strong>, and only shows a direction when the gap
+      exceeds 5 points. Day-over-day comparison is not used: this data is bursty
+      (median day-to-day swing ≈ 16 points), so it would flag a direction almost every day and
+      carry no information.</p>
+    <p>The site's colour scheme follows the same index: days scoring 66 or above render
+      the whole site dark, everything else light.</p>
+    <p>Should the scale ever need recalibrating (for instance if PLA activity shifts upward
+      enough that the scale loses discrimination), the version number will increment and the
+      change will be documented here. <strong>Past scores are not rewritten.</strong></p>
 
     <h2>The arms dataset</h2>
     <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset covering US

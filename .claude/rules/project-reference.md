@@ -98,13 +98,40 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 - `activity_start` / `activity_end` 近期公告多為空，允許留空
 - `special_event` 放空域描述或特殊事件，可留空
 
+## 共軍活動強度指數 PAI（2026-08-13 上線；改它之前先讀完這節）
+
+0–100 的每日活動強度，首頁大數字＋分帶＋趨勢箭頭，方法論全文在 /about#pai。
+程式在 `build_site.py` 頂部（Grep `PAI_KNOTS`）：`pai_score()` / `pai_trend()` /
+`pai_band()`，首頁區塊 `pai_section_html()`，方法論 `pai_method_html()`。
+
+- **三個設計原則，動任何一項都會毀掉指數的可信度**：
+  1. **可重現**：只吃 `records.csv` 的欄位，不引入外部訊號、不做人工判讀。
+  2. **不漂移**：刻度是**校準一次後凍結的常數**，不是對當下歷史即時取百分位。
+     改用即時百分位＝每天新資料都會讓舊日期的分數微幅變動，與 about 頁
+     「引用過的數字不會變」的承諾直接衝突。要重算刻度＝`PAI_VERSION` +1、
+     在方法論頁公告，**不追溯改寫舊分數**。
+  3. **描述而非警報**：分帶名稱只能用「極高／高／偏高／常態／低」這類描述詞。
+     禁用「警戒等級」「警報」——那是國防部與國安單位的用語，本站自算的數字借用
+     會被讀成官方發布。`validate.py` 會攔下這些字串。
+- 組成：架次 .35／越中線 .35／共艦 .20／空域廣度 .10，各項先依 `PAI_KNOTS` 做分段
+  線性內插換成 0–100，加權相加，公告有氣球再 `+PAI_BALLOON_BOOST`(4)，夾在 0–100。
+  **0 一律得 0 分**（沒越線就是沒越線，不因「多數日子都是 0」而給基礎分）。
+- 空域數共用 `zones_from_special()`，不要另寫一份判斷（西南部 ⊄ 南部的坑見 judgment.md）。
+- 趨勢箭頭比的是**當日 vs 近 `PAI_TREND_WINDOW`(7) 個有資料日的平均**，差 >`PAI_TREND_EPS`(5)
+  才顯示方向。**不要改成「與前一日相比」**——本站資料是脈衝式的（日間變動中位數約
+  16 分），逐日比較幾乎天天亮箭頭，等於沒有資訊。
+- v1 刻度在 223 天歷史上的分帶分布：極高 5.4%／高 11.7%／偏高 13.0%／常態 24.2%／
+  低 45.7%；深色日 17.0%（舊雙門檻規則是 14.3%）。改刻度後**先跑一次這個分布**再決定。
+- `validate.py` 會用 `build_site.pai_score()` 重算 CSV 最後一列並逐字比對頁面上的
+  分數、分帶、主題屬性。所以**計分邏輯改了沒重 build 會被擋下**，這是刻意的。
+
 ## 圖表與設計規格（改 build_site.py 圖表區才需要）
 
-- **雙主題（2026-07-23 起）**：build 時由 CSV 最後一列決定整站深/淺色——
-  嚴重日（`aircraft_total ≥ SEVERE_AC(15)` 且 `median_line_cross ≥ SEVERE_ML(10)`）
-  深色，其餘淺色。`<html data-theme="dark|light">`；本機測試可用環境變數
-  `PLA_THEME_OVERRIDE=light|dark` 強制。色盤常數與注入邏輯在 build_site.py 頂部
-  （Grep `SEVERE_AC` 定位）。
+- **雙主題（2026-07-23 起；2026-08-13 改綁指數）**：build 時由 CSV 最後一列決定整站
+  深/淺色——當日**共軍活動強度指數 ≥ `PAI_DARK`(66)** 深色，其餘淺色
+  （舊的 `SEVERE_AC`/`SEVERE_ML` 雙門檻已刪除）。`<html data-theme="dark|light">`；
+  本機測試可用環境變數 `PLA_THEME_OVERRIDE=light|dark` 強制。色盤常數與注入邏輯在
+  build_site.py 頂部（Grep `PAI_DARK` 定位）。
 - 深色圖表面板：`#1e2224`；軍機黃（當日 `#f5c842`，其他 `#8a7020`）；
   艦艇紅（當日 `#e05555`，其他 `#7a2a2a`）。淺色對應值見 build_site.py 色盤常數。
 - 當日長條永遠高亮；圖表字體由 Chart.js options 的字級設定控制（要改先在
@@ -208,6 +235,14 @@ aircraft_type, ships_total, activity_start, activity_end, special_event
 
 ## 已知歷史事件（查問題時的線索）
 
+- [2026-08-13] 症狀：新做的指數組成表在英文版手機寬度下，標籤與數值疊字。
+  根因：每一列 `.pai-c` 各自是 grid、第一欄寫死 `5.6em`——中文標籤（「逾越中線」）
+  塞得下，英文（Median-line crossings）超出兩倍寬且 `white-space:nowrap`，直接壓到
+  右邊的數值欄。修法：格線定義搬到容器 `.pai-comps`、每列改 `display:contents`、
+  第一欄改 `auto`（跨列共用同一組 track，寬度由最長標籤決定）。
+  **規則**：任何「標籤＋數值」的等寬欄位版面，欄寬不得寫死 em——本站每個版面都有
+  中英兩版，英文字串普遍是中文的 2–3 倍寬。驗收要量 `scrollWidth > clientWidth`
+  （nowrap 溢出不會反映在 getBoundingClientRect 上，只看 rect 會漏掉）。
 - [2026-08-09] 症狀：每天 API 帳單約 10,000 input token，但真正有用的擷取只有一次。
   根因：每天有**五班**會抓到同一則公告（三班 cron ＋ 兩班 cron-job.org 的外部
   `workflow_dispatch`，以使用者帳號在 UTC 04:00／06:00 準點觸發，repo 內沒有任何東西
