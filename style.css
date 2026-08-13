@@ -124,8 +124,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .b-extreme{color:#e05555}  .pai-bar i.b-extreme{background:#e05555}
 .b-high{color:#ff9933}     .pai-bar i.b-high{background:#ff9933}
 .b-elevated{color:#f5c842} .pai-bar i.b-elevated{background:#f5c842}
-.b-normal{color:#8a9faa}   .pai-bar i.b-normal{background:#8a9faa}
-.b-low{color:#4dba6a}      .pai-bar i.b-low{background:#4dba6a}
+.b-normal{color:#b8a06a}   .pai-bar i.b-normal{background:#b8a06a}
+.b-low{color:#7f8f9a}      .pai-bar i.b-low{background:#7f8f9a}
 @media (max-width:620px){
   .pai-body{grid-template-columns:1fr;gap:.9rem}
   .pai-gauge{border-right:0;border-bottom:1px solid var(--bdr);
@@ -712,13 +712,13 @@ html[data-theme="light"] .ars-atag.mnna   {background:#ece1f7;color:#7a4fb0}
 html[data-theme="light"] .ars-atag.partner{background:#f3ecc9;color:#7a5c00}
 html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}
 html[data-theme="light"] .b-extreme {color:#c23a3a}
-html[data-theme="light"] .b-high    {color:#cc7a1f}
-html[data-theme="light"] .b-elevated{color:#9a7500}
-html[data-theme="light"] .b-normal  {color:#6b7a84}
-html[data-theme="light"] .b-low     {color:#2f8f4f}
+html[data-theme="light"] .b-high    {color:#a35c0a}
+html[data-theme="light"] .b-elevated{color:#8a6900}
+html[data-theme="light"] .b-normal  {color:#7d6d53}
+html[data-theme="light"] .b-low     {color:#64727c}
 html[data-theme="light"] .pai-bar i.b-extreme {background:#c23a3a}
-html[data-theme="light"] .pai-bar i.b-high    {background:#cc7a1f}
-html[data-theme="light"] .pai-bar i.b-elevated{background:#9a7500}
-html[data-theme="light"] .pai-bar i.b-normal  {background:#6b7a84}
-html[data-theme="light"] .pai-bar i.b-low     {background:#2f8f4f}
+html[data-theme="light"] .pai-bar i.b-high    {background:#a35c0a}
+html[data-theme="light"] .pai-bar i.b-elevated{background:#8a6900}
+html[data-theme="light"] .pai-bar i.b-normal  {background:#7d6d53}
+html[data-theme="light"] .pai-bar i.b-low     {background:#64727c}
 html[data-theme="light"] .pai-bar{background:#e3dfd4}

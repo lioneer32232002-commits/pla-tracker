@@ -629,11 +629,11 @@
     },
     "fill_height": 14,
     "band_colors": {
-      "極高": "#e0575c",
+      "極高": "#e05555",
       "高": "#ff9933",
       "偏高": "#f5c842",
-      "常態": "#8a9faa",
-      "低": "#4dba6a"
+      "常態": "#b8a06a",
+      "低": "#7f8f9a"
     },
     "daily_ops_example": [
       {
@@ -648,7 +648,7 @@
           "font_size": 34,
           "font_weight": "bold",
           "text_align": "start",
-          "color": "#8a9faa"
+          "color": "#b8a06a"
         }
       },
       {
@@ -661,7 +661,7 @@
       {
         "type": "recolor_element",
         "element_id": "PBrY48DlSrkTrB5h-LBPw6XK1jnWWGrWg",
-        "color": "#8a9faa"
+        "color": "#b8a06a"
       }
     ],
     "no_animation_warning": "這四個元素是 2026-08-13 用 API 插進母版的，沒有動畫。使用者若要動畫，需在 Canva 手動補上；補完後不要用 API 重新插入這些元素。"

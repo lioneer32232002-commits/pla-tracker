@@ -173,13 +173,20 @@ _CHART_COLORS = {
               'avg_line': '#9aa7ae'},
 }
 
-# 活動強度指數的分帶色：由低到高走「綠→黃→橘→紅」，深淺主題各一組。
-# 刻意不用純紅綠燈（紅/黃/綠三色），因為分帶有五級，且「常態」不該被塗成警示色。
+# 活動強度指數的分帶色：熱度斜坡「中性灰 → 暖金 → 黃 → 橘 → 紅」，深淺主題各一組。
+# 2026-08-13 使用者定案，兩個被否決的選項與理由留在這裡，避免日後又繞回去：
+#  - 低帶用綠：綠在這個題目上會被讀成「安全」，但零架次只代表當天沒偵獲，不是安全。
+#  - 全部用紅色深淺：視覺最一致，但平靜日也是紅的，等於每天都在示警。
+# 所以低帶用中性灰藍（不表態）、常態用暖金（開始升溫）、往上才進黃橘紅。
+# 這組色同時是文字色（大數字、分帶名），所以淺色主題那組要能在白底上讀得清楚，
+# 不能直接把深色那組調暗了事。
 _PAI_COLORS = {
     'dark':  {'extreme': '#e05555', 'high': '#ff9933', 'elevated': '#f5c842',
-              'normal': '#8a9faa', 'low': '#4dba6a'},
-    'light': {'extreme': '#c23a3a', 'high': '#cc7a1f', 'elevated': '#9a7500',
-              'normal': '#6b7a84', 'low': '#2f8f4f'},
+              'normal': '#b8a06a', 'low': '#7f8f9a'},
+    # 淺色這組全部落在「對白底對比 ≈5.0」的同一條線上：分帶靠色相區分，不靠深淺，
+    # 這樣五個分帶當文字用時的可讀性一致（量過：4.95–5.3，全部過 4.5）。
+    'light': {'extreme': '#c23a3a', 'high': '#a35c0a', 'elevated': '#8a6900',
+              'normal': '#7d6d53', 'low': '#64727c'},
 }
 
 # 地圖注入色（直接以裸 hex 取代，因同一顏色在 _MAP_JS 中同時出現於 JS 字串與
@@ -1417,8 +1424,8 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .b-extreme{color:#e05555}  .pai-bar i.b-extreme{background:#e05555}
 .b-high{color:#ff9933}     .pai-bar i.b-high{background:#ff9933}
 .b-elevated{color:#f5c842} .pai-bar i.b-elevated{background:#f5c842}
-.b-normal{color:#8a9faa}   .pai-bar i.b-normal{background:#8a9faa}
-.b-low{color:#4dba6a}      .pai-bar i.b-low{background:#4dba6a}
+.b-normal{color:#b8a06a}   .pai-bar i.b-normal{background:#b8a06a}
+.b-low{color:#7f8f9a}      .pai-bar i.b-low{background:#7f8f9a}
 @media (max-width:620px){
   .pai-body{grid-template-columns:1fr;gap:.9rem}
   .pai-gauge{border-right:0;border-bottom:1px solid var(--bdr);
@@ -2005,15 +2012,15 @@ html[data-theme="light"] .ars-atag.mnna   {background:#ece1f7;color:#7a4fb0}
 html[data-theme="light"] .ars-atag.partner{background:#f3ecc9;color:#7a5c00}
 html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}
 html[data-theme="light"] .b-extreme {color:#c23a3a}
-html[data-theme="light"] .b-high    {color:#cc7a1f}
-html[data-theme="light"] .b-elevated{color:#9a7500}
-html[data-theme="light"] .b-normal  {color:#6b7a84}
-html[data-theme="light"] .b-low     {color:#2f8f4f}
+html[data-theme="light"] .b-high    {color:#a35c0a}
+html[data-theme="light"] .b-elevated{color:#8a6900}
+html[data-theme="light"] .b-normal  {color:#7d6d53}
+html[data-theme="light"] .b-low     {color:#64727c}
 html[data-theme="light"] .pai-bar i.b-extreme {background:#c23a3a}
-html[data-theme="light"] .pai-bar i.b-high    {background:#cc7a1f}
-html[data-theme="light"] .pai-bar i.b-elevated{background:#9a7500}
-html[data-theme="light"] .pai-bar i.b-normal  {background:#6b7a84}
-html[data-theme="light"] .pai-bar i.b-low     {background:#2f8f4f}
+html[data-theme="light"] .pai-bar i.b-high    {background:#a35c0a}
+html[data-theme="light"] .pai-bar i.b-elevated{background:#8a6900}
+html[data-theme="light"] .pai-bar i.b-normal  {background:#7d6d53}
+html[data-theme="light"] .pai-bar i.b-low     {background:#64727c}
 html[data-theme="light"] .pai-bar{background:#e3dfd4}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
