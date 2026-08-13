@@ -59,11 +59,14 @@
   690/-22/1125×850），所以空域座標不需重算。強度列的實測座標記在
   `canva_zone_ops.json` 的 `activity_index.positions_measured`，那組值**只供人核對，
   不相符不必停手**——每日操作不碰位置。真正要停手的仍然只有 `map_element` 對不上。
-  ⚠️ **雲端排程的 prompt 要同步加這一段，否則自動產的圖卡指數會停在母版的 84 極高**：
-  「跑完 make_canva_ops.py 後，把輸出裡 `activity_index.ops` 的四個操作原樣加進
-  edit-design 的 operations」。routine 管理頁在
-  https://claude.ai/code/routines/trig_01RbV4ojgTax7DoEUEy2euWW
-  （**本機 session 改不了雲端 routine 的 prompt，要在 claude.ai 上改**）。
+  雲端排程的 prompt 已於 2026-08-13 同步加上第 (6b) 步（照 `activity_index.ops` 做四個
+  操作），並加註「只有地圖元素對不上才停手，其他元素使用者會自行微調、位置對不上是正常的」。
+  **更正一條之前寫錯的認知**：本機 session **改得了**雲端 routine——用 `/schedule`
+  技能載入 `RemoteTrigger` 工具（`get` / `update`），不必去 claude.ai 網頁手改。
+  更新時**只送 `job_config`、不要送 `mcp_connections`**：省略即保留，送了會覆蓋掉
+  Canva 連接器；`/schedule` 技能開場常回報「No available MCP connectors found」，
+  那是清單沒抓到，不代表連接器不在（同 2026-08-09 那條教訓）。
+  routine 管理頁：https://claude.ai/code/routines/trig_01RbV4ojgTax7DoEUEy2euWW
 - 只有在母版真的缺某個空域時才需要插入（`zones[].shapes` / `label`）。`add_text` 插出來的
   標籤是黑色 16px 左對齊，**插完必須再補一次 `format_text`**（黃 `#F5C842`／25px／
   bold／center），否則深色底上等於看不見。插入的形狀不會有動畫，要回報使用者。
