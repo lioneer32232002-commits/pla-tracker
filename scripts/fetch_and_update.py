@@ -67,7 +67,11 @@ _EXTRACT_SPEC = """提取以下資訊並以 JSON 格式回答。
 - activity_end：共機活動最晚時間（HH:MM 格式，無則空字串）
 - special_event：活動區域與機型詳情，格式「區域名(①機型N架次) 區域名(②機型N架次)」，
   例：「西南部空域(①無人機2架) 東北部空域(②輔戰機3架次)」。
-  若無共機活動或無法判斷區域，填空字串。
+  **空域名稱以公告內文為準**：內文通常寫成「偵獲共機N架次（逾越中線進入北部、中部、
+  西南及東部空域M架次）」，括號裡那句就是空域資訊，請完整保留。航跡圖上不一定會標注
+  空域名稱（2026-08-12、08-13 兩天的圖就沒標），**只看圖會整組漏掉**。
+  若同時提供圖片與內文：空域名稱取自內文，①②機型細節取自圖片，兩者併寫。
+  真的無共機活動、或內文與圖片都沒有區域資訊，才填空字串。
   注意：「上述期間未偵獲共機，故無提供航跡圖」等例行說明文字請填空字串。
 
 請只回傳 JSON，不要任何說明文字：
@@ -247,6 +251,25 @@ def extract_article_text(soup2):
     return node.get_text('\n', strip=True) if node else ''
 
 
+# 公告內文的空域資訊固定寫在括號裡，例：
+#   偵獲共機18架次（逾越中線進入北部、中部、西南及東部空域15架次）、共艦11艘…
+# 抓「含『空域』二字的那一組括號內容」。全形半形括號都收。
+_ZONE_PAREN_RE = re.compile(r'[（(]([^（）()]*空域[^（）()]*)[）)]')
+
+
+def zone_phrase_from_text(article_text):
+    """從公告內文抓出空域描述，抓不到回傳空字串。
+
+    這是**不依賴模型**的保險絲：模型偶爾會把 special_event 留空
+    （2026-08-12、08-13 連兩天發生，兩天的航跡圖都沒標空域名稱），
+    但內文的括號寫法非常固定，用字串就能取得，不必再花一次 API。
+    """
+    if not article_text:
+        return ''
+    m = _ZONE_PAREN_RE.search(article_text)
+    return m.group(1).strip() if m else ''
+
+
 def looks_like_bulletin(text):
     """判斷內文是否為一則正式的共機動態公告（用來區分「零架次無圖公告」與「尚未發布」）。"""
     if not text:
@@ -294,8 +317,13 @@ def download_image(url):
     return resp.content, cache_path
 
 
-def extract_data_from_image(img_bytes, img_url):
-    """用 Claude API 解讀圖片，回傳 dict"""
+def extract_data_from_image(img_bytes, img_url, article_text=''):
+    """用 Claude API 解讀圖片，回傳 dict。
+
+    article_text 是同一則公告的內文（有就一起餵）。**空域名稱只穩定出現在內文裡**，
+    航跡圖不一定會標——2026-08-13 就是圖上沒標、而本函式當時只讀圖，
+    整組空域因此漏掉（內文寫的是「逾越中線進入北部、中部、西南及東部空域15架次」）。
+    內文只有 140–160 字，相對於圖片的 ~1,180 token 幾乎不增加成本。"""
     client = anthropic.Anthropic(api_key=os.environ['ANTHROPIC_API_KEY'])
 
     ext = img_url.split('?')[0].rsplit('.', 1)[-1].lower()
@@ -317,7 +345,9 @@ def extract_data_from_image(img_bytes, img_url):
                 {'type': 'image', 'source': {'type': 'base64',
                                              'media_type': media_type,
                                              'data': img_b64}},
-                {'type': 'text', 'text': EXTRACT_PROMPT}
+                {'type': 'text', 'text': EXTRACT_PROMPT + (
+                    f'\n\n以下是同一則公告的內文文字，空域名稱請以它為準：\n{article_text}'
+                    if article_text else '')}
             ]
         }]
     )
@@ -467,7 +497,15 @@ def main():
             return
 
         # 2.5 用 Claude 解讀圖片
-        data = extract_data_from_image(img_bytes, img_url)
+        article_text = extract_article_text(soup2)
+        data = extract_data_from_image(img_bytes, img_url, article_text)
+        # 保險絲：模型仍把空域留空時，直接用內文的括號內容補上。
+        # 空域是首頁地圖、分享圖卡與 Canva 圖卡共用的欄位，漏掉會三處一起空白。
+        if not str(data.get('special_event', '')).strip():
+            phrase = zone_phrase_from_text(article_text)
+            if phrase:
+                log(f'模型未回傳 special_event，改用內文括號補上：{phrase}')
+                data['special_event'] = phrase
 
     # 3. 寫入 CSV
     is_new = append_to_csv(data)
