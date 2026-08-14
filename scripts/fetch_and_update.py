@@ -515,6 +515,15 @@ def main():
                 log(f'模型未回傳 special_event，改用內文括號補上：{phrase}')
                 data['special_event'] = phrase
 
+    # 保險絲二：不論 special_event 來自模型或內文，一律正規化「…空域N架次」→「…空域(N架次)」。
+    # 2026-08-14 踩到：模型照公告的無括號寫法原樣回傳，zone_phrase_from_text 只在
+    # 模型「留空」時才啟動，正規化被繞過 → 英文版翻不出來 → validate 擋 commit → 當日三班全紅。
+    se = str(data.get('special_event', '')).strip()
+    m_zc = _ZONE_COUNT_RE.match(se)
+    if m_zc:
+        data['special_event'] = f'{m_zc.group(1)}({m_zc.group(2).replace(" ", "")})'
+        log(f'空域字串正規化：{se} → {data["special_event"]}')
+
     # 3. 寫入 CSV
     is_new = append_to_csv(data)
 
