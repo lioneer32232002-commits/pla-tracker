@@ -1182,12 +1182,16 @@ def translate_special_event(text):
 
         # Pattern 4: 逾越中線進入{regions}空域 (with optional leading description)
         if '逾越中線' in part and '空域' in part:
-            # Extract everything after 逾越中線 (or 逾越海峽中線)
-            m = re.search(r'逾越(?:海峽)?中線進入(.+?空域)$', part)
+            # Extract everything after 逾越中線 (or 逾越海峽中線).
+            # 結尾允許無括號的「N架次」——公告與模型輸出都出現過這種寫法
+            # （2026-08-14：「…空域6架次」讓本函式整組不匹配，英文版殘留中文）。
+            m = re.search(r'逾越(?:海峽)?中線進入(.+?空域)(?:(\d+)架次)?$', part)
             if m:
                 regions = _extract_crossing_regions(m.group(1))
                 if regions:
-                    result.append(f'Median line crossings: {_fmt_regions(regions)} airspace')
+                    n_str = f' ({m.group(2)} sorties)' if m.group(2) else ''
+                    result.append(
+                        f'Median line crossings: {_fmt_regions(regions)} airspace{n_str}')
                     continue
             # Fallback: any 逾越中線 + 空域 combination
             regions = _extract_crossing_regions(part)
