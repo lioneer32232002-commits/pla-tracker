@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="dark">
+<html lang="zh-Hant" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,7 +9,7 @@
 <link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.skyfaring.net/">
 <link rel="alternate" hreflang="en" href="https://pla-tracker.skyfaring.net/en/">
 <link rel="alternate" hreflang="x-default" href="https://pla-tracker.skyfaring.net/">
-<meta name="theme-color" content="#090d0f">
+<meta name="theme-color" content="#f5f4f0">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="中國擾台趨勢數據分析">
 <meta property="og:title" content="中國擾台趨勢數據分析｜共機架次・海峽中線・每日更新">
@@ -26,19 +26,19 @@
 <meta name="twitter:description" content="每日追蹤中國解放軍在台灣周邊的軍事活動：共機架次、逾越海峽中線比例、共艦數量與趨勢圖。資料來源：中華民國國防部每日公布。">
 <meta name="twitter:image" content="https://pla-tracker.skyfaring.net/og.png">
 <meta name="twitter:image:alt" content="中國擾台趨勢數據分析">
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608190400">
-<link rel="stylesheet" href="style.css?v=202608190400">
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=202608200400">
+<link rel="stylesheet" href="style.css?v=202608200400">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608190400')location.reload(true);});</script>
+<script>fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202608200400')location.reload(true);});</script>
 
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "中國擾台每日數據集", "description": "每日整理中國解放軍（PLA）在台灣周邊軍事活動的結構化資料，來源為中華民國國防部每日公布：共機架次、逾越海峽中線數、共艦艘數。", "url": "https://pla-tracker.skyfaring.net/", "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait", "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions", "PLAAF", "PLAN", "cross-strait tensions", "解放軍", "擾台", "海峽中線", "防空識別區"], "creator": {"@type": "Person", "name": "Adam Pan"}, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "temporalCoverage": "2026-01-01/2026-08-19", "dateModified": "2026-08-19", "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"}, "variableMeasured": [{"@type": "PropertyValue", "name": "aircraft_total", "description": "PLA aircraft sorties detected per day"}, {"@type": "PropertyValue", "name": "median_line_cross", "description": "Sorties crossing the Taiwan Strait median line per day"}, {"@type": "PropertyValue", "name": "ships_total", "description": "PLA naval vessels detected per day"}], "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist", "creditText": "Source: ROC Ministry of National Defense (MND)", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://pla-tracker.skyfaring.net/data/records.csv"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Dataset", "name": "中國擾台每日數據集", "description": "每日整理中國解放軍（PLA）在台灣周邊軍事活動的結構化資料，來源為中華民國國防部每日公布：共機架次、逾越海峽中線數、共艦艘數。", "url": "https://pla-tracker.skyfaring.net/", "keywords": ["PLA", "People's Liberation Army", "Taiwan", "Taiwan Strait", "ADIZ", "median line", "Taiwan Strait median line", "PLA incursions", "PLAAF", "PLAN", "cross-strait tensions", "解放軍", "擾台", "海峽中線", "防空識別區"], "creator": {"@type": "Person", "name": "Adam Pan"}, "isAccessibleForFree": true, "license": "https://creativecommons.org/licenses/by/4.0/", "temporalCoverage": "2026-01-01/2026-08-20", "dateModified": "2026-08-20", "spatialCoverage": {"@type": "Place", "name": "Taiwan Strait / Taiwan ADIZ"}, "variableMeasured": [{"@type": "PropertyValue", "name": "aircraft_total", "description": "PLA aircraft sorties detected per day"}, {"@type": "PropertyValue", "name": "median_line_cross", "description": "Sorties crossing the Taiwan Strait median line per day"}, {"@type": "PropertyValue", "name": "ships_total", "description": "PLA naval vessels detected per day"}], "isBasedOn": "https://www.mnd.gov.tw/news/plaactlist", "creditText": "Source: ROC Ministry of National Defense (MND)", "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": "https://pla-tracker.skyfaring.net/data/records.csv"}]}</script>
 </head>
 <body>
 <div class="top-bar">
   <span>UNCLASSIFIED // OPEN SOURCE</span>
-  <span>ROC MND · 8/19</span>
+  <span>ROC MND · 8/20</span>
 </div>
 <header class="site-header">
   <div class="header-inner">
@@ -52,24 +52,24 @@
 </header>
 
 <main>
-  <div class="alert">⚡ 北部、中部、西南及東部空域(共15架次)</div>
+  <div class="alert">⚡ 進入北部、西南及東部空域共5架次</div>
 
   <div class="sitrep anim-ready">
-    <div class="sitrep-label">SITREP &nbsp;·&nbsp; 8/19</div>
+    <div class="sitrep-label">SITREP &nbsp;·&nbsp; 8/20</div>
     <div class="stats-row">
       <div class="stat">
-        <div class="stat-n y" data-count="20">20</div>
+        <div class="stat-n y" data-count="7">7</div>
         <div class="stat-l">中共軍機架次</div>
-        <span class="delta-up" title="較前一日 +15" aria-label="較前一日 +15">▲15</span>
+        <span class="delta-dn" title="較前一日 −13" aria-label="較前一日 −13">▼13</span>
       </div>
       <div class="stat">
-        <div class="stat-n y" data-count="15">15</div>
-        <div class="stat-l">逾越中線&nbsp;<span class="stat-detail">75%</span></div>
+        <div class="stat-n y" data-count="5">5</div>
+        <div class="stat-l">逾越中線&nbsp;<span class="stat-detail">71%</span></div>
       </div>
       <div class="stat">
-        <div class="stat-n r" data-count="13">13</div>
+        <div class="stat-n r" data-count="14">14</div>
         <div class="stat-l">中共艦艇</div>
-        <span class="delta-dn" title="較前一日 −2" aria-label="較前一日 −2">▼2</span>
+        <span class="delta-up" title="較前一日 +1" aria-label="較前一日 +1">▲1</span>
       </div>
     </div>
     <div class="delta-note">▲▼ 為與前一日的比較</div>
@@ -83,25 +83,25 @@
   </div>
   <div class="pai-body">
     <div class="pai-gauge">
-      <div class="pai-score b-extreme"><span data-count="81">81</span><em>/100</em></div>
-      <div class="pai-band b-extreme">極高</div>
-      <div class="pai-meter" role="img" aria-label="共軍活動強度指數 81/100"><span class="pai-meter-fill b-extreme" style="width:81%"></span><i style="left:81%"></i><i style="left:66%"></i><i style="left:51%"></i><i style="left:31%"></i></div>
-      <div class="pai-bdesc">大規模出動並伴隨高強度越線</div>
-      <div class="pai-trend t-up">▲ 高於近 7 日平均 <span class="pai-delta">(+30)</span></div>
+      <div class="pai-score b-elevated"><span data-count="55">55</span><em>/100</em></div>
+      <div class="pai-band b-elevated">偏高</div>
+      <div class="pai-meter" role="img" aria-label="共軍活動強度指數 55/100"><span class="pai-meter-fill b-elevated" style="width:55%"></span><i style="left:81%"></i><i style="left:66%"></i><i style="left:51%"></i><i style="left:31%"></i></div>
+      <div class="pai-bdesc">活動高於平日基準</div>
+      <div class="pai-trend t-flat">─ 與近 7 日平均相當 <span class="pai-delta">(-1)</span></div>
     </div>
     <div class="pai-comps">
       <div class="pai-comps-hd">指數組成</div>
-      <div class="pai-c"><span class="pai-cl">共機架次</span><span class="pai-cv">20<em>架次</em></span><span class="pai-bar"><i class="b-extreme" style="width:81%"></i></span><span class="pai-cs">81</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">逾越中線</span><span class="pai-cv">15<em>架次</em></span><span class="pai-bar"><i class="b-extreme" style="width:81%"></i></span><span class="pai-cs">81</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">中共艦艇</span><span class="pai-cv">13<em>艘</em></span><span class="pai-bar"><i class="b-extreme" style="width:80%"></i></span><span class="pai-cs">80</span><span class="pai-cw">×0.20</span></div><div class="pai-c"><span class="pai-cl">活動空域</span><span class="pai-cv">4<em>處</em></span><span class="pai-bar"><i class="b-extreme" style="width:88%"></i></span><span class="pai-cs">88</span><span class="pai-cw">×0.10</span></div>
+      <div class="pai-c"><span class="pai-cl">共機架次</span><span class="pai-cv">7<em>架次</em></span><span class="pai-bar"><i class="b-elevated" style="width:48%"></i></span><span class="pai-cs">48</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">逾越中線</span><span class="pai-cv">5<em>架次</em></span><span class="pai-bar"><i class="b-elevated" style="width:40%"></i></span><span class="pai-cs">40</span><span class="pai-cw">×0.35</span></div><div class="pai-c"><span class="pai-cl">中共艦艇</span><span class="pai-cv">14<em>艘</em></span><span class="pai-bar"><i class="b-elevated" style="width:85%"></i></span><span class="pai-cs">85</span><span class="pai-cw">×0.20</span></div><div class="pai-c"><span class="pai-cl">活動空域</span><span class="pai-cv">3<em>處</em></span><span class="pai-bar"><i class="b-elevated" style="width:75%"></i></span><span class="pai-cs">75</span><span class="pai-cw">×0.10</span></div>
     </div>
   </div>
-  <div class="pai-spark-wrap"><svg class="pai-spark" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="ps-area b-extreme" d="M0.0 78.0 L10.2 18.0 L20.3 52.0 L30.5 46.0 L40.7 39.0 L50.8 82.0 L61.0 88.0 L71.2 93.0 L81.4 87.0 L91.5 77.0 L101.7 32.0 L111.9 61.0 L122.0 9.0 L132.2 60.0 L142.4 83.0 L152.5 68.0 L162.7 59.0 L172.9 46.0 L183.1 13.0 L193.2 83.0 L203.4 98.0 L213.6 94.0 L223.7 82.0 L233.9 58.0 L244.1 68.0 L254.2 59.0 L264.4 48.0 L274.6 85.0 L284.7 41.0 L294.9 72.0 L305.1 57.0 L315.3 51.0 L325.4 24.0 L335.6 46.0 L345.8 16.0 L355.9 76.0 L366.1 68.0 L376.3 84.0 L386.4 51.0 L396.6 40.0 L406.8 13.0 L416.9 66.0 L427.1 59.0 L437.3 80.0 L447.5 63.0 L457.6 16.0 L467.8 35.0 L478.0 46.0 L488.1 30.0 L498.3 57.0 L508.5 73.0 L518.6 74.0 L528.8 57.0 L539.0 19.0 L549.2 40.0 L559.3 59.0 L569.5 43.0 L579.7 75.0 L589.8 52.0 L600.0 19.0 L600.0 100.0 L0 100.0 Z"/><line class="ps-thr" x1="0" y1="34.0" x2="600" y2="34.0" vector-effect="non-scaling-stroke"/><path class="ps-line b-extreme" d="M0.0 78.0 L10.2 18.0 L20.3 52.0 L30.5 46.0 L40.7 39.0 L50.8 82.0 L61.0 88.0 L71.2 93.0 L81.4 87.0 L91.5 77.0 L101.7 32.0 L111.9 61.0 L122.0 9.0 L132.2 60.0 L142.4 83.0 L152.5 68.0 L162.7 59.0 L172.9 46.0 L183.1 13.0 L193.2 83.0 L203.4 98.0 L213.6 94.0 L223.7 82.0 L233.9 58.0 L244.1 68.0 L254.2 59.0 L264.4 48.0 L274.6 85.0 L284.7 41.0 L294.9 72.0 L305.1 57.0 L315.3 51.0 L325.4 24.0 L335.6 46.0 L345.8 16.0 L355.9 76.0 L366.1 68.0 L376.3 84.0 L386.4 51.0 L396.6 40.0 L406.8 13.0 L416.9 66.0 L427.1 59.0 L437.3 80.0 L447.5 63.0 L457.6 16.0 L467.8 35.0 L478.0 46.0 L488.1 30.0 L498.3 57.0 L508.5 73.0 L518.6 74.0 L528.8 57.0 L539.0 19.0 L549.2 40.0 L559.3 59.0 L569.5 43.0 L579.7 75.0 L589.8 52.0 L600.0 19.0" vector-effect="non-scaling-stroke"/><line class="ps-now b-extreme" x1="600.0" y1="0" x2="600.0" y2="100" vector-effect="non-scaling-stroke"/></svg><div class="pai-spark-lg"><span>近 60 個發布日</span><span class="ps-k">最高 <b>91</b></span><span class="ps-k">平均 <b>44</b></span><span class="ps-k ps-thr-lg">虛線＝深色門檻 66</span></div></div>
+  <div class="pai-spark-wrap"><svg class="pai-spark" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="ps-area b-elevated" d="M0.0 18.0 L10.2 52.0 L20.3 46.0 L30.5 39.0 L40.7 82.0 L50.8 88.0 L61.0 93.0 L71.2 87.0 L81.4 77.0 L91.5 32.0 L101.7 61.0 L111.9 9.0 L122.0 60.0 L132.2 83.0 L142.4 68.0 L152.5 59.0 L162.7 46.0 L172.9 13.0 L183.1 83.0 L193.2 98.0 L203.4 94.0 L213.6 82.0 L223.7 58.0 L233.9 68.0 L244.1 59.0 L254.2 48.0 L264.4 85.0 L274.6 41.0 L284.7 72.0 L294.9 57.0 L305.1 51.0 L315.3 24.0 L325.4 46.0 L335.6 16.0 L345.8 76.0 L355.9 68.0 L366.1 84.0 L376.3 51.0 L386.4 40.0 L396.6 13.0 L406.8 66.0 L416.9 59.0 L427.1 80.0 L437.3 63.0 L447.5 16.0 L457.6 35.0 L467.8 46.0 L478.0 30.0 L488.1 57.0 L498.3 73.0 L508.5 74.0 L518.6 57.0 L528.8 19.0 L539.0 40.0 L549.2 59.0 L559.3 43.0 L569.5 75.0 L579.7 52.0 L589.8 19.0 L600.0 45.0 L600.0 100.0 L0 100.0 Z"/><line class="ps-thr" x1="0" y1="34.0" x2="600" y2="34.0" vector-effect="non-scaling-stroke"/><path class="ps-line b-elevated" d="M0.0 18.0 L10.2 52.0 L20.3 46.0 L30.5 39.0 L40.7 82.0 L50.8 88.0 L61.0 93.0 L71.2 87.0 L81.4 77.0 L91.5 32.0 L101.7 61.0 L111.9 9.0 L122.0 60.0 L132.2 83.0 L142.4 68.0 L152.5 59.0 L162.7 46.0 L172.9 13.0 L183.1 83.0 L193.2 98.0 L203.4 94.0 L213.6 82.0 L223.7 58.0 L233.9 68.0 L244.1 59.0 L254.2 48.0 L264.4 85.0 L274.6 41.0 L284.7 72.0 L294.9 57.0 L305.1 51.0 L315.3 24.0 L325.4 46.0 L335.6 16.0 L345.8 76.0 L355.9 68.0 L366.1 84.0 L376.3 51.0 L386.4 40.0 L396.6 13.0 L406.8 66.0 L416.9 59.0 L427.1 80.0 L437.3 63.0 L447.5 16.0 L457.6 35.0 L467.8 46.0 L478.0 30.0 L488.1 57.0 L498.3 73.0 L508.5 74.0 L518.6 57.0 L528.8 19.0 L539.0 40.0 L549.2 59.0 L559.3 43.0 L569.5 75.0 L579.7 52.0 L589.8 19.0 L600.0 45.0" vector-effect="non-scaling-stroke"/><line class="ps-now b-elevated" x1="600.0" y1="0" x2="600.0" y2="100" vector-effect="non-scaling-stroke"/></svg><div class="pai-spark-lg"><span>近 60 個發布日</span><span class="ps-k">最高 <b>91</b></span><span class="ps-k">平均 <b>44</b></span><span class="ps-k ps-thr-lg">虛線＝深色門檻 66</span></div></div>
   <div class="pai-note">本指數為本站依國防部公開數據自算的相對活動強度，非官方警戒等級。</div>
 </section>
 
-  <div class="sitrep anim-ready"><div class="sitrep-label">8月至今 &nbsp;·&nbsp; 19 天</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="157">157</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y" data-count="98">98</div><div class="stat-l">逾越中線&nbsp;<span class="stat-detail">62%</span></div></div><div class="stat"><div class="stat-n r">12.9</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
+  <div class="sitrep anim-ready"><div class="sitrep-label">8月至今 &nbsp;·&nbsp; 20 天</div><div class="stats-row"><div class="stat"><div class="stat-n y" data-count="164">164</div><div class="stat-l">中共軍機架次</div></div><div class="stat"><div class="stat-n y" data-count="103">103</div><div class="stat-l">逾越中線&nbsp;<span class="stat-detail">63%</span></div></div><div class="stat"><div class="stat-n r">12.9</div><div class="stat-l">艦艇日均（艘）</div></div></div></div>
 
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">活動區域示意</span><span class="chart-obs" style="color:var(--sub);font-size:.75rem">台海周邊 · 示意圖</span></div><div class="map-wrap"><div id="activity-map"></div></div><div class="map-note"><strong>12海里領海界線（綠色虛線）</strong>為實質法律邊界。解放軍機艦越過中線不觸發自衛權；一旦進入此界線內的領海或領空，依國際法及《國防法》，台灣方面可採取防衛行動。</div><script>(function(){
-var ML=15,AC=20,SH=13,ZONES={"n": true, "c": true, "sw": true, "e": true, "ne": false, "s": false};
+var ML=5,AC=7,SH=14,ZONES={"n": true, "c": false, "sw": true, "e": true, "ne": false, "s": false};
 
 var map=L.map('activity-map',{
   center:[23.8,120.5],zoom:6,
@@ -112,14 +112,14 @@ var map=L.map('activity-map',{
   maxBoundsViscosity:0.85
 });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
   attribution:'\u00a9 <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> \u00a9 <a href="https://carto.com/">CARTO</a>',
   subdomains:'abcd',maxZoom:10,minZoom:5
 }).addTo(map);
 
 var _aL=[];
 
-var mlColor=ML>0?'#e05555':'#3a6070';
+var mlColor=ML>0?'#c23a3a':'#8196a1';
 var mlDash=ML>0?'7,4':'6,5';
 var mlW=ML>0?2:1.5;
 L.polyline([
@@ -129,7 +129,7 @@ L.polyline([
 ],{color:mlColor,weight:mlW,dashArray:mlDash,opacity:0.85}).addTo(map);
 
 function zoneLabel(ll,txt){
-  L.marker(ll,{icon:L.divIcon({className:'',html:'<div style="color:#f5c842;font-size:.58rem;font-weight:700;font-family:Noto Sans TC,sans-serif;text-shadow:0 1px 4px #000,0 0 8px #000;white-space:nowrap;pointer-events:none">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false}).addTo(map);
+  L.marker(ll,{icon:L.divIcon({className:'',html:'<div style="color:#c98f00;font-size:.58rem;font-weight:700;font-family:Noto Sans TC,sans-serif;text-shadow:0 1px 3px #fff,0 0 6px #fff;white-space:nowrap;pointer-events:none">'+txt+'</div>',iconAnchor:[0,0]}),interactive:false,keyboard:false}).addTo(map);
 }
 function gradZone(coords,fp){
   var sc=[1.0,0.78,0.58,0.40,0.24];
@@ -137,7 +137,7 @@ function gradZone(coords,fp){
   for(var i=sc.length-1;i>=0;i--){
     var s=sc[i];
     var pts=coords.map(function(p){return[fp[0]+s*(p[0]-fp[0]),fp[1]+s*(p[1]-fp[1])];});
-    var _l=L.polygon(pts,{fillColor:'#f5c842',fillOpacity:0,color:'none',weight:0}).addTo(map);
+    var _l=L.polygon(pts,{fillColor:'#c98f00',fillOpacity:0,color:'none',weight:0}).addTo(map);
     _aL.push([_l,fo[i]]);
   }
 }
@@ -147,7 +147,7 @@ function gradZone12(coords,fp){
   for(var i=0;i<sc.length-1;i++){
     var outer=coords.map(function(p){return[fp[0]+sc[i+1]*(p[0]-fp[0]),fp[1]+sc[i+1]*(p[1]-fp[1])];});
     var inner=coords.map(function(p){return[fp[0]+sc[i]*(p[0]-fp[0]),fp[1]+sc[i]*(p[1]-fp[1])];});
-    var _l=L.polygon([outer,inner],{fillColor:'#4dba6a',fillOpacity:0,color:'none',weight:0}).addTo(map);
+    var _l=L.polygon([outer,inner],{fillColor:'#2f8f4f',fillOpacity:0,color:'none',weight:0}).addTo(map);
     _aL.push([_l,fo[i]]);
   }
 }
@@ -179,7 +179,7 @@ if(ZONES.ne){
 function gradCircle(ll,r){
   var sc=[1.0,0.72,0.47,0.25],fo=[0.06,0.11,0.17,0.25];
   for(var i=sc.length-1;i>=0;i--){
-    var _l=L.circle(ll,{radius:r*sc[i],fillColor:'#4dba6a',fillOpacity:0,color:'none',weight:0}).addTo(map);
+    var _l=L.circle(ll,{radius:r*sc[i],fillColor:'#2f8f4f',fillOpacity:0,color:'none',weight:0}).addTo(map);
     _aL.push([_l,fo[i]]);
   }
 }
@@ -213,11 +213,11 @@ leg.onAdd=function(){
   d.innerHTML=
     '<div style="'+rw+';color:'+mlColor+'"><svg style="'+iS+'" viewBox="0 0 18 8">'+
     '<line x1="0" y1="4" x2="18" y2="4" stroke="'+mlColor+'" stroke-width="'+(ML>0?2:1.5)+'" stroke-dasharray="'+(ML>0?'7,3':'6,4')+'"/></svg>中線</div>'+
-    '<div style="'+rw+';color:#4dba6a"><svg style="'+iS+'" viewBox="0 0 18 8">'+
-    '<defs><linearGradient id="g12" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#4dba6a" stop-opacity="0.08"/><stop offset="100%" stop-color="#4dba6a" stop-opacity="0.35"/></linearGradient></defs>'+
+    '<div style="'+rw+';color:#2f8f4f"><svg style="'+iS+'" viewBox="0 0 18 8">'+
+    '<defs><linearGradient id="g12" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#2f8f4f" stop-opacity="0.08"/><stop offset="100%" stop-color="#2f8f4f" stop-opacity="0.35"/></linearGradient></defs>'+
     '<rect width="18" height="8" fill="url(#g12)" rx="1"/></svg>12海里領海</div>'+
-    (hasZone?'<div style="'+rw+';color:#f5c842"><svg style="'+iS+'" viewBox="0 0 18 8">'+
-    '<defs><linearGradient id="gac" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#f5c842" stop-opacity="0.06"/><stop offset="100%" stop-color="#f5c842" stop-opacity="0.25"/></linearGradient></defs>'+
+    (hasZone?'<div style="'+rw+';color:#c98f00"><svg style="'+iS+'" viewBox="0 0 18 8">'+
+    '<defs><linearGradient id="gac" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="#c98f00" stop-opacity="0.06"/><stop offset="100%" stop-color="#c98f00" stop-opacity="0.25"/></linearGradient></defs>'+
     '<rect width="18" height="8" fill="url(#gac)" rx="1"/></svg>活動區域</div>':'');
   return d;
 };
@@ -236,20 +236,20 @@ map.whenReady(function(){
 
 })();</script></section>
 
-  <p class="sitrep-text">2026年8月19日：偵獲中共軍機 20 架次，其中 15 架次逾越海峽中線（越線率 75%）；中共艦艇 13 艘。</p>
+  <p class="sitrep-text">2026年8月20日：偵獲中共軍機 7 架次，其中 5 架次逾越海峽中線（越線率 71%）；中共艦艇 14 艘。</p>
 
-  <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">近兩週</span><span class="chart-obs">今日 20 架次 · 15 架次越線</span><span class="chart-obs" style="color:var(--r)">13 艘艦艇</span></div><div class="split-panels"><div class="chart-legend"><span><i style="background:#f5c842"></i>逾越中線</span><span><i style="background:#4a4526"></i>未越線</span><span><i class="dash" style="border-top-color:#5a6c74"></i>30 日均 9.5</span><span class="sh"><i style="background:#e05555"></i>共艦（艘）</span></div><div class="panel-wrap-ac"><canvas id="rc-ac"></canvas></div><div class="panel-wrap-sh panel-wrap-sh-slim"><canvas id="rc-sh"></canvas></div></div><script>(function(){
-var L=["8/6", "8/7", "8/8", "8/9", "8/10", "8/11", "8/12", "8/13", "8/14", "8/15", "8/16", "8/17", "8/18", "8/19"],AC=[14, 10, 14, 4, 1, 2, 6, 18, 9, 4, 11, 1, 5, 20],CR=[6, 6, 11, 2, 0, 0, 4, 15, 6, 3, 7, 0, 3, 15],SH=[16, 9, 14, 15, 20, 13, 8, 14, 14, 9, 10, 16, 15, 13],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"],AVG=9.5,T=L.length-1;
+  <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">近兩週</span><span class="chart-obs">今日 7 架次 · 5 架次越線</span><span class="chart-obs" style="color:var(--r)">14 艘艦艇</span></div><div class="split-panels"><div class="chart-legend"><span><i style="background:#8a6300"></i>逾越中線</span><span><i style="background:#e6dcc0"></i>未越線</span><span><i class="dash" style="border-top-color:#9aa7ae"></i>30 日均 9.6</span><span class="sh"><i style="background:#c74040"></i>共艦（艘）</span></div><div class="panel-wrap-ac"><canvas id="rc-ac"></canvas></div><div class="panel-wrap-sh panel-wrap-sh-slim"><canvas id="rc-sh"></canvas></div></div><script>(function(){
+var L=["8/7", "8/8", "8/9", "8/10", "8/11", "8/12", "8/13", "8/14", "8/15", "8/16", "8/17", "8/18", "8/19", "8/20"],AC=[10, 14, 4, 1, 2, 6, 18, 9, 4, 11, 1, 5, 20, 7],CR=[6, 11, 2, 0, 0, 4, 15, 6, 3, 7, 0, 3, 15, 5],SH=[9, 14, 15, 20, 13, 8, 14, 14, 9, 10, 16, 15, 13, 14],SHbg=["#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#c74040"],AVG=9.6,T=L.length-1;
 function gfill(hex){return function(c){var a=c.chart.chartArea;if(!a)return 'rgba(0,0,0,0)';
   var g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);
   g.addColorStop(0,hex+'59');g.addColorStop(0.85,hex+'0d');g.addColorStop(1,hex+'00');return g;};}
 var NC=AC.map(function(v,i){return Math.max(0,v-CR[i]);});
-var CRbg=AC.map(function(v,i){return i===T?"#f5c842":"#c9a52f";});
-var NCbg=AC.map(function(v,i){return i===T?"#6b6234":"#4a4526";});
+var CRbg=AC.map(function(v,i){return i===T?"#8a6300":"#c08c00";});
+var NCbg=AC.map(function(v,i){return i===T?"#d3c395":"#e6dcc0";});
 // 下段圓角只在「當日全部越線」（上段為 0）時打開，其餘保持與 x 軸齊平的方角
 var CRrad=NC.map(function(v){return v===0?3:0;});
-var xA={stacked:true,grid:{display:false},ticks:{color:"#96b0b8",font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return (i%2===0||i===T)?L[i]:'';}},border:{display:false}};
-var yA={stacked:true,grid:{color:function(ctx){return ctx.tick.value===0?"#3a4448":'transparent';}},ticks:{color:"#96b0b8",font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
+var xA={stacked:true,grid:{display:false},ticks:{color:"#6b7a84",font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return (i%2===0||i===T)?L[i]:'';}},border:{display:false}};
+var yA={stacked:true,grid:{color:function(ctx){return ctx.tick.value===0?"#cfc9ba":'transparent';}},ticks:{color:"#6b7a84",font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
 var acOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,
  plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
@@ -259,7 +259,7 @@ var acOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},trans
 new Chart(document.getElementById('rc-ac'),{data:{labels:L,datasets:[
   {type:'bar',label:"\u903e\u8d8a\u4e2d\u7dda",data:CR,backgroundColor:CRbg,borderRadius:CRrad,maxBarThickness:24,stack:'a',order:3},
   {type:'bar',label:"\u672a\u8d8a\u7dda",data:NC,backgroundColor:NCbg,borderRadius:3,maxBarThickness:24,stack:'a',order:3},
-  {type:'line',label:"30 \u65e5\u5747",data:AC.map(function(){return AVG;}),borderColor:"#5a6c74",borderDash:[5,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,fill:false,tension:0,order:1}
+  {type:'line',label:"30 \u65e5\u5747",data:AC.map(function(){return AVG;}),borderColor:"#9aa7ae",borderDash:[5,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,fill:false,tension:0,order:1}
 ]},options:acOpts});
 // 艦艇細帶：不畫座標軸（日期已由上圖標出），只留形狀與當日點
 // 細帶隱藏了 y 軸刻度，繪圖區左緣會比上圖淺 ~17px，同一天的欄位就對不齊。
@@ -277,18 +277,18 @@ var shOpts={animation:{duration:600,easing:'easeOutQuart'},responsive:true,maint
             afterFit:function(sc){var a=Chart.getChart('rc-ac');
               if(a&&a.scales&&a.scales.y)sc.width=a.scales.y.width;}}}};
 new Chart(document.getElementById('rc-sh'),{data:{labels:L,datasets:[
-  {type:'line',label:"\u5171\u8266\uff08\u8258\uff09",data:SH,borderColor:"#e05555",backgroundColor:gfill("#e05555"),fill:true,tension:0.35,borderWidth:2,pointRadius:2,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:"#1e2224",pointBorderWidth:1}
+  {type:'line',label:"\u5171\u8266\uff08\u8258\uff09",data:SH,borderColor:"#c74040",backgroundColor:gfill("#c74040"),fill:true,tension:0.35,borderWidth:2,pointRadius:2,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:"#fbfaf6",pointBorderWidth:1}
 ]},options:shOpts});
 })();</script></section>
   <section class="chart-section anim-ready"><div class="chart-header"><span class="chart-title">2026 至今</span><span class="chart-obs">本月峰值 21 架次（8/5）</span><span class="chart-obs" style="color:var(--r)">艦艇 2–20 艘</span></div><div class="split-panels"><div class="panel-wrap-ac"><canvas id="ytd-ac"></canvas></div><div class="panel-wrap-sh"><canvas id="ytd-sh"></canvas></div></div><script>(function(){
-var L=["1/1", "1/2", "1/3", "1/4", "1/5", "1/6", "1/7", "1/8", "1/9", "1/10", "1/11", "1/12", "1/13", "1/14", "1/15", "1/16", "1/17", "1/18", "1/19", "1/20", "1/21", "1/22", "1/23", "1/24", "1/25", "1/26", "1/27", "1/28", "1/29", "1/30", "1/31", "2/1", "2/2", "2/3", "2/4", "2/5", "2/6", "2/7", "2/8", "2/9", "2/10", "2/11", "2/12", "2/13", "2/14", "2/15", "2/16", "2/17", "2/18", "2/19", "2/20", "2/21", "2/22", "2/23", "2/24", "2/25", "2/26", "2/27", "2/28", "3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31", "4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7", "4/8", "4/9", "4/10", "4/11", "4/12", "4/13", "4/14", "4/15", "4/16", "4/17", "4/18", "4/19", "4/20", "4/21", "4/22", "4/23", "4/24", "4/25", "4/26", "4/27", "4/28", "4/29", "4/30", "5/1", "5/2", "5/3", "5/4", "5/5", "5/6", "5/7", "5/8", "5/9", "5/10", "5/11", "5/12", "5/13", "5/14", "5/15", "5/16", "5/17", "5/18", "5/19", "5/20", "5/21", "5/22", "5/23", "5/24", "5/25", "5/26", "5/27", "5/28", "5/29", "5/30", "5/31", "6/1", "6/2", "6/3", "6/4", "6/5", "6/6", "6/7", "6/8", "6/9", "6/10", "6/11", "6/12", "6/13", "6/14", "6/15", "6/17", "6/18", "6/19", "6/20", "6/21", "6/22", "6/23", "6/24", "6/25", "6/26", "6/27", "6/28", "6/29", "6/30", "7/1", "7/2", "7/3", "7/4", "7/5", "7/6", "7/7", "7/8", "7/9", "7/10", "7/11", "7/12", "7/13", "7/14", "7/15", "7/16", "7/17", "7/18", "7/19", "7/20", "7/21", "7/22", "7/23", "7/24", "7/25", "7/26", "7/27", "7/28", "7/29", "7/30", "7/31", "8/1", "8/2", "8/3", "8/4", "8/5", "8/6", "8/7", "8/8", "8/9", "8/10", "8/11", "8/12", "8/13", "8/14", "8/15", "8/16", "8/17", "8/18", "8/19"],AC=[3, 0, 4, 0, 3, 8, 11, 9, 23, 3, 4, 0, 10, 20, 9, 34, 26, 9, 2, 2, 4, 2, 11, 26, 4, 5, 2, 4, 5, 26, 3, 0, 0, 2, 13, 12, 8, 6, 0, 0, 4, 9, 17, 42, 1, 11, 3, 0, 0, 0, 14, 8, 2, 0, 0, 0, 30, 8, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 3, 3, 26, 2, 2, 36, 12, 6, 6, 2, 0, 0, 3, 16, 4, 6, 13, 19, 1, 11, 25, 2, 2, 2, 0, 3, 1, 2, 6, 7, 17, 2, 0, 9, 5, 3, 5, 5, 2, 5, 24, 6, 15, 2, 8, 28, 7, 22, 10, 2, 4, 29, 1, 2, 1, 0, 22, 12, 8, 12, 7, 9, 2, 3, 0, 0, 5, 7, 13, 24, 7, 6, 16, 4, 9, 29, 10, 9, 10, 16, 1, 0, 7, 18, 32, 7, 22, 4, 2, 1, 0, 11, 14, 6, 1, 0, 0, 0, 4, 5, 2, 23, 6, 11, 14, 2, 1, 0, 0, 2, 13, 5, 30, 8, 0, 5, 4, 9, 28, 2, 0, 0, 0, 3, 6, 5, 9, 0, 10, 2, 4, 12, 21, 8, 29, 4, 3, 1, 8, 12, 27, 5, 5, 1, 6, 21, 14, 10, 14, 4, 1, 2, 6, 18, 9, 4, 11, 1, 5, 20],CR=[0, 0, 1, 0, 3, 0, 9, 9, 19, 0, 1, 0, 3, 17, 9, 18, 7, 3, 2, 1, 0, 0, 9, 18, 2, 0, 0, 0, 0, 19, 0, 0, 0, 2, 11, 11, 6, 0, 0, 0, 0, 6, 14, 32, 0, 9, 0, 0, 0, 0, 10, 8, 1, 0, 0, 0, 22, 6, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 1, 3, 16, 0, 2, 24, 5, 4, 4, 1, 0, 0, 3, 13, 4, 4, 9, 13, 1, 11, 16, 2, 0, 0, 0, 3, 0, 2, 5, 7, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 18, 0, 20, 9, 0, 0, 15, 1, 0, 0, 0, 18, 10, 8, 9, 5, 0, 0, 0, 0, 0, 4, 7, 10, 13, 6, 0, 13, 3, 0, 24, 9, 9, 10, 16, 0, 0, 0, 14, 25, 0, 2, 0, 0, 0, 0, 9, 13, 0, 0, 0, 0, 0, 4, 0, 0, 20, 3, 3, 10, 0, 0, 0, 0, 0, 9, 2, 26, 0, 0, 0, 3, 4, 20, 0, 0, 0, 0, 3, 0, 3, 6, 0, 8, 2, 4, 0, 20, 6, 17, 0, 1, 0, 6, 10, 22, 0, 3, 0, 0, 17, 6, 6, 11, 2, 0, 0, 4, 15, 6, 3, 7, 0, 3, 15],SH=[17, 6, 6, 5, 8, 7, 6, 5, 6, 6, 6, 5, 5, 9, 11, 11, 8, 9, 8, 6, 6, 5, 5, 6, 7, 8, 5, 5, 5, 6, 8, 6, 6, 6, 6, 7, 6, 7, 7, 7, 8, 8, 6, 11, 8, 8, 6, 5, 5, 6, 6, 7, 6, 5, 5, 5, 6, 6, 7, 7, 5, 5, 6, 7, 7, 8, 8, 6, 6, 6, 5, 5, 7, 7, 8, 8, 9, 8, 8, 8, 7, 10, 10, 12, 12, 12, 9, 11, 10, 8, 11, 9, 8, 8, 7, 8, 9, 10, 8, 8, 8, 12, 10, 9, 9, 9, 6, 7, 7, 12, 8, 6, 6, 7, 7, 8, 9, 9, 12, 7, 7, 8, 10, 11, 7, 8, 7, 8, 8, 6, 6, 8, 8, 6, 8, 9, 8, 6, 7, 9, 8, 10, 8, 6, 8, 8, 7, 6, 12, 11, 12, 11, 13, 14, 15, 16, 10, 16, 13, 15, 16, 9, 13, 10, 7, 5, 6, 8, 11, 14, 12, 12, 14, 13, 8, 6, 7, 6, 10, 13, 13, 11, 12, 17, 14, 11, 12, 12, 13, 8, 2, 5, 15, 14, 10, 9, 9, 12, 12, 8, 11, 17, 8, 10, 11, 10, 11, 7, 8, 8, 11, 12, 10, 10, 13, 14, 16, 9, 14, 15, 20, 13, 8, 14, 14, 9, 10, 16, 15, 13],ACbg=["#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#8a7020", "#f5c842"],SHbg=["#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#7a2a2a", "#e05555"];
-var xA={grid:{display:false},ticks:{color:"#96b0b8",font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{display:false}};
-var yA={grid:{color:function(ctx){return ctx.tick.value===0?"#3a4448":'transparent';}},ticks:{color:"#96b0b8",font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
+var L=["1/1", "1/2", "1/3", "1/4", "1/5", "1/6", "1/7", "1/8", "1/9", "1/10", "1/11", "1/12", "1/13", "1/14", "1/15", "1/16", "1/17", "1/18", "1/19", "1/20", "1/21", "1/22", "1/23", "1/24", "1/25", "1/26", "1/27", "1/28", "1/29", "1/30", "1/31", "2/1", "2/2", "2/3", "2/4", "2/5", "2/6", "2/7", "2/8", "2/9", "2/10", "2/11", "2/12", "2/13", "2/14", "2/15", "2/16", "2/17", "2/18", "2/19", "2/20", "2/21", "2/22", "2/23", "2/24", "2/25", "2/26", "2/27", "2/28", "3/1", "3/2", "3/3", "3/4", "3/5", "3/6", "3/7", "3/8", "3/9", "3/10", "3/11", "3/12", "3/13", "3/14", "3/15", "3/16", "3/17", "3/18", "3/19", "3/20", "3/21", "3/22", "3/23", "3/24", "3/25", "3/26", "3/27", "3/28", "3/29", "3/30", "3/31", "4/1", "4/2", "4/3", "4/4", "4/5", "4/6", "4/7", "4/8", "4/9", "4/10", "4/11", "4/12", "4/13", "4/14", "4/15", "4/16", "4/17", "4/18", "4/19", "4/20", "4/21", "4/22", "4/23", "4/24", "4/25", "4/26", "4/27", "4/28", "4/29", "4/30", "5/1", "5/2", "5/3", "5/4", "5/5", "5/6", "5/7", "5/8", "5/9", "5/10", "5/11", "5/12", "5/13", "5/14", "5/15", "5/16", "5/17", "5/18", "5/19", "5/20", "5/21", "5/22", "5/23", "5/24", "5/25", "5/26", "5/27", "5/28", "5/29", "5/30", "5/31", "6/1", "6/2", "6/3", "6/4", "6/5", "6/6", "6/7", "6/8", "6/9", "6/10", "6/11", "6/12", "6/13", "6/14", "6/15", "6/17", "6/18", "6/19", "6/20", "6/21", "6/22", "6/23", "6/24", "6/25", "6/26", "6/27", "6/28", "6/29", "6/30", "7/1", "7/2", "7/3", "7/4", "7/5", "7/6", "7/7", "7/8", "7/9", "7/10", "7/11", "7/12", "7/13", "7/14", "7/15", "7/16", "7/17", "7/18", "7/19", "7/20", "7/21", "7/22", "7/23", "7/24", "7/25", "7/26", "7/27", "7/28", "7/29", "7/30", "7/31", "8/1", "8/2", "8/3", "8/4", "8/5", "8/6", "8/7", "8/8", "8/9", "8/10", "8/11", "8/12", "8/13", "8/14", "8/15", "8/16", "8/17", "8/18", "8/19", "8/20"],AC=[3, 0, 4, 0, 3, 8, 11, 9, 23, 3, 4, 0, 10, 20, 9, 34, 26, 9, 2, 2, 4, 2, 11, 26, 4, 5, 2, 4, 5, 26, 3, 0, 0, 2, 13, 12, 8, 6, 0, 0, 4, 9, 17, 42, 1, 11, 3, 0, 0, 0, 14, 8, 2, 0, 0, 0, 30, 8, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 5, 3, 3, 26, 2, 2, 36, 12, 6, 6, 2, 0, 0, 3, 16, 4, 6, 13, 19, 1, 11, 25, 2, 2, 2, 0, 3, 1, 2, 6, 7, 17, 2, 0, 9, 5, 3, 5, 5, 2, 5, 24, 6, 15, 2, 8, 28, 7, 22, 10, 2, 4, 29, 1, 2, 1, 0, 22, 12, 8, 12, 7, 9, 2, 3, 0, 0, 5, 7, 13, 24, 7, 6, 16, 4, 9, 29, 10, 9, 10, 16, 1, 0, 7, 18, 32, 7, 22, 4, 2, 1, 0, 11, 14, 6, 1, 0, 0, 0, 4, 5, 2, 23, 6, 11, 14, 2, 1, 0, 0, 2, 13, 5, 30, 8, 0, 5, 4, 9, 28, 2, 0, 0, 0, 3, 6, 5, 9, 0, 10, 2, 4, 12, 21, 8, 29, 4, 3, 1, 8, 12, 27, 5, 5, 1, 6, 21, 14, 10, 14, 4, 1, 2, 6, 18, 9, 4, 11, 1, 5, 20, 7],CR=[0, 0, 1, 0, 3, 0, 9, 9, 19, 0, 1, 0, 3, 17, 9, 18, 7, 3, 2, 1, 0, 0, 9, 18, 2, 0, 0, 0, 0, 19, 0, 0, 0, 2, 11, 11, 6, 0, 0, 0, 0, 6, 14, 32, 0, 9, 0, 0, 0, 0, 10, 8, 1, 0, 0, 0, 22, 6, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 3, 1, 3, 16, 0, 2, 24, 5, 4, 4, 1, 0, 0, 3, 13, 4, 4, 9, 13, 1, 11, 16, 2, 0, 0, 0, 3, 0, 2, 5, 7, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 18, 0, 20, 9, 0, 0, 15, 1, 0, 0, 0, 18, 10, 8, 9, 5, 0, 0, 0, 0, 0, 4, 7, 10, 13, 6, 0, 13, 3, 0, 24, 9, 9, 10, 16, 0, 0, 0, 14, 25, 0, 2, 0, 0, 0, 0, 9, 13, 0, 0, 0, 0, 0, 4, 0, 0, 20, 3, 3, 10, 0, 0, 0, 0, 0, 9, 2, 26, 0, 0, 0, 3, 4, 20, 0, 0, 0, 0, 3, 0, 3, 6, 0, 8, 2, 4, 0, 20, 6, 17, 0, 1, 0, 6, 10, 22, 0, 3, 0, 0, 17, 6, 6, 11, 2, 0, 0, 4, 15, 6, 3, 7, 0, 3, 15, 5],SH=[17, 6, 6, 5, 8, 7, 6, 5, 6, 6, 6, 5, 5, 9, 11, 11, 8, 9, 8, 6, 6, 5, 5, 6, 7, 8, 5, 5, 5, 6, 8, 6, 6, 6, 6, 7, 6, 7, 7, 7, 8, 8, 6, 11, 8, 8, 6, 5, 5, 6, 6, 7, 6, 5, 5, 5, 6, 6, 7, 7, 5, 5, 6, 7, 7, 8, 8, 6, 6, 6, 5, 5, 7, 7, 8, 8, 9, 8, 8, 8, 7, 10, 10, 12, 12, 12, 9, 11, 10, 8, 11, 9, 8, 8, 7, 8, 9, 10, 8, 8, 8, 12, 10, 9, 9, 9, 6, 7, 7, 12, 8, 6, 6, 7, 7, 8, 9, 9, 12, 7, 7, 8, 10, 11, 7, 8, 7, 8, 8, 6, 6, 8, 8, 6, 8, 9, 8, 6, 7, 9, 8, 10, 8, 6, 8, 8, 7, 6, 12, 11, 12, 11, 13, 14, 15, 16, 10, 16, 13, 15, 16, 9, 13, 10, 7, 5, 6, 8, 11, 14, 12, 12, 14, 13, 8, 6, 7, 6, 10, 13, 13, 11, 12, 17, 14, 11, 12, 12, 13, 8, 2, 5, 15, 14, 10, 9, 9, 12, 12, 8, 11, 17, 8, 10, 11, 10, 11, 7, 8, 8, 11, 12, 10, 10, 13, 14, 16, 9, 14, 15, 20, 13, 8, 14, 14, 9, 10, 16, 15, 13, 14],ACbg=["#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d6c79b", "#d99f00"],SHbg=["#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#e0b9b9", "#c74040"];
+var xA={grid:{display:false},ticks:{color:"#6b7a84",font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return L[i]&&L[i].endsWith('/1')?L[i]:''}},border:{display:false}};
+var yA={grid:{color:function(ctx){return ctx.tick.value===0?"#cfc9ba":'transparent';}},ticks:{color:"#6b7a84",font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*15+c.datasetIndex*60:0;};
 var baseOpts={animation:{delay:animDelay,duration:600,easing:'easeOutExpo'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('ytd-ac'),{data:{labels:L,datasets:[
   {type:'bar',data:AC,backgroundColor:ACbg,borderRadius:2,order:2},
-  {type:'line',data:CR,borderColor:"#ff9933",borderDash:[4,3],pointBackgroundColor:"#ff9933",pointRadius:2,tension:0,fill:false,order:1}
+  {type:'line',data:CR,borderColor:"#cc7a1f",borderDash:[4,3],pointBackgroundColor:"#cc7a1f",pointRadius:2,tension:0,fill:false,order:1}
 ]},options:baseOpts});
 new Chart(document.getElementById('ytd-sh'),{data:{labels:L,datasets:[
   {type:'bar',data:SH,backgroundColor:SHbg,borderRadius:2}
@@ -336,5 +336,5 @@ document.querySelectorAll('[data-count]').forEach(function(el){
 if(el.textContent==='0'&&el.dataset.count!=='0')el.textContent=el.dataset.count;});
 },2500);
 })();</script>
-<footer><span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">中華民國國防部</a></span><span>製作：Adam Pan</span><span>更新：8/19</span><span class="footer-hub"><a href="https://skyfaring.net/" rel="noopener">由 Skyfaring 製作</a></span></footer>
+<footer><span>資料來源：<a href="https://www.mnd.gov.tw/news/plaactlist" target="_blank" rel="noopener">中華民國國防部</a></span><span>製作：Adam Pan</span><span>更新：8/20</span><span class="footer-hub"><a href="https://skyfaring.net/" rel="noopener">由 Skyfaring 製作</a></span></footer>
 </body></html>
