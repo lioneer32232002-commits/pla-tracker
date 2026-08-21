@@ -3,7 +3,6 @@ build_site.py — 讀取 records.csv，產出靜態網站（中英雙語）
 圖表使用 Chart.js 瀏覽器端渲染，不需要 matplotlib 或字型安裝。
 en/ 子目錄由本腳本自動產生，禁止手動修改。
 """
-import calendar
 import html
 import json
 import os
@@ -17,136 +16,24 @@ ROOT      = Path(__file__).parent.parent
 DATA_FILE = ROOT / 'data' / 'records.csv'
 ARSENAL_FILE = ROOT / 'data' / 'arsenal.csv'          # 軍購案主表（49 案）
 PEERS_FILE   = ROOT / 'data' / 'arsenal_peers.csv'    # 國際買家對比
-GEO_FILE     = ROOT / 'data' / 'geo_card.json'        # 分享圖卡地圖輪廓（靜態）
 SITE_DIR  = ROOT
 SITE_DIR.mkdir(exist_ok=True)
 
 # 正式部署網域（canonical / OG / sitemap / robots 的絕對網址基準）
-# 2026-08-05 由 pla-tracker.pages.dev 遷來；舊網域的轉址規則在 functions/_middleware.js。
-BASE_URL = 'https://pla-tracker.skyfaring.net'
-SITE_HOST = BASE_URL.split('//', 1)[1]     # 供頁面／圖卡顯示用（不含 scheme）
+BASE_URL = 'https://pla-tracker.pages.dev'
 # Skyfaring 作品集主站（頁尾回連）
-HUB_URL  = 'https://skyfaring.net/'
+HUB_URL  = 'https://skyfaring.pages.dev/'
+# 相關發布（部落格）
+BLOG_URL = 'https://yi-tienpan.blogspot.com'
 
 
-def canon_url(path, pfx=''):
-    """站內路徑 → canonical 絕對網址。
-
-    Cloudflare Pages 會把 `/x.html` 308 到 `/x`、`/index.html` 308 到 `/`。
-    canonical／og:url／sitemap 若沿用 `.html`，等於宣告「本頁的規範網址是一個轉址」，
-    Google 會忽略它。因此對外的絕對網址一律走這裡轉成最終形式；
-    **站內 <a href> 不受影響**，維持 .html 相對連結即可（一樣會被轉到最終網址）。
-    """
-    if path.endswith('/index.html'):
-        path = path[:-len('index.html')]     # /index.html → /
-    elif path.endswith('.html'):
-        path = path[:-len('.html')]          # /records.html → /records
-    return f'{BASE_URL}{pfx}{path}'
-
-
-# ── 共軍活動強度指數（PAI, PLA Activity Index）───────────────────────────────
-# 0–100 的單一數字，把當日四個觀測值壓成一個可比較、可引用的強度。
-#
-# 設計三原則（違反任一條，這個指數就不值得掛在站上）：
-#  1. **可重現**：任何人拿 records.csv ＋本節的常數就能算出完全一樣的分數，
-#     不含任何外部訊號、隨機性或人工判斷。
-#  2. **不漂移**：刻度是「校準一次後凍結的常數」，不是對當下歷史即時取百分位。
-#     若改用即時百分位，每天新資料進來都會讓昨天以前的分數微幅變動，
-#     與 about 頁「引用過的數字不會變」的承諾直接衝突。要重新校準＝版本號 +1，
-#     並在方法論頁公告，舊分數不追溯改寫。
-#  3. **描述而非警報**：這是本站自算的活動強度，不是官方警戒等級。分帶名稱一律
-#     用「極高／高／偏高／常態／低」這類描述詞，不得使用「警戒」「警報」等
-#     會被誤讀為官方發布的字眼（UI 文案見 STRINGS 的 pai_* 鍵）。
-#
-# v1 刻度校準自 2026-01-01～2026-08-12 共 223 天實際分布（下面每個轉折點的
-# 括號即當時的百分位）。分項採分段線性內插：0 一律得 0 分（沒有越線就是沒有
-# 威脅，不因「多數日子都是 0」而拿到基礎分），上方轉折點對齊歷史高標。
-PAI_VERSION = 'v1'
-PAI_KNOTS = {
-    # (原始值, 分數)；區間內線性內插，超出末端即封頂
-    'ac':   [(0, 0), (2, 20), (5, 40), (10, 60), (15, 70), (22, 85), (30, 95), (42, 100)],
-    'ml':   [(0, 0), (1, 15), (3, 30), (6, 45), (9, 60), (12, 70), (16, 85), (25, 95), (32, 100)],
-    'sh':   [(0, 0), (4, 20), (6, 35), (8, 50), (11, 70), (13, 80), (15, 90), (20, 100)],
-    'zone': [(0, 0), (1, 35), (2, 55), (3, 75), (4, 88), (5, 95), (6, 100)],
-}
-# 權重：空中活動（架次＋越線）佔七成——越線是最強的政治訊號，與總架次同權；
-# 共艦兩成（幾乎每天都有，實質是基準壓力）；空域廣度一成（同樣架次散佈越廣＝壓力越大）。
-PAI_WEIGHTS = {'ac': 0.35, 'ml': 0.35, 'sh': 0.20, 'zone': 0.10}
-# 空飄氣球加成：公告有偵獲即 +4（不隨顆數放大，歷史上 25 天出現、最多 2 顆）。
-PAI_BALLOON_BOOST = 4
-# 分帶（下限, key）；由高到低比對。名稱與說明在 STRINGS['pai_bands']。
-PAI_BANDS = [(81, 'extreme'), (66, 'high'), (51, 'elevated'), (31, 'normal'), (0, 'low')]
-# 趨勢箭頭門檻：與「近 7 個有資料日（不含當日）」的平均相比。
-# 不用「與前一日相比」——本站資料是脈衝式的（日間變動中位數 16 分），
-# 逐日比較幾乎每天都會亮箭頭，等於沒有資訊。
-PAI_TREND_WINDOW = 7
-PAI_TREND_EPS = 5
-# 整站深色主題門檻：指數 ≥ 66（高）。v1 校準下約 17% 的日子為深色，
-# 與舊的雙門檻規則（15 架次且 10 越線，14%）相當，但少了「35 架次全不越線
-# 卻判為平常日」這種破口。
-PAI_DARK = 66
-
-
-def _pai_interp(kind, value):
-    """分段線性內插：把單一原始觀測值換算成 0–100 分項分數。"""
-    knots = PAI_KNOTS[kind]
-    if value <= knots[0][0]:
-        return float(knots[0][1])
-    for (x0, y0), (x1, y1) in zip(knots, knots[1:]):
-        if value <= x1:
-            return y0 + (y1 - y0) * (value - x0) / (x1 - x0)
-    return float(knots[-1][1])
-
-
-def _pai_int(row, col):
-    """取整數欄位，空白／NaN／缺欄一律視為 0。
-    刻意容忍字串輸入——validate.py 用 csv.DictReader 的原始列重算指數來比對頁面，
-    走的是同一支函式（兩邊各寫一份計分邏輯，遲早會不一致）。"""
-    v = row[col] if col in row else None
-    if v is None or not pd.notna(v):
-        return 0
-    if isinstance(v, str) and not v.strip():
-        return 0
-    return int(float(v))
-
-
-def pai_band(score):
-    for floor, key in PAI_BANDS:
-        if score >= floor:
-            return key
-    return 'low'
-
-
-def pai_score(row):
-    """算單日指數。回傳 dict：score(0-100 整數)、band、raw（原始值）、
-    comp（各分項 0-100 分）、boost。row 需含 CSV 欄位（pandas Series 或 dict）。"""
-    special = row['special_event'] if pd.notna(row.get('special_event')) else ''
-    raw = {
-        'ac':   _pai_int(row, 'aircraft_total'),
-        'ml':   _pai_int(row, 'median_line_cross'),
-        'sh':   _pai_int(row, 'ships_total'),
-        'zone': sum(1 for v in zones_from_special(special).values() if v),
-    }
-    comp = {k: _pai_interp(k, v) for k, v in raw.items()}
-    boost = PAI_BALLOON_BOOST if '氣球' in str(special) else 0
-    base = sum(comp[k] * PAI_WEIGHTS[k] for k in PAI_WEIGHTS)
-    score = int(max(0, min(100, round(base + boost))))
-    return {'score': score, 'band': pai_band(score), 'raw': raw,
-            'comp': comp, 'boost': boost}
-
-
-def pai_trend(df):
-    """當日指數相對近 PAI_TREND_WINDOW 個有資料日（不含當日）平均的走向。
-    回傳 (key, delta)：key ∈ up/flat/down；資料不足回 (None, 0)。"""
-    if len(df) < 2:
-        return None, 0
-    window = df.iloc[max(0, len(df) - 1 - PAI_TREND_WINDOW):len(df) - 1]
-    prev = [pai_score(r)['score'] for _, r in window.iterrows()]
-    if not prev:
-        return None, 0
-    delta = pai_score(df.iloc[-1])['score'] - sum(prev) / len(prev)
-    key = 'up' if delta > PAI_TREND_EPS else 'down' if delta < -PAI_TREND_EPS else 'flat'
-    return key, delta
+# ── 嚴重日自動配色 ────────────────────────────────────────────────────────────
+# 顏色本身即資訊：平常日整站淺色、嚴重日整站深色，訪客一開頁就從色調得知態勢。
+# 門檻由 203 天歷史分布決定（aircraft_total 與 median_line_cross 的聯合分布，
+# 落在 P86 附近 → 約 14% 的日子被判為「嚴重」）。嚴重＝當日 aircraft_total ≥
+# SEVERE_AC 且 median_line_cross ≥ SEVERE_ML；零架次日必為淺色。
+SEVERE_AC = 15   # 當日共機總架次門檻
+SEVERE_ML = 10   # 當日逾越中線架次門檻
 
 # theme-color meta：深/淺各一（深色沿用原值，淺色為淺主題背景）
 THEME_COLOR = {'dark': '#090d0f', 'light': '#f5f4f0'}
@@ -157,36 +44,12 @@ _CHART_COLORS = {
               'ac_line': '#f5c842', 'sh_line': '#e05555',
               'cr_line': '#ff9933', 'pt_ring': '#1e2224',
               'ac_today': '#f5c842', 'ac_other': '#8a7020',
-              'sh_today': '#e05555', 'sh_other': '#7a2a2a',
-              # 近兩週堆疊長條：同色相兩階（越線＝亮、未越線＝暗），
-              # 不用第二色相，避免與艦艇紅搶注意力
-              'cr_bar': '#c9a52f', 'cr_today': '#f5c842',
-              'nc_bar': '#4a4526', 'nc_today': '#6b6234',
-              'avg_line': '#5a6c74'},
+              'sh_today': '#e05555', 'sh_other': '#7a2a2a'},
     'light': {'tick': '#6b7a84', 'zero': '#cfc9ba',
               'ac_line': '#d99f00', 'sh_line': '#c74040',
               'cr_line': '#cc7a1f', 'pt_ring': '#fbfaf6',
               'ac_today': '#d99f00', 'ac_other': '#d6c79b',
-              'sh_today': '#c74040', 'sh_other': '#e0b9b9',
-              'cr_bar': '#c08c00', 'cr_today': '#8a6300',
-              'nc_bar': '#e6dcc0', 'nc_today': '#d3c395',
-              'avg_line': '#9aa7ae'},
-}
-
-# 活動強度指數的分帶色：熱度斜坡「中性灰 → 暖金 → 黃 → 橘 → 紅」，深淺主題各一組。
-# 2026-08-13 使用者定案，兩個被否決的選項與理由留在這裡，避免日後又繞回去：
-#  - 低帶用綠：綠在這個題目上會被讀成「安全」，但零架次只代表當天沒偵獲，不是安全。
-#  - 全部用紅色深淺：視覺最一致，但平靜日也是紅的，等於每天都在示警。
-# 所以低帶用中性灰藍（不表態）、常態用暖金（開始升溫）、往上才進黃橘紅。
-# 這組色同時是文字色（大數字、分帶名），所以淺色主題那組要能在白底上讀得清楚，
-# 不能直接把深色那組調暗了事。
-_PAI_COLORS = {
-    'dark':  {'extreme': '#e05555', 'high': '#ff9933', 'elevated': '#f5c842',
-              'normal': '#b8a06a', 'low': '#7f8f9a'},
-    # 淺色這組全部落在「對白底對比 ≈5.0」的同一條線上：分帶靠色相區分，不靠深淺，
-    # 這樣五個分帶當文字用時的可讀性一致（量過：4.95–5.3，全部過 4.5）。
-    'light': {'extreme': '#c23a3a', 'high': '#a35c0a', 'elevated': '#8a6900',
-              'normal': '#7d6d53', 'low': '#64727c'},
+              'sh_today': '#c74040', 'sh_other': '#e0b9b9'},
 }
 
 # 地圖注入色（直接以裸 hex 取代，因同一顏色在 _MAP_JS 中同時出現於 JS 字串與
@@ -217,7 +80,7 @@ ARSENAL_STATUS = {  # delivery_status enum → (zh, en, css class)
     'completed':  ('已完成', 'Completed',  'completed'),
     'delivering': ('交付中', 'Delivering', 'delivering'),
     'announced':  ('已公告', 'Announced',  'announced'),
-    'unknown':    ('進度未確認', 'Unconfirmed','unknown'),
+    'unknown':    ('未確認', 'Unconfirmed','unknown'),
     'cancelled':  ('已終止', 'Cancelled',  'cancelled'),
 }
 # 主要裝備進度矩陣的名目填充比例（僅「狀態示意」，非精確交付比例；
@@ -277,8 +140,19 @@ ARSENAL_DELAYS = {
               'none'),
 }
 # 延宕對照表列出順序（依裝備重要性／案值）
+ARSENAL_DELAY_ORDER = ['19-50', '20-68', '19-21', '22-70', '21-44', '20-07', '20-87']
 
 # 準時／如期交付的反例（案 → 說明 → 來源；來源取自 arsenal.csv 的 source_delivery）
+ARSENAL_COUNTERS = [
+    ('20-77',
+     '轟雷專案首批 11 套 HIMARS 於 2024-11 完成全數交付。',
+     'The first batch of 11 HIMARS launchers was fully delivered in November 2024.',
+     'https://www.cato.org/blog/taiwan-arms-backlog-november-2024-update-himars-delivery-second-trump-administration'),
+    ('20-74',
+     'MQ-9B 海上衛士無人機首批 2 架如期於 2026-03 交運抵台並展開組裝測試。',
+     'The first two MQ-9B SeaGuardian drones arrived in Taiwan on schedule in March 2026 and began assembly and testing.',
+     'https://news.usni.org/2026/03/23/taiwan-receives-first-u-s-mq-9-skyguardian-drones'),
+]
 
 # ── 武器內頁（drill-down）內容 ────────────────────────────────────────────────
 # 三個系統的深度頁：採購時間軸／實戰紀錄／國際買家排名／台海角色／來源。
@@ -489,12 +363,16 @@ THEME = 'dark'
 
 
 def resolve_theme(df):
-    """決定全站主題：當日活動強度指數 ≥ PAI_DARK → dark，其餘（含零架次）→ light。
+    """決定全站主題：嚴重日 → dark，平常日（含零架次）→ light。
+    嚴重＝當日 aircraft_total ≥ SEVERE_AC 且 median_line_cross ≥ SEVERE_ML。
     PLA_THEME_OVERRIDE=light|dark 可強制覆蓋——僅供本機視覺測試，CI 不設此變數。"""
     override = os.environ.get('PLA_THEME_OVERRIDE', '').strip().lower()
     if override in ('light', 'dark'):
         return override
-    return 'dark' if pai_score(df.iloc[-1])['score'] >= PAI_DARK else 'light'
+    latest = df.iloc[-1]
+    ac = int(latest['aircraft_total'])    if pd.notna(latest['aircraft_total'])    else 0
+    ml = int(latest['median_line_cross']) if pd.notna(latest['median_line_cross']) else 0
+    return 'dark' if (ac >= SEVERE_AC and ml >= SEVERE_ML) else 'light'
 
 
 # ── 字串對照表（UI 文字全部抽在這裡）────────────────────────────────────────────
@@ -503,7 +381,7 @@ STRINGS = {
     'zh': {
         'html_lang': 'zh-Hant',
         'page_titles': {
-            'index':   '中國擾台趨勢數據分析｜共機架次・海峽中線・每日更新',
+            'index':   '中國擾台趨勢數據分析',
             'records': '每日紀錄 — 中國擾台趨勢數據分析',
             'monthly': '月統計 — 中國擾台趨勢數據分析',
             'about':   '方法論與資料來源 — 中國擾台趨勢數據分析',
@@ -525,9 +403,7 @@ STRINGS = {
         'site_title': '中國擾台趨勢數據分析',
         'site_sub': 'PLA Activity Around Taiwan',
         'nav_about': '關於',
-        'nav_card':  '圖卡',
         'footer_hub': '由 Skyfaring 製作',
-        'brand_hub': 'Skyfaring 作品',
         'sitrep_text':      '{date}：偵獲中共軍機 {ac} 架次，其中 {ml} 架次逾越海峽中線（越線率 {rate}）；中共艦艇 {sh} 艘。',
         'sitrep_text_zero': '{date}：當日未偵獲中共軍機；中共艦艇 {sh} 艘。',
         'nav_index': '總覽',
@@ -540,49 +416,14 @@ STRINGS = {
         'stat_aircraft': '中共軍機架次',
         'stat_median': '逾越中線',
         'stat_ships': '中共艦艇',
-        'delta_title': '較前一日 {sign}{n}',
-        'delta_note':  '▲▼ 為與前一日的比較',
-        # 活動強度指數（PAI）。措辭紀律：全部用描述性字眼，不得出現「警戒」「警報」
-        # 「威脅等級」——那是官方發布的用語，本站自算的數字借用會誤導讀者。
-        'pai_label': '共軍活動強度指數',
-        'pai_scale': '/100',
-        'pai_how':   '演算法',
-        'pai_detail': '指數組成',
-        'pai_bands': {'extreme': '極高', 'high': '高', 'elevated': '偏高',
-                      'normal': '常態', 'low': '低'},
-        'pai_band_desc': {'extreme': '大規模出動並伴隨高強度越線',
-                          'high':    '明顯高於常態的空中活動',
-                          'elevated': '活動高於平日基準',
-                          'normal':  '日常規模的例行活動',
-                          'low':     '空中活動稀少或僅有海上兵力'},
-        'pai_comp': {'ac': '共機架次', 'ml': '逾越中線',
-                     'sh': '中共艦艇', 'zone': '活動空域'},
-        'pai_unit': {'ac': '架次', 'ml': '架次', 'sh': '艘', 'zone': '處'},
-        'pai_trend': {'up':   '高於近 {n} 日平均',
-                      'flat': '與近 {n} 日平均相當',
-                      'down': '低於近 {n} 日平均'},
-        'pai_boost': '空飄氣球 +{n}',
-        'pai_spark':     '近 {n} 個發布日',
-        'pai_spark_hi':  '最高',
-        'pai_spark_avg': '平均',
-        'pai_spark_thr': '虛線＝深色門檻 {n}',
-        'pai_note':  '本指數為本站依國防部公開數據自算的相對活動強度，非官方警戒等級。',
         'mo_prefix': '{m}月至今',
         'mo_days': '天',
         'mo_aircraft': '中共軍機架次',
         'mo_cross': '逾越中線',
         'mo_ships_avg': '艦艇日均（艘）',
-        'chart_recent': '近兩週',
-        'chart': {
-            'lg_cross':   '逾越中線',
-            'lg_nocross': '未越線',
-            'lg_avg':     '30 日均',
-            'lg_ship':    '共艦（艘）',
-            'lg_total':   '合計 ',
-        },
+        'chart_recent': '10日觀察',
         'chart_ytd': '2026 至今',
-        'obs_ac': '今日 {n} 架次 · {m} 架次越線',
-        'obs_ac_zero': '今日 0 架次',
+        'obs_ac': '今日 {n} 架次',
         'obs_sh': '{n} 艘艦艇',
         'peak_ac': '本月峰值 {n} 架次（{d}）',
         'ships_range': '艦艇 {lo}–{hi} 艘',
@@ -595,8 +436,6 @@ STRINGS = {
             '依國際法及《國防法》，台灣方面可採取防衛行動。'
         ),
         'map_zone_n':    '北部空域',
-        'map_zone_c':    '中部空域',
-        'map_zone_s':    '南部空域',
         'map_zone_sw':   '西南部空域',
         'map_zone_e':    '東部空域',
         'map_zone_ne':   '東北部空域',
@@ -647,17 +486,6 @@ STRINGS = {
         'monthly_col_rate':  '越線率',
         'monthly_col_ships': '艦艇日均',
         'monthly_records_count': '共 {n} 筆',
-        'hm': {
-            'title':    '每日強度日曆',
-            'sub':      '每格一天 · 橫向為該月 1 → 31 日 · 顏色深淺＝活動強度指數',
-            'lg_none':  '未發布',
-            'lg_zero':  '0 架次',
-            'lg_cross': '紅點＝當日有逾越中線',
-            'tip':      '{date}：共機 {ac} 架次，其中 {ml} 架次逾越中線；共艦 {sh} 艘',
-            'tip_zero': '{date}：未偵獲共機；共艦 {sh} 艘',
-            'tip_none': '{date}：國防部當日未發布，本站從缺',
-            'tip_pai':  '｜強度指數 {n}（{band}）',
-        },
         'ars': {
             'topbar':      'ARMS PROCUREMENT TRACKER',
             'h1':          '台灣對美軍購追蹤',
@@ -667,23 +495,23 @@ STRINGS = {
             'kpi_deliver': '交付中',
             'kpi_done':    '已完成',
             'kpi_cancel':  '已終止',
-            'kpi_latest':  '資料更新',
+            'kpi_latest':  '最近公告',
             'kpi_unit_case': '案',
             'matrix_title':  '主要裝備交付進度',
-            'matrix_note':   '每張卡是一個武器系統，卡內每列是一筆採購案（同系統的多筆案子已合併在一起）。進度條只表示交付狀態（已交付／待交付／終止），交付中的案子一律畫成固定長度，不代表實際已交付的比例。標有「延宕」的卡展開後可看延宕原因與來源；其餘卡展開後是各批次明細與出處。',
-            'matrix_scope':  '本頁只收 2019 年起的 DSCA 公告案，卡上數量不含更早批次；'
-                             '含歷年累計的數字（如 HIMARS 111 套、魚叉 460 枚）見下方〈這些軍售說明什麼〉。',
-            'matrix_expand': '展開明細與來源',
-            'matrix_delay':  '交付進度：',
-            'matrix_delay_chip': '延宕',
-            'grp_active':    '已交付／交付中／已終止',
-            'grp_pend':      '已公告，尚未開始交付',
-            'grp_count':     '{n} 項',
+            'matrix_note':   '進度條為交付狀態示意（已交付／待交付／終止），交付中案以名目比例呈現「已展開交付」；精確批次數量請點各案展開，以官方與媒體來源為準。',
+            'matrix_expand': '展開延宕理由與來源',
+            'matrix_delay':  '延宕／進度：',
             'chart_title':   '歷年軍售公告金額',
             'chart_sub':     '單位：億美元 · 依 DSCA 公告年',
             'chart_top':     '當年最大三案：',
             'read_title':    '這些軍售說明什麼',
             'read_intro':    '把台灣放進「美國賣給誰、賣多少」的國際脈絡裡，可以看出美國願意把哪一級的武器交給台灣。以下每個判讀都附國際買家對比資料的來源。',
+            'delay_title':   '延宕與它的官方理由',
+            'delay_intro':   '交付延宕是事實，但每一筆都有可查證的官方或半官方理由；沒有查到官方說明的，我們誠實標註「未見官方說明」，不臆測。',
+            'delay_col_case':   '案件',
+            'delay_col_reason': '延宕的官方／半官方理由',
+            'delay_col_src':    '來源',
+            'counter_title': '準時與如期的反例',
             'table_title':   '全部軍售案',
             'table_sub':     '{n} 案 · 2019 → 今',
             'th_date':   '公告日',
@@ -697,7 +525,7 @@ STRINGS = {
             'card_value':  '案值',
             'card_qty':    '數量',
             'card_status': '狀態',
-            'scope_title': '這頁算什麼、不算什麼',
+            'scope_title': '口徑說明',
             'scope_body': ('本頁追蹤自 2019 年起、經美國國防安全合作署（DSCA）通知國會的對台軍售案（FMS）。'
                            '<strong>公告 ≠ 已簽約 ≠ 已交付</strong>：DSCA 公告是「國會通知」階段，實際簽署發價書（LOA）與交付時程另計。'
                            '本頁不含商售案與美軍自用移撥。案值為公告上限金額，實際簽約金額常較低。'
@@ -709,12 +537,11 @@ STRINGS = {
             'wcards_title':  '武器內頁 · 實戰檔案',
             'wcards_cta':    '看實戰檔案 →',
             'detail_back':   '← 軍購總覽',
-            'more_title':    '更多美製武器實戰檔案',
             'tl_title':      '採購時間軸',
             'combat_title':  '實戰紀錄',
             'combat_intro':  '每一條都附來源；查無權威來源佐證者不列入本頁。',
             'rank_title':    '國際買家排名',
-            'rank_intro':    '同一系統，美國賣給誰、賣多少。台灣那一列標成黃色；各國與美國的同盟關係用文字標籤標出，不只靠顏色分辨。',
+            'rank_intro':    '同一系統，美國賣給誰、賣多少。台灣以站內黃強調，同盟關係以文字標籤標示，不靠顏色。',
             'rank_note':     '烏克蘭為美國軍援（非付費軍售 FMS），以虛線框另計。',
             'rank_q':        '數量 ',
             'rank_year':     '訂購年：',
@@ -751,7 +578,6 @@ STRINGS = {
         'site_sub': 'Daily data from ROC MND public releases',
         'nav_about': 'About',
         'footer_hub': 'Made by Skyfaring',
-        'brand_hub': 'A Skyfaring project',
         'sitrep_text':      'On {date}, {ac} PLA aircraft sorties were detected, of which {ml} crossed the Taiwan Strait median line ({rate} crossing rate); {sh} PLA naval vessels.',
         'sitrep_text_zero': 'On {date}, no PLA aircraft were detected; {sh} PLA naval vessels.',
         'nav_index': 'Overview',
@@ -764,48 +590,14 @@ STRINGS = {
         'stat_aircraft': 'PLA Sorties',
         'stat_median': 'Median Line Crossings',
         'stat_ships': 'PLA Vessels',
-        'delta_title': '{sign}{n} vs. previous day',
-        'delta_note':  '▲▼ compared with the previous day',
-        'pai_label': 'PLA Activity Index',
-        'pai_scale': '/100',
-        'pai_how':   'Method',
-        'pai_detail': 'Index components',
-        'pai_bands': {'extreme': 'Extreme', 'high': 'High', 'elevated': 'Elevated',
-                      'normal': 'Normal', 'low': 'Low'},
-        'pai_band_desc': {'extreme': 'Large-scale sortie with heavy median-line crossing',
-                          'high':    'Air activity clearly above the norm',
-                          'elevated': 'Activity above the everyday baseline',
-                          'normal':  'Routine activity at everyday scale',
-                          'low':     'Little or no air activity; naval presence only'},
-        'pai_comp': {'ac': 'PLA sorties', 'ml': 'Median-line crossings',
-                     'sh': 'PLA vessels', 'zone': 'Active airspaces'},
-        'pai_unit': {'ac': 'sorties', 'ml': 'sorties', 'sh': 'vessels', 'zone': 'zones'},
-        'pai_trend': {'up':   'above the {n}-day average',
-                      'flat': 'in line with the {n}-day average',
-                      'down': 'below the {n}-day average'},
-        'pai_boost': 'Balloon activity +{n}',
-        'pai_spark':     'Last {n} published days',
-        'pai_spark_hi':  'Peak',
-        'pai_spark_avg': 'Mean',
-        'pai_spark_thr': 'Dashed = dark-theme threshold {n}',
-        'pai_note':  "This site's own composite of the MND's published figures — "
-                     'not an official alert level.',
         'mo_prefix': '{m} MTD',
         'mo_days': 'days',
         'mo_aircraft': 'PLA Sorties',
         'mo_cross': 'Median Line Crossings',
         'mo_ships_avg': 'Avg Vessels/Day',
-        'chart_recent': 'Last 14 days',
-        'chart': {
-            'lg_cross':   'Crossed median line',
-            'lg_nocross': 'Did not cross',
-            'lg_avg':     '30-day avg',
-            'lg_ship':    'Vessels',
-            'lg_total':   'Total ',
-        },
+        'chart_recent': '10-Day Trend',
         'chart_ytd': '2026 YTD',
-        'obs_ac': 'Today: {n} sorties · {m} crossed',
-        'obs_ac_zero': 'Today: no sorties',
+        'obs_ac': 'Today: {n} sorties',
         'obs_sh': '{n} vessels',
         'peak_ac': 'Month peak: {n} ({d})',
         'ships_range': 'Vessels {lo}–{hi}',
@@ -818,8 +610,6 @@ STRINGS = {
             'under international law and the Defense Act, allow Taiwan to take defensive action.'
         ),
         'map_zone_n':    'Northern',
-        'map_zone_c':    'Central',
-        'map_zone_s':    'Southern',
         'map_zone_sw':   'SW',
         'map_zone_e':    'Eastern',
         'map_zone_ne':   'NE',
@@ -870,17 +660,6 @@ STRINGS = {
         'monthly_col_rate':  'Cross Rate',
         'monthly_col_ships': 'Avg Vessels',
         'monthly_records_count': '{n} records',
-        'hm': {
-            'title':    'Daily intensity calendar',
-            'sub':      'One cell per day · columns run 1 → 31 of each month · shade = activity index',
-            'lg_none':  'No release',
-            'lg_zero':  'No sorties',
-            'lg_cross': 'Red dot = median line crossed that day',
-            'tip':      '{date}: {ac} PLA sorties, {ml} crossed the median line; {sh} vessels',
-            'tip_zero': '{date}: no PLA aircraft detected; {sh} vessels',
-            'tip_none': '{date}: no MND release that day — left blank',
-            'tip_pai':  ' | activity index {n} ({band})',
-        },
         'ars': {
             'topbar':      'ARMS PROCUREMENT TRACKER',
             'h1':          'Taiwan–US Arms Delivery Tracker',
@@ -890,24 +669,23 @@ STRINGS = {
             'kpi_deliver': 'Delivering',
             'kpi_done':    'Completed',
             'kpi_cancel':  'Cancelled',
-            'kpi_latest':  'Data updated',
+            'kpi_latest':  'Latest notice',
             'kpi_unit_case': '',
             'matrix_title':  'Major Systems — Delivery Progress',
-            'matrix_note':   'Each card is one weapon system; every row within it is a procurement case (multiple cases of the same system are consolidated). Bars show delivery status only (delivered / pending / cancelled); in-progress cases are drawn at a fixed length and do not represent the share actually delivered. Cards marked "Delayed" expand to the delay reason and its source; the rest expand to batch details and citations.',
-            'matrix_scope':  'This page only covers DSCA notifications from 2019 onward, so card quantities '
-                             'exclude earlier batches; cumulative totals (e.g. 111 HIMARS launchers, 460 Harpoons) '
-                             'appear under "What these sales tell us" below.',
-            'matrix_expand': 'Details & sources',
-            'matrix_delay':  'Delivery progress: ',
-            'matrix_delay_chip': 'Delayed',
-            'grp_active':    'Delivered / in progress / cancelled',
-            'grp_pend':      'Announced — delivery not yet started',
-            'grp_count':     '{n} systems',
+            'matrix_note':   'Bars indicate delivery status (delivered / pending / cancelled); in-progress cases use a nominal fill to show delivery has begun. For exact batch quantities, expand each case — official and press sources govern.',
+            'matrix_expand': 'Delay reason & sources',
+            'matrix_delay':  'Delay / progress: ',
             'chart_title':   'Arms Sales by Year',
             'chart_sub':     'US$ billion · by DSCA notice year',
             'chart_top':     'Top 3 cases: ',
             'read_title':    'What These Sales Tell Us',
             'read_intro':    'Placing Taiwan in the international context of who the US sells to, and how much, shows what tier of weapon the US is willing to hand Taiwan. Each reading below cites the peer-buyer comparison data.',
+            'delay_title':   'Delays and Their Official Reasons',
+            'delay_intro':   'Delivery delays are real, but each has a verifiable official or semi-official reason. Where no official explanation was found, we honestly mark it "no official statement" rather than speculate.',
+            'delay_col_case':   'Case',
+            'delay_col_reason': 'Official / semi-official reason',
+            'delay_col_src':    'Source',
+            'counter_title': 'On-Time Counter-Examples',
             'table_title':   'All Arms Sales Cases',
             'table_sub':     '{n} cases · 2019 → now',
             'th_date':   'Date',
@@ -937,7 +715,6 @@ STRINGS = {
             'wcards_title':  'Weapon Files · Combat Record',
             'wcards_cta':    'View combat file →',
             'detail_back':   '← Arms overview',
-            'more_title':    'More US weapon files',
             'tl_title':      'Procurement Timeline',
             'combat_title':  'Combat Record',
             'combat_intro':  'Every entry is sourced; cases without authoritative sources are omitted.',
@@ -1022,16 +799,11 @@ def _translate_airspace_block(part):
         region_str = _fmt_regions(en_regions) + ' airspace'
         cross_m = re.search(r'逾越中線.*?(\d+)架次', detail)
         sort_m  = re.search(r'(\d+)架次', detail)
-        # 「逾越中線」可能寫在括號裡（「…空域(逾越中線17架次)」），也可能寫在區域前綴
-        # （「逾越中線進入中部及西南空域(4架次)」）。只看括號的話後者會被翻成
-        # 一般 Activity——本站整個題目就是越線，在英文版把它講輕是事實錯誤
-        # （2026-08-13 回填時發現，8/06 等既有列也一起修正）。
-        crossed = any('逾越中線' in s or '越線' in s for s in (detail, regions_zh))
-        num = cross_m or (sort_m if crossed else None)
-        if crossed:
-            return (f'Median line crossings: {region_str} ({num.group(1)} sorties)'
-                    if num else f'Median line crossings: {region_str}')
-        if sort_m:
+        if cross_m:
+            return f'Median line crossings: {region_str} ({cross_m.group(1)} sorties)'
+        elif '逾越中線' in detail:
+            return f'Median line crossings: {region_str}'
+        elif sort_m:
             return f'Activity: {region_str} ({sort_m.group(1)} sorties)'
         return f'Activity: {region_str}'
 
@@ -1182,16 +954,12 @@ def translate_special_event(text):
 
         # Pattern 4: 逾越中線進入{regions}空域 (with optional leading description)
         if '逾越中線' in part and '空域' in part:
-            # Extract everything after 逾越中線 (or 逾越海峽中線).
-            # 結尾允許無括號的「N架次」——公告與模型輸出都出現過這種寫法
-            # （2026-08-14：「…空域6架次」讓本函式整組不匹配，英文版殘留中文）。
-            m = re.search(r'逾越(?:海峽)?中線進入(.+?空域)(?:(\d+)架次)?$', part)
+            # Extract everything after 逾越中線 (or 逾越海峽中線)
+            m = re.search(r'逾越(?:海峽)?中線進入(.+?空域)$', part)
             if m:
                 regions = _extract_crossing_regions(m.group(1))
                 if regions:
-                    n_str = f' ({m.group(2)} sorties)' if m.group(2) else ''
-                    result.append(
-                        f'Median line crossings: {_fmt_regions(regions)} airspace{n_str}')
+                    result.append(f'Median line crossings: {_fmt_regions(regions)} airspace')
                     continue
             # Fallback: any 逾越中線 + 空域 combination
             regions = _extract_crossing_regions(part)
@@ -1283,22 +1051,13 @@ def fmt_date_full(date_str, lang):
     return f"{dt.year}年{dt.month}月{dt.day}日"
 
 
-def delta_span(cur, prev_val, s=None):
-    """▲/▼ 與前一日的差。箭頭本身沒說「跟誰比」（2026-07-30 使用者回報），
-    所以掛 title/aria-label，並由呼叫端在 stats-row 下方補一行常駐說明
-    （手機沒有 hover，只靠 title 不夠）。"""
+def delta_span(cur, prev_val):
     try:
         d = float(cur) - float(prev_val)
         if d == 0: return ''
         arrow = '▲' if d > 0 else '▼'
         cls   = 'delta-up' if d > 0 else 'delta-dn'
-        if s:
-            lbl = html.escape(s['delta_title'].format(
-                sign='+' if d > 0 else '−', n=f'{abs(d):.0f}'))
-            attrs = f' title="{lbl}" aria-label="{lbl}"'
-        else:
-            attrs = ''
-        return f'<span class="{cls}"{attrs}>{arrow}{abs(d):.0f}</span>'
+        return f'<span class="{cls}">{arrow}{abs(d):.0f}</span>'
     except Exception:
         return ''
 
@@ -1333,10 +1092,6 @@ body{background:var(--bg);color:var(--tx);
   align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .site-title{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
 .site-sub{font-size:.65rem;color:var(--sub);letter-spacing:.05em;margin-top:.1rem}
-/* 回主站：放站名下方而非導覽列——導覽列是站內頁面，混入外站連結會被誤認 */
-.site-hub{display:inline-block;margin-top:.22rem;font-size:.6rem;color:var(--sub);
-  opacity:.62;text-decoration:none;letter-spacing:.04em}
-.site-hub:hover{color:var(--y);opacity:1}
 nav{display:flex;gap:.15rem;align-items:center;background:var(--sur);
   border:1px solid var(--bdr);border-radius:999px;padding:.22rem}
 nav a{color:var(--sub);text-decoration:none;font-size:.72rem;
@@ -1346,13 +1101,6 @@ nav a:hover{color:var(--tx)}
 nav a.active{color:var(--tx);background:var(--nav-active)}
 nav a.lang-toggle{border:0;border-left:1px solid var(--bdr);border-radius:0;
   margin-left:.15rem;padding-left:.9em}
-/* 分享圖卡：導覽列最後一項。窄螢幕只留圖示，避免導覽列被第七項擠爆 */
-nav a.nav-card{display:inline-flex;align-items:center;gap:.34em;color:var(--y);opacity:.9}
-nav a.nav-card:hover{color:var(--y);opacity:1}
-nav a.nav-card.active{color:var(--y);background:var(--nav-active);opacity:1}
-nav a.nav-card .nc-i{flex-shrink:0}
-@media (max-width:560px){nav a.nav-card .nc-t{display:none}
-  nav a.nav-card{padding-left:.6em;padding-right:.6em}}
 
 /* ── Main ── */
 main{max-width:900px;margin:0 auto;padding:1.5rem}
@@ -1362,86 +1110,6 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
   border-left:3px solid var(--y);color:var(--y);
   padding:.6rem 1rem;border-radius:var(--rad);
   font-size:.83rem;font-weight:700;margin-bottom:2rem;letter-spacing:.02em}
-
-/* ── 活動強度指數 ── */
-.pai{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
-  padding:1rem 1.25rem 1.05rem;margin-bottom:1.25rem}
-.pai-head{display:flex;align-items:baseline;gap:.55rem;margin-bottom:.85rem}
-.pai-title{font-size:1rem;text-transform:uppercase;letter-spacing:.16em;color:var(--sub)}
-.pai-ver{font-size:.6rem;letter-spacing:.1em;color:var(--sub);opacity:.6;
-  border:1px solid var(--bdr);border-radius:999px;padding:.05rem .4rem}
-.pai-how{margin-left:auto;font-size:.68rem;color:var(--sub);text-decoration:none;
-  letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.pai-how:hover{color:var(--y)}
-.pai-body{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:1.1rem;align-items:start}
-.pai-gauge{border-right:1px solid var(--bdr);padding-right:1.1rem}
-.pai-score{font-size:3.9rem;font-weight:900;line-height:1;
-  font-variant-numeric:tabular-nums;letter-spacing:-.03em}
-.pai-score em{font-size:1rem;font-weight:700;font-style:normal;opacity:.45;margin-left:.15rem}
-.pai-band{font-size:1.15rem;font-weight:800;letter-spacing:.08em;margin-top:.4rem}
-/* 強度條：軌道＋分帶刻度＋填色。刻度是 1px 細線，只在軌道上方半截，
-   避免與填色搶注意力（填色才是資訊，刻度是尺）。 */
-.pai-meter{position:relative;height:10px;border-radius:999px;background:var(--bdr);
-  margin:.6rem 0 .5rem;overflow:hidden}
-.pai-meter-fill{display:block;height:100%;border-radius:999px;background:currentColor;
-  min-width:10px}
-.pai-meter i{position:absolute;top:0;width:1px;height:4px;background:var(--sur);
-  opacity:.85}
-.pai-bdesc{font-size:.72rem;color:var(--sub);line-height:1.5;margin-top:.22rem}
-.pai-trend{font-size:.72rem;color:var(--sub);margin-top:.5rem;letter-spacing:.02em}
-.pai-trend.t-up{color:var(--r)}
-.pai-trend.t-down{color:var(--grn)}
-.pai-delta{opacity:.65;font-variant-numeric:tabular-nums}
-.pai-comps-hd{font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;
-  color:var(--sub);opacity:.75;margin-bottom:.1rem;grid-column:1/-1}
-/* 一列一個分項，但格線定義在容器上、每列用 display:contents 併入——
-   若讓每個 .pai-c 各自當 grid，第一欄的 auto 寬度會各列不同，長條起點就會參差。
-   第一欄用 auto 而非固定寬：英文標籤（Median-line crossings）比中文長一倍，
-   寫死 em 值會讓英文版標籤溢出欄位、與右邊的數值疊字。 */
-.pai-comps{display:grid;grid-template-columns:auto 3.9em minmax(60px,1fr) 2em 2.6em;
-  align-items:center;gap:.4rem .5rem;font-size:.74rem}
-.pai-c{display:contents}
-.pai-cl{color:var(--sub);white-space:nowrap}
-.pai-cv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
-.pai-cv em{font-size:.62rem;font-style:normal;font-weight:500;color:var(--sub);margin-left:.28em}
-.pai-bar{background:var(--bdr);border-radius:999px;height:6px;overflow:hidden}
-.pai-bar i{display:block;height:100%;border-radius:999px}
-.pai-cs{text-align:right;font-variant-numeric:tabular-nums;color:var(--sub)}
-.pai-cw{text-align:right;font-size:.62rem;color:var(--sub);opacity:.55;
-  font-variant-numeric:tabular-nums}
-.pai-boost .pai-cl{grid-column:1/-1;opacity:.8;padding-top:.15rem}
-/* ── 指數走勢 sparkline ── */
-.pai-spark-wrap{margin-top:1rem;border-top:1px solid var(--bdr);padding-top:.85rem}
-.pai-spark{display:block;width:100%;height:56px;overflow:visible}
-.ps-area{fill:currentColor;opacity:.13;stroke:none}
-.ps-line{fill:none;stroke:currentColor;stroke-width:1.6;
-  stroke-linejoin:round;stroke-linecap:round}
-.ps-thr{stroke:var(--sub);stroke-width:1;stroke-dasharray:3 4;opacity:.45}
-.ps-now{stroke:currentColor;stroke-width:1.2;opacity:.55}
-.pai-spark-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .9rem;
-  margin-top:.5rem;font-size:.65rem;color:var(--sub);letter-spacing:.02em}
-.pai-spark-lg b{color:var(--tx);font-variant-numeric:tabular-nums;font-weight:700}
-.ps-thr-lg{margin-left:auto;opacity:.7}
-@media (max-width:620px){
-  .pai-spark{height:48px}
-  .ps-thr-lg{margin-left:0;flex-basis:100%}
-}
-.pai-note{font-size:.66rem;color:var(--sub);opacity:.75;line-height:1.6;
-  margin-top:.85rem;border-top:1px solid var(--bdr);padding-top:.6rem}
-/* 分帶色：深色為基準值，淺色在檔尾的 data-theme="light" 區覆寫。
-   兩處的色碼須與 build_site.py 的 _PAI_COLORS 一致（圖卡等其他產物共用同一組）。*/
-.b-extreme{color:#e05555}  .pai-bar i.b-extreme{background:#e05555}
-.b-high{color:#ff9933}     .pai-bar i.b-high{background:#ff9933}
-.b-elevated{color:#f5c842} .pai-bar i.b-elevated{background:#f5c842}
-.b-normal{color:#b8a06a}   .pai-bar i.b-normal{background:#b8a06a}
-.b-low{color:#7f8f9a}      .pai-bar i.b-low{background:#7f8f9a}
-@media (max-width:620px){
-  .pai-body{grid-template-columns:1fr;gap:.9rem}
-  .pai-gauge{border-right:0;border-bottom:1px solid var(--bdr);
-    padding-right:0;padding-bottom:.85rem}
-  .pai-comps{grid-template-columns:auto 3.5em minmax(40px,1fr) 2em;gap:.4rem .45rem}
-  .pai-cw{display:none}
-}
 
 /* ── SITREP ── */
 .sitrep{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);
@@ -1465,9 +1133,6 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .stat-detail{font-size:1.1rem;color:var(--sub);margin-top:.2rem;white-space:nowrap}
 .delta-up{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
 .delta-dn{display:block;font-size:.7rem;color:#fff;margin-top:.28rem;font-weight:700}
-.delta-note{font-size:.68rem;color:var(--sub);opacity:.8;text-align:center;margin-top:.55rem;
-  letter-spacing:.02em}
-
 
 /* ── Badge ── */
 .badge{display:inline-block;padding:.2em .7em;border-radius:999px;font-size:.78rem;font-weight:700}
@@ -1490,17 +1155,6 @@ main{max-width:900px;margin:0 auto;padding:1.5rem}
 .split-panels{background:#1e2224;border-radius:var(--rad);padding:12px 12px 8px}
 .panel-wrap-ac{position:relative;height:200px}
 .panel-wrap-sh{position:relative;height:130px;margin-top:8px}
-/* 艦艇細帶（近兩週版）：變異小的資料給小空間，讀起來更快 */
-/* 46px（改版前 130px）：艦艇 60 日只在 7–17 之間，變異小的資料不該佔一半版面。
-   日期由上圖標出，細帶不重複畫座標軸。 */
-.panel-wrap-sh-slim{height:46px;margin-top:2px}
-.chart-legend{display:flex;flex-wrap:wrap;gap:.45rem .95rem;margin:0 0 .55rem;
-  font-size:.66rem;color:var(--sub);line-height:1.4}
-.chart-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;
-  margin-right:.3rem;vertical-align:-1px}
-.chart-legend i.dash{height:0;border-radius:0;border-top:2px dashed;
-  background:none;width:14px;vertical-align:2px}
-.chart-legend .sh{margin-left:auto}
 
 /* ── Records table ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -1545,10 +1199,6 @@ html[lang="zh-Hant"] .sitrep-text{font-size:.9rem}
   word-break:break-word}
 .prose a:hover{color:#fff;border-bottom-color:var(--y)}
 .prose strong{color:var(--tx);font-weight:700}
-/* 方法論頁的刻度／分帶表：全站 table 是 nowrap，窄螢幕靠這層水平捲動，不讓頁面橫向溢出 */
-.pai-tbl{overflow-x:auto;margin:.9rem 0;border:1px solid var(--bdr);border-radius:var(--rad)}
-.pai-tbl td{white-space:nowrap}
-.pai-tbl tr:last-child td{border-bottom:0}
 .prose ul{margin:.6rem 0 .6rem 1.2rem}
 .prose li{font-size:.92rem;line-height:1.8;color:var(--tx);margin:.35rem 0}
 html[lang="zh-Hant"] .prose p,html[lang="zh-Hant"] .prose li{font-size:.95rem}
@@ -1606,7 +1256,6 @@ html[lang="zh-Hant"] .def-card p{font-size:.9rem}
 /* ── zh-Hant 字型視覺校正（CJK 在相同 rem 下視覺較小，補齊至英文版水準）── */
 html[lang="zh-Hant"] .site-title{font-size:1.4rem}
 html[lang="zh-Hant"] .site-sub{font-size:.72rem}
-html[lang="zh-Hant"] .site-hub{font-size:.66rem}
 html[lang="zh-Hant"] nav a{font-size:.82rem;letter-spacing:.06em}
 html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 
@@ -1616,9 +1265,8 @@ html[lang="zh-Hant"] nav a.lang-toggle{font-size:.72rem;letter-spacing:.09em}
 html[lang="zh-Hant"] .ars-h1{font-size:1.85rem}
 .ars-sub{font-size:.9rem;color:var(--sub);line-height:1.6;margin-top:.5rem;max-width:640px}
 .ars-section{margin-bottom:2.25rem}
-.ars-sec-title{font-size:.8rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+.ars-sec-title{font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
   color:var(--sub);white-space:normal;padding-bottom:.5rem;margin-bottom:1rem;border-bottom:1px solid var(--bdr)}
-html[lang="zh-Hant"] .ars-sec-title{font-size:.95rem;letter-spacing:.12em}
 .ars-sec-title .sub{font-weight:600;letter-spacing:.04em;color:var(--sub);opacity:.75;margin-left:.6rem;text-transform:none}
 .ars-lead{font-size:.88rem;color:var(--sub);line-height:1.7;margin:-.3rem 0 1rem;max-width:680px}
 html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
@@ -1633,132 +1281,36 @@ html[lang="zh-Hant"] .ars-lead{font-size:.9rem}
 .ars-kpi-l{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--sub);margin-top:.4rem;white-space:nowrap}
 html[lang="zh-Hant"] .ars-kpi-l{font-size:.78rem;letter-spacing:.04em}
 
-/* 每日強度日曆（月統計頁）。列＝月、欄＝1→31 日。格子純 CSS，無 JS。 */
-.hm{margin-top:1.6rem}
-.hm-h{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;margin-bottom:.7rem}
-.hm-t{font-size:.9rem;font-weight:800;color:var(--tx)}
-.hm-s{font-size:.68rem;color:var(--sub)}
-.hm-grid{display:flex;flex-direction:column;gap:3px}
-.hm-row{display:grid;grid-template-columns:2.1rem repeat(31,minmax(0,1fr));gap:3px;align-items:center}
-.hm-mo{font-size:.62rem;color:var(--sub);text-align:right;padding-right:.3rem;
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-.hm-c{aspect-ratio:1;border-radius:2px;position:relative;display:block;min-width:0}
-.hm-c.e{background:none}
-.hm-c.n{background:none;box-shadow:inset 0 0 0 1px var(--bdr)}
-/* v1–v5＝活動強度指數的五個分帶。刻意維持單一色相的深淺斜坡，不套指數卡上那組
-   五色（綠/灰/黃/橘/紅）——8 個月 ×31 格的密集網格用五種色相會變成雜訊，
-   讀者只分得出深淺、分不出色相。
-   單一色相、亮度單調遞增（深色主題）／遞減（淺色主題）是熱圖能被讀懂的前提。
-   v5 不用紅或橘：格子右下角的「越線」標記本身就是紅點，底色再用紅橘系會蓋掉它。
-   v0（零架次）刻意是中性灰藍／灰米色，與 v1 起的暖色系分屬兩類，不只是深淺差。 */
-.hm-c.v0{background:#1a2830}
-.hm-c.v1{background:#4a4526}
-.hm-c.v2{background:#82691e}
-.hm-c.v3{background:#b8942a}
-.hm-c.v4{background:#e0b53a}
-.hm-c.v5{background:#f5c842}
-.hm-c.x::after{content:'';position:absolute;right:1px;bottom:1px;width:3px;height:3px;
-  border-radius:50%;background:var(--r)}
-.hm-lg{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .85rem;margin-top:.8rem;
-  font-size:.66rem;color:var(--sub)}
-.hm-lg span{display:inline-flex;align-items:center;gap:.3rem}
-.hm-lg .hm-c{width:11px;height:11px;aspect-ratio:auto;flex-shrink:0}
-.hm-lg-x{margin-left:auto}
-@media(max-width:520px){
-  .hm-row{grid-template-columns:1.7rem repeat(31,minmax(0,1fr));gap:2px}
-  .hm-grid{gap:2px}
-  .hm-mo{font-size:.58rem;padding-right:.2rem}
-  .hm-c.x::after{width:2px;height:2px;right:0;bottom:0}
-  .hm-lg-x{margin-left:0}
-}
-
-/* System card wall (裝備系統卡片牆) */
-.ars-syscards{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.ars-syscard{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden;
-  display:flex;flex-direction:column}
-.ars-syscard>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column}
-.ars-syscard>summary::-webkit-details-marker{display:none}
-.ars-scard-img{width:100%;aspect-ratio:16/9;overflow:hidden;background:var(--bg);
-  border-bottom:1px solid var(--bdr)}
-.ars-scard-img img{width:100%;height:100%;object-fit:cover;display:block}
-.ars-scard-band{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:.35rem;background:var(--sur) repeating-linear-gradient(45deg,
-  transparent 0 14px,var(--bdr) 14px 15px)}
-.ars-scard-band .band-word{font-size:1.05rem;font-weight:800;letter-spacing:.35em;
-  color:var(--sub);opacity:.55;padding-left:.35em}
-.ars-scard-band .band-note{font-size:.62rem;letter-spacing:.08em;color:var(--sub);opacity:.5}
-/* 無照片的卡：矮帶，不撐 16:9（撐滿會像圖片載入失敗） */
-.ars-scard-band-slim{aspect-ratio:auto;height:38px}
-
-/* 分組標題（有進度 / 尚未開始交付） */
-.ars-grp{display:flex;align-items:baseline;gap:.5rem;margin:.2rem 0 .7rem}
-.ars-grp+.ars-syscards,.ars-grp+.ars-prows{margin-top:0}
-.ars-syscards+.ars-grp,.ars-prows+.ars-grp{margin-top:1.4rem}
-.ars-grp-t{font-size:.74rem;font-weight:800;letter-spacing:.08em;color:var(--sub)}
-.ars-grp-n{font-size:.68rem;color:var(--sub);opacity:.7;font-variant-numeric:tabular-nums}
-
-/* 尚未開始交付的系統：縮圖緊湊列 */
-.ars-prows{display:flex;flex-direction:column;gap:.4rem}
-.ars-prow{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
-.ars-prow>summary{list-style:none;cursor:pointer;display:grid;
-  grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:.65rem;padding:.5rem .7rem}
-.ars-prow>summary::-webkit-details-marker{display:none}
-.ars-prow-thumb{width:42px;height:42px;border-radius:6px;overflow:hidden;background:var(--bg);
-  border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center}
-.ars-prow-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.ars-prow-glyph{font-size:1.05rem;font-weight:800;color:var(--sub);opacity:.6}
-.ars-prow-main{min-width:0}
-.ars-prow-name{display:block;font-size:.82rem;font-weight:800;color:var(--tx);line-height:1.3}
-.ars-prow-name .en{display:block;font-size:.65rem;font-weight:600;color:var(--sub);
-  margin-top:.1rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ars-prow-meta{display:block;font-size:.7rem;color:var(--sub);margin-top:.2rem;
-  font-variant-numeric:tabular-nums}
-.ars-prow-meta .dot{opacity:.5;margin:0 .35em}
-.ars-prow-meta .brk{opacity:.8}
-.ars-prow-tags{display:flex;align-items:center;gap:.35rem;flex-shrink:0}
-.ars-prow-tags .tri{color:var(--sub);font-size:.7rem;transition:transform .15s;display:inline-block}
-.ars-prow[open] .ars-prow-tags .tri{transform:rotate(90deg)}
-.ars-prow>.ars-scard-detail{padding:0 .7rem .7rem;border-top:1px solid var(--bdr);margin-top:.1rem}
-/* 全表狀態欄：狀態徽章＋延宕標籤同格不擠壓 */
-.ars-td-st{white-space:nowrap}
-.ars-td-st .ars-delaychip{margin-left:.3rem}
-.ars-scard-body{padding:.75rem .85rem;display:flex;flex-direction:column;flex:1;min-width:0}
-.ars-scard-head{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-between}
-.ars-scard-ph{width:40px;height:40px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);
-  display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:.72rem;font-weight:700;flex-shrink:0}
-.ars-scard-titles{min-width:0;flex:1}
-.ars-scard-name{font-size:.9rem;font-weight:800;color:var(--tx);line-height:1.3}
-.ars-scard-name .en{display:block;font-size:.7rem;font-weight:600;color:var(--sub);margin-top:.15rem;letter-spacing:.01em;line-height:1.35}
-.ars-scard-agg{font-size:.78rem;font-weight:700;color:var(--tx);font-variant-numeric:tabular-nums;
-  white-space:nowrap;text-align:right;flex-shrink:0;line-height:1.3}
-.ars-scard-agg .brk{display:block;font-size:.66rem;font-weight:600;color:var(--sub);opacity:.9;white-space:normal;margin-top:.15rem}
-.ars-scard-rows{display:flex;flex-direction:column;gap:.55rem;margin-top:.7rem}
-.ars-scard-row-top{display:flex;align-items:center;gap:.45rem;margin-bottom:.32rem}
-.ars-scard-case{font-size:.64rem;font-weight:700;color:var(--sub);font-variant-numeric:tabular-nums;
-  background:var(--bg);border:1px solid var(--bdr);border-radius:4px;padding:.1em .4em;flex-shrink:0}
-.ars-scard-qty{font-size:.74rem;color:var(--tx);font-variant-numeric:tabular-nums;flex:1;min-width:0;font-weight:600}
-.ars-st{font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
-  padding:.16em .55em;border-radius:999px;white-space:nowrap;flex-shrink:0}
+/* Progress matrix */
+.ars-matrix{display:flex;flex-direction:column;gap:.55rem}
+.ars-row{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);overflow:hidden}
+.ars-row>summary{list-style:none;cursor:pointer;padding:.7rem .9rem;display:block}
+.ars-row>summary::-webkit-details-marker{display:none}
+.ars-row-flex{display:flex;align-items:center;gap:.65rem}
+.ars-row-main{flex:1;min-width:0}
+.ars-row-thumb{width:56px;height:56px;border-radius:8px;border:1px solid var(--bdr);
+  object-fit:cover;flex-shrink:0}
+.ars-row-thumb-ph{background:var(--sur);display:flex;align-items:center;justify-content:center;
+  color:var(--sub);font-size:.7rem;font-weight:700}
+.ars-row-top{display:flex;justify-content:space-between;align-items:baseline;gap:.75rem;margin-bottom:.5rem}
+.ars-name{font-size:.86rem;font-weight:700;color:var(--tx);line-height:1.35}
+.ars-name .qty{color:var(--sub);font-weight:600;font-size:.78rem;font-variant-numeric:tabular-nums;white-space:nowrap;margin-left:.35rem}
+.ars-st{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:.18em .6em;border-radius:999px;white-space:nowrap;flex-shrink:0}
 .ars-st.completed {background:#123016;color:#5fce77}
 .ars-st.delivering{background:#2a2408;color:var(--y)}
 .ars-st.announced {background:#0d1d2e;color:#6aaee0}
 .ars-st.unknown   {background:var(--sur);color:var(--sub);border:1px solid var(--bdr)}
 .ars-st.cancelled {background:#2c1414;color:#e08585}
-.ars-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--bg)}
+.ars-bar{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--sur)}
 .ars-seg{height:100%}
 .ars-seg-d{background:var(--y)}
 .ars-seg-p{background:rgba(245,200,66,.26)}
 .ars-seg-c{flex:1;background:repeating-linear-gradient(45deg,#3a4448 0 5px,#222a2e 5px 10px)}
-.ars-scard-foot{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.7rem}
-.ars-delaychip{font-size:.62rem;font-weight:800;letter-spacing:.05em;padding:.14em .5em;border-radius:999px;
-  white-space:nowrap;flex-shrink:0;color:var(--y);border:1px solid var(--y);background:transparent}
-.ars-caret{color:var(--sub);font-size:.7rem;display:inline-flex;align-items:center;gap:.3rem}
-.ars-syscard[open] .ars-caret .tri{transform:rotate(90deg)}
+.ars-caret{color:var(--sub);font-size:.72rem;margin-top:.5rem;display:inline-flex;align-items:center;gap:.3rem}
+.ars-row[open] .ars-caret .tri{transform:rotate(90deg)}
 .ars-caret .tri{transition:transform .15s;display:inline-block}
-.ars-scard-detail{padding:0 .85rem .8rem}
-.ars-scard-seg{margin-top:.6rem}
-.ars-scard-seg-h{font-size:.72rem;font-weight:700;color:var(--tx);margin-bottom:.2rem;font-variant-numeric:tabular-nums}
-.ars-detail{padding:0;font-size:.8rem;color:var(--sub);line-height:1.7}
+.ars-detail{padding:0 .9rem .8rem;font-size:.8rem;color:var(--sub);line-height:1.7}
 html[lang="zh-Hant"] .ars-detail{font-size:.84rem}
 .ars-detail .lbl{font-weight:700;color:var(--tx)}
 .ars-detail a{color:var(--y);text-decoration:none;border-bottom:1px solid #4a3f12;word-break:break-all}
@@ -1783,6 +1335,11 @@ html[lang="zh-Hant"] .ars-point p{font-size:.87rem}
 .ars-src a:hover{color:var(--y);border-bottom-color:var(--y)}
 
 /* Delay table + counter cards */
+.ars-counter{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}
+.ars-counter .c{flex:1 1 240px;background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rad);padding:.7rem .9rem}
+.ars-counter .c .t{font-size:.82rem;font-weight:700;color:var(--grn)}
+.ars-counter .c p{font-size:.78rem;color:var(--sub);line-height:1.6;margin-top:.3rem}
+html[lang="zh-Hant"] .ars-counter .c p{font-size:.82rem}
 
 /* Category badge */
 .ars-cat{display:inline-block;padding:.15em .55em;border-radius:999px;font-size:.68rem;font-weight:700;white-space:nowrap}
@@ -1937,7 +1494,7 @@ a.src-chip::after{content:'\\2197';font-size:.85em;opacity:.7}
   .ars-chart-canvas{height:220px}
   .ars-wcards{grid-template-columns:1fr}
   .ars-userwall{grid-template-columns:1fr}
-  .ars-syscards{grid-template-columns:1fr}
+  .ars-row-thumb{width:44px;height:44px}
 }
 @media(max-width:380px){
   .stat-n{font-size:1.9rem}
@@ -1986,18 +1543,6 @@ html[data-theme="light"] .map-info{background:rgba(255,255,255,0.9)}
 html[data-theme="light"] .map-ml-label{color:#5a7280}
 html[data-theme="light"] .map-note{background:#eef4ee;border-left-color:#2f8f4f}
 
-/* 每日強度日曆淺色階（同一色相由淺到深，順序與深色版一致） */
-html[data-theme="light"] .hm-c.v0{background:#e9e5da}
-html[data-theme="light"] .hm-c.v1{background:#e9d590}
-html[data-theme="light"] .hm-c.v2{background:#d6bd6a}
-html[data-theme="light"] .hm-c.v3{background:#bd9a2b}
-html[data-theme="light"] .hm-c.v4{background:#94700c}
-html[data-theme="light"] .hm-c.v5{background:#5e4400}
-/* 越線紅點在淺色主題最深的兩格上幾乎看不見（深棕底 L≈69 vs 紅 L≈58），改用亮紅。
-   格子底色若再調深，這條要跟著往下延伸。 */
-html[data-theme="light"] .hm-c.v4.x::after,
-html[data-theme="light"] .hm-c.v5.x::after{background:#ff9e9e}
-
 /* ── Arsenal 淺色覆蓋（僅顏色，不動版面尺寸）── */
 html[data-theme="light"] .ars-chart-wrap{background:#fbfaf6;box-shadow:inset 0 0 0 1px var(--bdr)}
 html[data-theme="light"] .ars-seg-p{background:rgba(154,117,0,.20)}
@@ -2020,17 +1565,6 @@ html[data-theme="light"] .ars-atag.nato   {background:#dbeaf6;color:#1f6fa8}
 html[data-theme="light"] .ars-atag.mnna   {background:#ece1f7;color:#7a4fb0}
 html[data-theme="light"] .ars-atag.partner{background:#f3ecc9;color:#7a5c00}
 html[data-theme="light"] .ars-atag.aid    {background:#f5dede;color:#b23a3a}
-html[data-theme="light"] .b-extreme {color:#c23a3a}
-html[data-theme="light"] .b-high    {color:#a35c0a}
-html[data-theme="light"] .b-elevated{color:#8a6900}
-html[data-theme="light"] .b-normal  {color:#7d6d53}
-html[data-theme="light"] .b-low     {color:#64727c}
-html[data-theme="light"] .pai-bar i.b-extreme {background:#c23a3a}
-html[data-theme="light"] .pai-bar i.b-high    {background:#a35c0a}
-html[data-theme="light"] .pai-bar i.b-elevated{background:#8a6900}
-html[data-theme="light"] .pai-bar i.b-normal  {background:#7d6d53}
-html[data-theme="light"] .pai-bar i.b-low     {background:#64727c}
-html[data-theme="light"] .pai-bar{background:#e3dfd4}
 """
     (SITE_DIR / 'style.css').write_text(css, encoding='utf-8')
     print('[OK] style.css')
@@ -2038,53 +1572,24 @@ html[data-theme="light"] .pai-bar{background:#e3dfd4}
 
 # ── Chart.js 圖表產生 ─────────────────────────────────────────────────────────
 
-# 近兩週面板（2026-07-30 改版）。原本是「架次面積線＋越線數虛線」兩條疊在一起，
-# 加上與架次等大的艦艇面積圖。問題：(1) 艦艇 60 日只在 7–17 之間、變異極小，卻拿到
-# 一半版面；(2) 越線數用另一條線畫，讀者得在兩條線之間換算才知道「這天越線佔多少」。
-# 改法：架次做同色相堆疊長條（下段＝逾越中線、上段＝未越線），一根長條同時回答
-# 「多不多」與「越不越線」；加 30 日均虛線當基準；艦艇壓成無座標軸的細帶。
 _CHART_JS_RECENT = """\
 (function(){
-var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,SHbg=__SHbg__,AVG=__AVG__,T=L.length-1;
+var L=__L__,AC=__AC__,CR=__CR__,SH=__SH__,ACbg=__ACbg__,SHbg=__SHbg__;
+// 垂直漸層填色（頂濃底透）：area chart 質感關鍵；匯出 PNG 端會保留此函式重畫。
 function gfill(hex){return function(c){var a=c.chart.chartArea;if(!a)return 'rgba(0,0,0,0)';
   var g=c.chart.ctx.createLinearGradient(0,a.top,0,a.bottom);
   g.addColorStop(0,hex+'59');g.addColorStop(0.85,hex+'0d');g.addColorStop(1,hex+'00');return g;};}
-var NC=AC.map(function(v,i){return Math.max(0,v-CR[i]);});
-var CRbg=AC.map(function(v,i){return i===T?__CRTODAY__:__CRBAR__;});
-var NCbg=AC.map(function(v,i){return i===T?__NCTODAY__:__NCBAR__;});
-// 下段圓角只在「當日全部越線」（上段為 0）時打開，其餘保持與 x 軸齊平的方角
-var CRrad=NC.map(function(v){return v===0?3:0;});
-var xA={stacked:true,grid:{display:false},ticks:{color:__TICK__,font:{size:10},maxRotation:0,autoSkip:false,callback:function(v,i){return (i%2===0||i===T)?L[i]:'';}},border:{display:false}};
-var yA={stacked:true,grid:{color:function(ctx){return ctx.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
+var xA={grid:{display:false},ticks:{color:__TICK__,font:{size:10},maxRotation:0},border:{display:false}};
+var yA={grid:{color:function(ctx){return ctx.tick.value===0?__ZERO__:'transparent';}},ticks:{color:__TICK__,font:{size:10},maxTicksLimit:4},border:{display:false},beginAtZero:true};
 var animDelay=function(c){return c.type==='data'&&c.mode==='default'?c.dataIndex*40+c.datasetIndex*120:0;};
-var acOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,
- plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
-   filter:function(it){return it.datasetIndex<2;},
-   callbacks:{footer:function(items){var i=items[0].dataIndex;return __L_TOTAL__+AC[i];}}}},
- scales:{x:xA,y:yA}};
+var baseOpts={animation:{delay:animDelay,duration:800,easing:'easeOutQuart'},transitions:{active:{animation:{duration:0}}},responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('__UID__-ac'),{data:{labels:L,datasets:[
-  {type:'bar',label:__L_CROSS__,data:CR,backgroundColor:CRbg,borderRadius:CRrad,maxBarThickness:24,stack:'a',order:3},
-  {type:'bar',label:__L_NOCROSS__,data:NC,backgroundColor:NCbg,borderRadius:3,maxBarThickness:24,stack:'a',order:3},
-  {type:'line',label:__L_AVG__,data:AC.map(function(){return AVG;}),borderColor:__AVGLINE__,borderDash:[5,4],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,fill:false,tension:0,order:1}
-]},options:acOpts});
-// 艦艇細帶：不畫座標軸（日期已由上圖標出），只留形狀與當日點
-// 細帶隱藏了 y 軸刻度，繪圖區左緣會比上圖淺 ~17px，同一天的欄位就對不齊。
-// afterFit 把細帶的 y 軸寬度綁到上圖的實際 y 軸寬度（每次 layout 都會跑，resize 後仍對齊）。
-// 細帶與上圖的逐日對齊，兩件事是必要的：
-//   offset:true —— 長條畫在「格中央」、折線預設畫在「格邊界」，少了它第一天就差 29px。
-//   y 的 afterFit —— 細帶隱藏了 y 刻度，繪圖區左緣會比上圖淺 ~17px，把寬度綁回上圖。
-// 兩者做完左緣完全齊平、第一天 0px。右緣仍有 ~6px 差（累積到第 14 天 6px），來源不是
-// 刻度標籤（改成透明刻度、或執行期量測補 padding 都試過，殘差不變），是 Chart.js 對
-// bar/line 繪圖區的內距處理差異；站上原有的 YTD 兩圖也有同級（4px）差異。不再追。
-var shOpts={animation:{duration:600,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,
- plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
- scales:{x:{grid:{display:false},ticks:{display:false},border:{display:false},offset:true},
-         y:{grid:{display:false},ticks:{display:false},border:{display:false},beginAtZero:true,
-            afterFit:function(sc){var a=Chart.getChart('__UID__-ac');
-              if(a&&a.scales&&a.scales.y)sc.width=a.scales.y.width;}}}};
+  {type:'line',data:AC,borderColor:__ACLINE__,backgroundColor:gfill(__ACLINE__),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:ACbg,pointBorderColor:__PTRING__,pointBorderWidth:1.5,order:2},
+  {type:'line',data:CR,borderColor:__CRLINE__,borderDash:[5,4],borderWidth:1.5,pointBackgroundColor:__CRLINE__,pointRadius:0,pointHoverRadius:4,tension:0.35,fill:false,order:1}
+]},options:baseOpts});
 new Chart(document.getElementById('__UID__-sh'),{data:{labels:L,datasets:[
-  {type:'line',label:__L_SHIP__,data:SH,borderColor:__SHLINE__,backgroundColor:gfill(__SHLINE__),fill:true,tension:0.35,borderWidth:2,pointRadius:2,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:__PTRING__,pointBorderWidth:1}
-]},options:shOpts});
+  {type:'line',data:SH,borderColor:__SHLINE__,backgroundColor:gfill(__SHLINE__),fill:true,tension:0.35,borderWidth:2.5,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:SHbg,pointBorderColor:__PTRING__,pointBorderWidth:1.5}
+]},options:baseOpts});
 })();"""
 
 _CHART_JS_YTD = """\
@@ -2152,9 +1657,7 @@ new Chart(document.getElementById('__UID__'),{type:'bar',data:{labels:C,datasets
 })();"""
 
 
-def _build_panels(uid, df_slice, today_date, template, s=None, avg=None):
-    """兩段圖表面板。傳 avg（30 日均架次）＝近兩週堆疊版：架次改堆疊長條、加基準線、
-    艦艇改細帶＋圖例；不傳＝原本的面積線版（YTD 用）。"""
+def _build_panels(uid, df_slice, today_date, template):
     data = df_slice.reset_index(drop=True)
     today_idx = next(
         (i for i, (_, r) in enumerate(data.iterrows()) if r['date'] == today_date),
@@ -2186,37 +1689,9 @@ def _build_panels(uid, df_slice, today_date, template, s=None, avg=None):
           .replace('__PTRING__', json.dumps(tc['pt_ring']))
           .replace('__UID__',    uid))
 
-    if avg is None:
-        return (f'<div class="split-panels">'
-                f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
-                f'<div class="panel-wrap-sh"><canvas id="{uid}-sh"></canvas></div>'
-                f'</div>'
-                f'<script>{js}</script>')
-
-    # 堆疊版：注入基準線值、資料集名稱（tooltip 用），並在面板內加圖例。
-    # 兩段用同色相的亮/暗兩階，色相不同不足以區辨 → 圖例是必需品不是裝飾。
-    c = s['chart']
-    js = (js.replace('__AVG__',       json.dumps(round(avg, 1)))
-            .replace('__CRBAR__',     json.dumps(tc['cr_bar']))
-            .replace('__CRTODAY__',   json.dumps(tc['cr_today']))
-            .replace('__NCBAR__',     json.dumps(tc['nc_bar']))
-            .replace('__NCTODAY__',   json.dumps(tc['nc_today']))
-            .replace('__AVGLINE__',   json.dumps(tc['avg_line']))
-            .replace('__L_CROSS__',   json.dumps(c['lg_cross']))
-            .replace('__L_NOCROSS__', json.dumps(c['lg_nocross']))
-            .replace('__L_AVG__',     json.dumps(c['lg_avg']))
-            .replace('__L_SHIP__',    json.dumps(c['lg_ship']))
-            .replace('__L_TOTAL__',   json.dumps(c['lg_total'])))
-    legend = (f'<div class="chart-legend">'
-              f'<span><i style="background:{tc["cr_today"]}"></i>{c["lg_cross"]}</span>'
-              f'<span><i style="background:{tc["nc_bar"]}"></i>{c["lg_nocross"]}</span>'
-              f'<span><i class="dash" style="border-top-color:{tc["avg_line"]}"></i>'
-              f'{c["lg_avg"]} {avg:.1f}</span>'
-              f'<span class="sh"><i style="background:{tc["sh_today"]}"></i>{c["lg_ship"]}</span>'
-              f'</div>')
-    return (f'<div class="split-panels">{legend}'
+    return (f'<div class="split-panels">'
             f'<div class="panel-wrap-ac"><canvas id="{uid}-ac"></canvas></div>'
-            f'<div class="panel-wrap-sh panel-wrap-sh-slim"><canvas id="{uid}-sh"></canvas></div>'
+            f'<div class="panel-wrap-sh"><canvas id="{uid}-sh"></canvas></div>'
             f'</div>'
             f'<script>{js}</script>')
 
@@ -2294,14 +1769,6 @@ if(ZONES.sw){
   gradZone([[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5]);
   zoneLabel([21.8,117.5],'__ZN_SW__');
 }
-if(ZONES.c){
-  gradZone([[25.05,119.75],[25.05,120.45],[23.6,120.05],[23.6,118.95]],[24.3,119.8]);
-  zoneLabel([24.88,119.98],'__ZN_C__');
-}
-if(ZONES.s){
-  gradZone([[21.9,120.05],[21.9,121.9],[21.0,121.9],[21.0,120.05]],[21.45,121.0]);
-  zoneLabel([21.72,121.45],'__ZN_S__');
-}
 if(ZONES.e){
   gradZone([[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1]);
   zoneLabel([22.8,122.5],'__ZN_E__');
@@ -2372,24 +1839,17 @@ map.whenReady(function(){
 })();"""
 
 
-def zones_from_special(special):
-    """由 special_event 文字判斷當日活動空域。首頁地圖與分享圖卡共用同一份判斷，
-    避免兩處各寫一次而慢慢走鐘（子字串比對的邊界請見 judgment.md：西南部 ⊄ 南部）。"""
+def map_section_html(ac_val, ml_val, sh_val, special, s):
     special_str = special or ''
     has_n  = ('北部' in special_str and '東北部' not in special_str) or '北方' in special_str
     has_ne = '東北' in special_str
-    return {
+    zones = {
         'n':  has_n,
-        'c':  '中部' in special_str,
         'sw': '西南' in special_str,
         'e':  '東部' in special_str and not has_ne,
         'ne': has_ne,
         's':  '南部' in special_str and '西南部' not in special_str,
     }
-
-
-def map_section_html(ac_val, ml_val, sh_val, special, s):
-    zones = zones_from_special(special)
     # 地圖主題色注入（裸 hex→裸 hex，保留各自既有引號情境；tiles 換底圖）
     m = _MAP_COLORS[THEME]
     js = (_MAP_JS
@@ -2404,8 +1864,6 @@ def map_section_html(ac_val, ml_val, sh_val, special, s):
           .replace('__SH__',      str(sh_val))
           .replace('__ZONES__',   json.dumps(zones))
           .replace('__ZN_N__',    s['map_zone_n'])
-          .replace('__ZN_C__',    s['map_zone_c'])
-          .replace('__ZN_S__',    s['map_zone_s'])
           .replace('__ZN_SW__',   s['map_zone_sw'])
           .replace('__ZN_E__',    s['map_zone_e'])
           .replace('__ZN_NE__',   s['map_zone_ne'])
@@ -2454,8 +1912,8 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
 
     # Absolute URLs for canonical / hreflang / OG (full domain, per SEO best practice)
     path     = page_path if page_path else f'/{page_name}.html'
-    canon_zh = canon_url(path)
-    canon_en = canon_url(path, '/en')
+    canon_zh = f'{BASE_URL}{path}'
+    canon_en = f'{BASE_URL}/en{path}'
     canonical = canon_en if lang == 'en' else canon_zh
 
     # Asset paths: en/ pages (and nested zh pages) use absolute paths to avoid
@@ -2477,7 +1935,6 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
     # 沿用上面已固定的 og:image:width/height，不需另外改。
     if page_name in ARSENAL_OG_PAGES:
         og_image = f'{BASE_URL}/{ARSENAL_OG_IMG}'
-    og_alt = title if page_name in ARSENAL_OG_PAGES else s['site_title']
 
     return f"""\
 <!DOCTYPE html>
@@ -2500,14 +1957,14 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
 <meta property="og:image" content="{og_image}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="{og_alt}">
+<meta property="og:image:alt" content="{s['site_title']}">
 <meta property="og:locale" content="{og_locale}">
 <meta property="og:locale:alternate" content="{og_locale_alt}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{desc}">
 <meta name="twitter:image" content="{og_image}">
-<meta name="twitter:image:alt" content="{og_alt}">
+<meta name="twitter:image:alt" content="{s['site_title']}">
 <link rel="icon" type="image/svg+xml" href="{fav_href}">
 <link rel="stylesheet" href="{css_href}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
@@ -2529,12 +1986,12 @@ def dataset_jsonld(df, lang):
         desc = ("Daily structured record of People's Liberation Army (PLA) military activity "
                 "around Taiwan, compiled from ROC Ministry of National Defense public releases: "
                 "aircraft sorties, Taiwan Strait median-line crossings and naval vessel counts.")
-        page = canon_url('/index.html', '/en')   # 與 canonical / og:url 一致
+        page = f'{BASE_URL}/en/index.html'   # 與 canonical / og:url 一致
     else:
         name = '中國擾台每日數據集'
         desc = ('每日整理中國解放軍（PLA）在台灣周邊軍事活動的結構化資料，'
                 '來源為中華民國國防部每日公布：共機架次、逾越海峽中線數、共艦艘數。')
-        page = canon_url('/index.html')          # 與 canonical / og:url 一致
+        page = f'{BASE_URL}/index.html'      # 與 canonical / og:url 一致
 
     data = {
         "@context": "https://schema.org",
@@ -2572,112 +2029,13 @@ def dataset_jsonld(df, lang):
             + json.dumps(data, ensure_ascii=False) + '</script>')
 
 
-# ── /arsenal/ 結構化資料（BreadcrumbList；目錄頁另加 ItemList、內頁加 TechArticle）──
-
-ARS_PUBLISHED = '2026-07-23'   # /arsenal/ 內容區上線日（TechArticle datePublished）
-
-
-def arsenal_jsonld(lang, s, df_ars, weapon_key=None):
-    """arsenal 系列頁的 JSON-LD head_extra。"""
-    pfx  = '/en' if lang == 'en' else ''
-    home = canon_url('/index.html', pfx)
-    ars  = canon_url('/arsenal/', pfx)
-    ars_label = 'US Arms Deliveries to Taiwan' if lang == 'en' else '對美軍購交付追蹤'
-    crumbs = [
-        {"@type": "ListItem", "position": 1,
-         "name": 'Home' if lang == 'en' else '首頁', "item": home},
-        {"@type": "ListItem", "position": 2, "name": ars_label, "item": ars},
-    ]
-    # 內容更新日：與 /arsenal/ KPI 同源（arsenal_updated.txt，缺檔退回最新公告日）
-    upd_file = DATA_FILE.parent / 'arsenal_updated.txt'
-    upd = (upd_file.read_text(encoding='utf-8').strip() if upd_file.exists()
-           else str(df_ars['announce_date'].max()))
-
-    blocks = []
-    if weapon_key:
-        w    = ARSENAL_DETAIL[weapon_key]
-        name = w['name_en'] if lang == 'en' else w['name_zh']
-        url  = canon_url(f'/arsenal/{weapon_key}.html', pfx)
-        crumbs.append({"@type": "ListItem", "position": 3, "name": name, "item": url})
-        blocks.append({
-            "@context": "https://schema.org",
-            "@type": "TechArticle",
-            "headline": name,
-            "description": s['meta_descs'][f'ars_{weapon_key}'],
-            "mainEntityOfPage": url,
-            "image": f'{BASE_URL}/{ARSENAL_OG_IMG}',
-            "inLanguage": 'en' if lang == 'en' else 'zh-Hant',
-            "datePublished": ARS_PUBLISHED,
-            "dateModified": upd,
-            "author": {"@type": "Person", "name": "Adam Pan"},
-        })
-    else:
-        blocks.append({
-            "@context": "https://schema.org",
-            "@type": "ItemList",
-            "name": ars_label,
-            "itemListElement": [
-                {"@type": "ListItem", "position": i + 1,
-                 "name": (d['name_en'] if lang == 'en' else d['name_zh']),
-                 "url": canon_url(f'/arsenal/{k}.html', pfx)}
-                for i, (k, d) in enumerate(ARSENAL_DETAIL.items())
-            ],
-        })
-    blocks.append({"@context": "https://schema.org", "@type": "BreadcrumbList",
-                   "itemListElement": crumbs})
-    return ''.join('\n<script type="application/ld+json">'
-                   + json.dumps(b, ensure_ascii=False) + '</script>' for b in blocks)
-
-
-# ── records / monthly / about 頁結構化資料（WebPage + BreadcrumbList）──────────
-
-def page_jsonld(lang, s, page_name):
-    """WebPage + BreadcrumbList head_extra for records / monthly / about pages."""
-    pfx   = '/en' if lang == 'en' else ''
-    home  = canon_url('/index.html', pfx)
-    page  = canon_url(f'/{page_name}.html', pfx)
-    label = s[f'nav_{page_name}']
-    webpage = {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        "name": s['page_titles'][page_name],
-        "description": s['meta_descs'][page_name],
-        "url": page,
-        "inLanguage": 'en' if lang == 'en' else 'zh-Hant',
-        "isPartOf": {"@type": "WebSite", "name": s['site_title'], "url": home},
-    }
-    breadcrumb = {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-            {"@type": "ListItem", "position": 1,
-             "name": 'Home' if lang == 'en' else '首頁', "item": home},
-            {"@type": "ListItem", "position": 2, "name": label, "item": page},
-        ],
-    }
-    return ''.join('\n<script type="application/ld+json">'
-                   + json.dumps(b, ensure_ascii=False) + '</script>'
-                   for b in (webpage, breadcrumb))
-
-
-_NAV_CARD_ICON = (
-    '<svg class="nc-i" viewBox="0 0 16 16" width="13" height="13" fill="none" '
-    'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" '
-    'stroke-linejoin="round" aria-hidden="true">'
-    '<rect x="2" y="2.6" width="12" height="10.8" rx="1.6"/>'
-    '<path d="M8 5.6v4.2M6.1 7.9 8 9.8l1.9-1.9"/></svg>')
-
-
 def nav_html(active, lang, page_name, s):
     """Navigation bar with language toggle. 'arsenal' is a nested page (/arsenal/)."""
     base = '/en' if lang == 'en' else ''
 
     # 語言切換連結：arsenal 為 /arsenal/ 目錄式路徑；武器內頁為 /arsenal/{w}.html；
     # 其餘為 /{page}.html。
-    if page_name == 'card':
-        # 英文版沒有圖卡頁，語言切換退回英文首頁
-        toggle = '/en/index.html'
-    elif page_name == 'arsenal':
+    if page_name == 'arsenal':
         toggle = '/arsenal/' if lang == 'en' else '/en/arsenal/'
     elif page_name.startswith('ars_'):
         w = page_name[4:]
@@ -2692,16 +2050,10 @@ def nav_html(active, lang, page_name, s):
         ('arsenal', f'{base}/arsenal/',     s['nav_arsenal']),
         ('about',   f'{base}/about.html',   s['nav_about']),
     ]
-    if lang == 'zh':
-        # 分享圖卡只有中文版；擺在導覽列最後一項，手機寬度下只留圖示（見 CSS .nav-card）
-        pages.append(('card', '/card.html', s['nav_card']))
-    items = ''
-    for p, href, label in pages:
-        cls = ' '.join(([] if active != p else ['active'])
-                       + ([] if p != 'card' else ['nav-card']))
-        attr = f' class="{cls}"' if cls else ''
-        inner = f'{_NAV_CARD_ICON}<span class="nc-t">{label}</span>' if p == 'card' else label
-        items += f'<a href="{href}"{attr}>{inner}</a>'
+    items = ''.join(
+        f'<a href="{href}"{"" if active != p else " class=active"}>{label}</a>'
+        for p, href, label in pages
+    )
     lang_link = f'<a href="{toggle}" class="lang-toggle">{s["nav_toggle"]}</a>'
     return f'<nav>{items}{lang_link}</nav>'
 
@@ -2716,115 +2068,6 @@ def footer_html(update_label, s):
         f'<span class="footer-hub"><a href="{HUB_URL}" rel="noopener">{s["footer_hub"]}</a></span>'
         f'</footer>'
     )
-
-
-_PAI_ARROW = {'up': '▲', 'flat': '─', 'down': '▼'}
-PAI_SPARK_DAYS = 60
-
-
-def pai_spark_svg(scores, band):
-    """指數走勢 sparkline。SVG 內**一個字都沒有**（座標軸與數字都在外面的 HTML），
-    所以不牽涉字型——鐵律 7 針對的是 CI 無 CJK 字型時的圖片渲染，這裡與月統計頁的
-    純 CSS 日曆同類，不是 Chart.js 的替代品。
-    viewBox 用非等比縮放填滿寬度，所有線條加 vector-effect 才不會被拉粗。"""
-    if len(scores) < 2:
-        return ''
-    W, H = 600.0, 100.0
-    step = W / (len(scores) - 1)
-    pts = [(i * step, H - s) for i, s in enumerate(scores)]
-    line = 'M' + ' L'.join(f'{x:.1f} {y:.1f}' for x, y in pts)
-    area = f'{line} L{W:.1f} {H:.1f} L0 {H:.1f} Z'
-    tx = pts[-1][0]
-    thr = H - PAI_DARK
-    return (
-        f'<svg class="pai-spark" viewBox="0 0 {W:.0f} {H:.0f}" preserveAspectRatio="none" '
-        f'aria-hidden="true" focusable="false">'
-        f'<path class="ps-area b-{band}" d="{area}"/>'
-        f'<line class="ps-thr" x1="0" y1="{thr}" x2="{W:.0f}" y2="{thr}" '
-        f'vector-effect="non-scaling-stroke"/>'
-        f'<path class="ps-line b-{band}" d="{line}" vector-effect="non-scaling-stroke"/>'
-        f'<line class="ps-now b-{band}" x1="{tx:.1f}" y1="0" x2="{tx:.1f}" y2="{H:.0f}" '
-        f'vector-effect="non-scaling-stroke"/>'
-        f'</svg>')
-
-
-def pai_section_html(df, lang, s):
-    """首頁的活動強度指數卡：大數字＋分帶＋趨勢＋四個分項的組成拆解。
-    拆解是刻意的——單一數字沒有拆解就是黑箱，讀者無法判斷它憑什麼是這個值。"""
-    p = pai_score(df.iloc[-1])
-    band = p['band']
-    trend_key, delta = pai_trend(df)
-    base = '/en' if lang == 'en' else ''
-
-    trend_html = ''
-    if trend_key:
-        txt = s['pai_trend'][trend_key].format(n=PAI_TREND_WINDOW)
-        sign = '+' if delta > 0 else ''
-        trend_html = (f'<div class="pai-trend t-{trend_key}">{_PAI_ARROW[trend_key]} '
-                      f'{txt} <span class="pai-delta">({sign}{delta:.0f})</span></div>')
-
-    rows = ''
-    for k in ('ac', 'ml', 'sh', 'zone'):
-        sub = p['comp'][k]
-        rows += (
-            f'<div class="pai-c">'
-            f'<span class="pai-cl">{s["pai_comp"][k]}</span>'
-            f'<span class="pai-cv">{p["raw"][k]}<em>{s["pai_unit"][k]}</em></span>'
-            f'<span class="pai-bar"><i class="b-{band}" style="width:{sub:.0f}%"></i></span>'
-            f'<span class="pai-cs">{sub:.0f}</span>'
-            f'<span class="pai-cw">×{PAI_WEIGHTS[k]:.2f}</span>'
-            f'</div>'
-        )
-    if p['boost']:
-        rows += (f'<div class="pai-c pai-boost">'
-                 f'<span class="pai-cl">{s["pai_boost"].format(n=p["boost"])}</span></div>')
-
-    # 強度條：分帶門檻畫成刻度，讀者一眼看得出今天離下一帶還有多遠——
-    # 光一個數字看不出 38 在 0–100 的哪個位置，也看不出 50 跟 51 是兩個不同的帶。
-    # 刻度取自 PAI_BANDS，不寫死；分帶門檻改了刻度自動跟著移。
-    ticks = ''.join(f'<i style="left:{f}%"></i>' for f, _ in PAI_BANDS if f > 0)
-    meter_html = (
-        f'<div class="pai-meter" role="img" '
-        f'aria-label="{s["pai_label"]} {p["score"]}{s["pai_scale"]}">'
-        f'<span class="pai-meter-fill b-{band}" style="width:{p["score"]}%"></span>'
-        f'{ticks}</div>')
-
-    # 走勢：近 PAI_SPARK_DAYS 個有資料日。摘要數字放在 SVG 外面用 HTML 排，
-    # 一來 SVG 不必碰字型，二來手機上文字不會被非等比縮放拉扁。
-    hist = [pai_score(r)['score'] for _, r in df.tail(PAI_SPARK_DAYS).iterrows()]
-    spark_html = ''
-    if len(hist) >= 2:
-        spark_html = (
-            f'<div class="pai-spark-wrap">{pai_spark_svg(hist, band)}'
-            f'<div class="pai-spark-lg">'
-            f'<span>{s["pai_spark"].format(n=len(hist))}</span>'
-            f'<span class="ps-k">{s["pai_spark_hi"]} <b>{max(hist)}</b></span>'
-            f'<span class="ps-k">{s["pai_spark_avg"]} <b>{sum(hist) / len(hist):.0f}</b></span>'
-            f'<span class="ps-k ps-thr-lg">{s["pai_spark_thr"].format(n=PAI_DARK)}</span>'
-            f'</div></div>')
-
-    return f"""<section class="pai anim-ready">
-  <div class="pai-head">
-    <span class="pai-title">{s['pai_label']}</span>
-    <span class="pai-ver">{PAI_VERSION}</span>
-    <a class="pai-how" href="{base}/about.html#pai">{s['pai_how']} ↗</a>
-  </div>
-  <div class="pai-body">
-    <div class="pai-gauge">
-      <div class="pai-score b-{band}"><span data-count="{p['score']}">{p['score']}</span><em>{s['pai_scale']}</em></div>
-      <div class="pai-band b-{band}">{s['pai_bands'][band]}</div>
-      {meter_html}
-      <div class="pai-bdesc">{s['pai_band_desc'][band]}</div>
-      {trend_html}
-    </div>
-    <div class="pai-comps">
-      <div class="pai-comps-hd">{s['pai_detail']}</div>
-      {rows}
-    </div>
-  </div>
-  {spark_html}
-  <div class="pai-note">{s['pai_note']}</div>
-</section>"""
 
 
 def monthly_stats_html(df, today_date, s):
@@ -2912,19 +2155,8 @@ if(ch){ch.reset();ch.update();}});
 el.querySelectorAll('[data-count]').forEach(function(s,i){
 var t=+s.dataset.count;
 if(!t)return;
-setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0});
-// threshold 0：任何一像素進入視野即觸發。0.15 會讓「高度超過視窗 6.7 倍」的長區塊
-// （如 21 張卡的卡片牆在手機上）永遠達不到門檻而永久隱形——2026-07-24 實際踩過。
+setTimeout(function(){animCount(s,t,900);},i*100);});});},{threshold:0.15});
 document.querySelectorAll('.anim-ready').forEach(function(el){io.observe(el);});
-// 保險絲：無論 IntersectionObserver 是否正常（舊瀏覽器/省流模式/任何異常），
-// 2.5 秒後強制顯示所有尚未觸發的區塊。動畫是加分項，內容可見是底線。
-// 數字也要補：第 1 行已把 [data-count] 清成 '0'，若 IO 從未觸發，區塊會「顯示但數字全是 0」
-// ——比隱形更糟（讀者會以為當日零架次）。所以保險絲一併把未跑動畫的數字直接寫回真值。
-setTimeout(function(){
-document.querySelectorAll('.anim-ready:not(.visible)').forEach(function(el){el.classList.add('visible');});
-document.querySelectorAll('[data-count]').forEach(function(el){
-if(el.textContent==='0'&&el.dataset.count!=='0')el.textContent=el.dataset.count;});
-},2500);
 })();</script>"""
 
 
@@ -2951,20 +2183,14 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     else:
         special_display = special_zh
 
-    ac_delta = delta_span(latest['aircraft_total'], prev['aircraft_total'], s)
-    sh_delta = delta_span(latest['ships_total'],    prev['ships_total'], s)
-    delta_note = (f'<div class="delta-note">{s["delta_note"]}</div>'
-                  if (ac_delta or sh_delta) else '')
+    ac_delta = delta_span(latest['aircraft_total'], prev['aircraft_total'])
+    sh_delta = delta_span(latest['ships_total'],    prev['ships_total'])
 
     type_lower, type_label = type_info(atype, special_zh, s)
     sitrep_badge = (f'&nbsp;·&nbsp; {type_label}'
                     if type_label not in s['generic_types'] else '')
 
-    # 近兩週：14 天而非 10 天——以目前的活動節奏（多數日 0–4 架次、偶發 20+ 的脈衝日），
-    # 10 天常只框到一個脈衝，看不出節奏。基準線用近 30 日平均架次（不足 30 天就用全部）。
-    avg30 = float(df['aircraft_total'].tail(30).fillna(0).mean())
-    recent_html = _build_panels('rc',  df.tail(14), today_date, _CHART_JS_RECENT,
-                                s, avg30)
+    recent_html = _build_panels('rc',  df.tail(10), today_date, _CHART_JS_RECENT)
     year_prefix = today_date[:4]
     ytd_html    = _build_panels('ytd', df[df['date'] >= year_prefix], today_date, _CHART_JS_YTD)
 
@@ -2976,14 +2202,12 @@ def build_index(df, lang, out_dir, s, df_ars=None):
     sh_lo    = int(df['ships_total'].min())
     sh_hi    = int(df['ships_total'].max())
 
-    split_ac  = (s['obs_ac_zero'] if ac_val == 0
-                 else s['obs_ac'].format(n=ac_val, m=ml_val))
+    split_ac  = s['obs_ac'].format(n=ac_val)
     split_sh  = s['obs_sh'].format(n=sh_val)
     streak_ac = s['peak_ac'].format(n=mo_max, d=mo_max_d) if mo_max > 0 else ''
     streak_sh = s['ships_range'].format(lo=sh_lo, hi=sh_hi)
 
     alert_html   = f'<div class="alert">⚡ {special_display}</div>' if special_display else ''
-    pai_html     = pai_section_html(df, lang, s)
     monthly_html = monthly_stats_html(df, today_date, s)
     map_html     = map_section_html(ac_val, ml_val, sh_val, _raw_special, s)
 
@@ -3006,9 +2230,8 @@ def build_index(df, lang, out_dir, s, df_ars=None):
 <header class="site-header">
   <div class="header-inner">
     <div class="site-brand">
-      <h1 class="site-title">{s['site_title']}</h1>
+      <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
-      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('index', lang, 'index', s)}
   </div>
@@ -3035,10 +2258,7 @@ def build_index(df, lang, out_dir, s, df_ars=None):
         {sh_delta}
       </div>
     </div>
-    {delta_note}
   </div>
-
-  {pai_html}
 
   {monthly_html}
 
@@ -3090,7 +2310,7 @@ def build_records(df, lang, out_dir, s):
                  f'</tr>')
 
     today_label = fmt_date_display(df.iloc[-1]['date'], lang)
-    head = make_head(lang, 'records', s, head_extra=page_jsonld(lang, s, 'records'))
+    head = make_head(lang, 'records', s)
     html = f"""{head}
 <body>
 <header class="site-header">
@@ -3125,81 +2345,6 @@ def build_records(df, lang, out_dir, s):
 
 # ── monthly.html ──────────────────────────────────────────────────────────────
 
-# 每日強度日曆（月統計頁，2026-07-30）。列＝月、欄＝該月 1→31 日，與上方月統計表
-# 逐列對齊（表格給總量，熱圖給該月的形狀）。純 HTML/CSS，不用 Chart.js：格子是靜態
-# 方塊，沒有需要客戶端計算的東西，也不必再多載一份圖表初始化。
-# 三種「沒有顏色」必須分開，不能混為一格空白：
-#   e  = 該月沒有這一天（如 2 月的 30 日）或還沒到的未來日期 → 完全不畫
-#   n  = 有這一天但國防部當日未發布 → 只畫邊框（對應方法論頁「當日從缺不以估計值填補」）
-#   v0 = 有資料且為零架次 → 畫最淺的實色
-# 少了這個區分，「沒發布」會被讀成「零架次」，等於用視覺造假。
-# 2026-08-13 起格子的深淺改由「活動強度指數的分帶」決定（原本只看 aircraft_total 的
-# 4 段桶）。理由：日曆和首頁指數卡若各用一套強度定義，同一天會出現「指數說偏高、
-# 日曆畫得很淡」的矛盾。v0（零架次）維持獨立一格，不併進最低帶——零架次是一個
-# 具體事實，不是「分數低」。
-_HM_BAND_CLASS = {'low': 'v1', 'normal': 'v2', 'elevated': 'v3',
-                  'high': 'v4', 'extreme': 'v5'}
-
-
-def _hm_level(row):
-    """回傳日曆格的 class：零架次日固定 v0，其餘依活動強度指數的分帶 v1–v5。"""
-    if _pai_int(row, 'aircraft_total') == 0:
-        return 'v0'
-    return _HM_BAND_CLASS[pai_score(row)['band']]
-
-
-def _monthly_heatmap_html(df, lang, s):
-    h = s['hm']
-    recs = {}
-    for _, r in df.iterrows():
-        recs[r['date']] = r
-    today = df.iloc[-1]['date']
-    months = sorted({d[:7] for d in recs}, reverse=True)
-
-    rows = []
-    for mo in months:
-        yr, mn = int(mo[:4]), int(mo[5:7])
-        ndays = calendar.monthrange(yr, mn)[1]
-        label = (pd.to_datetime(mo + '-01').strftime('%b') if lang == 'en'
-                 else f'{mn}月')
-        cells = [f'<span class="hm-mo">{label}</span>']
-        for d in range(1, 32):
-            iso = f'{mo}-{d:02d}'
-            if d > ndays or iso > today:
-                cells.append('<span class="hm-c e"></span>')
-                continue
-            r = recs.get(iso)
-            if r is None:
-                tip = h['tip_none'].format(date=iso)
-                cells.append(f'<span class="hm-c n" title="{tip}"></span>')
-                continue
-            ac = int(r['aircraft_total']) if pd.notna(r['aircraft_total']) else 0
-            ml = int(r['median_line_cross']) if pd.notna(r['median_line_cross']) else 0
-            sh = int(r['ships_total']) if pd.notna(r['ships_total']) else 0
-            p  = pai_score(r)
-            tip = (h['tip_zero'].format(date=iso, sh=sh) if ac == 0
-                   else h['tip'].format(date=iso, ac=ac, ml=ml, sh=sh))
-            tip += h['tip_pai'].format(n=p['score'], band=s['pai_bands'][p['band']])
-            cls = _hm_level(r) + (' x' if ml > 0 else '')
-            cells.append(f'<span class="hm-c {cls}" title="{html.escape(tip, quote=True)}"></span>')
-        rows.append('<div class="hm-row">' + ''.join(cells) + '</div>')
-
-    # 圖例：未發布／零架次維持獨立兩格（合併＝視覺造假，validate 會擋），
-    # 其餘五格是活動強度指數的分帶，由低到高。
-    swatches = ''.join(
-        f'<span><i class="hm-c {c}"></i>{l}</span>'
-        for c, l in [('n', h['lg_none']), ('v0', h['lg_zero'])]
-        + [(_HM_BAND_CLASS[k], s['pai_bands'][k])
-           for k in ('low', 'normal', 'elevated', 'high', 'extreme')])
-    return (f'<section class="hm">'
-            f'<div class="hm-h"><span class="hm-t">{h["title"]}</span>'
-            f'<span class="hm-s">{h["sub"]}</span></div>'
-            f'<div class="hm-grid">' + ''.join(rows) + '</div>'
-            f'<div class="hm-lg">{swatches}'
-            f'<span class="hm-lg-x"><i class="hm-c v2 x"></i>{h["lg_cross"]}</span></div>'
-            f'</section>')
-
-
 def build_monthly(df, lang, out_dir, s):
     """Monthly aggregated stats page."""
     df_copy = df.copy()
@@ -3231,9 +2376,8 @@ def build_monthly(df, lang, out_dir, s):
                  f'<td class="num r">{mo_sh:.1f}</td>'
                  f'</tr>')
 
-    today_label  = fmt_date_display(df.iloc[-1]['date'], lang)
-    heatmap_html = _monthly_heatmap_html(df, lang, s)
-    head = make_head(lang, 'monthly', s, head_extra=page_jsonld(lang, s, 'monthly'))
+    today_label = fmt_date_display(df.iloc[-1]['date'], lang)
+    head = make_head(lang, 'monthly', s)
     html = f"""{head}
 <body>
 <header class="site-header">
@@ -3260,8 +2404,6 @@ def build_monthly(df, lang, out_dir, s):
     <tbody>{rows}</tbody>
   </table>
   </div>
-
-  {heatmap_html}
 </main>
 
 {footer_html(today_label, s)}
@@ -3272,93 +2414,6 @@ def build_monthly(df, lang, out_dir, s):
 
 
 # ── about.html（方法論與資料來源）──────────────────────────────────────────────
-
-def pai_method_html(lang, s):
-    """方法論頁的指數說明。刻度表、權重、分帶全部由常數即時產生——
-    寫死一份人工表格遲早會跟程式碼對不上，而對不上的公開方法論比沒有更糟。"""
-    zh = lang != 'en'
-    order = ('ac', 'ml', 'sh', 'zone')
-
-    # 刻度表：一列一個分項，欄位是「原始值→分數」的轉折點
-    knot_rows = ''
-    for k in order:
-        pts = '　'.join(f'{x}→{y}' for x, y in PAI_KNOTS[k])
-        knot_rows += (f'<tr><td>{s["pai_comp"][k]}</td>'
-                      f'<td>{PAI_WEIGHTS[k]:.2f}</td>'
-                      f'<td style="white-space:normal">{pts}</td></tr>')
-
-    band_rows = ''
-    for floor, key in PAI_BANDS:
-        # PAI_BANDS 由高到低排列，所以「上界」要取所有大於 floor 的門檻中的最小者
-        hi = min((f for f, _ in PAI_BANDS if f > floor), default=101) - 1
-        band_rows += (f'<tr><td>{floor}–{hi}</td>'
-                      f'<td class="b-{key}"><strong>{s["pai_bands"][key]}</strong></td>'
-                      f'<td style="white-space:normal">{s["pai_band_desc"][key]}</td></tr>')
-
-    formula = ' + '.join(f'{PAI_WEIGHTS[k]:.2f}×{s["pai_comp"][k]}' for k in order)
-
-    if zh:
-        return f"""
-    <h2 id="pai">共軍活動強度指數（{PAI_VERSION}）</h2>
-    <p>首頁那個 0–100 的數字，是把當日四項觀測值壓成一個可以跨日比較的強度。它<strong>不是
-      官方警戒等級</strong>——國防部與國安單位才有權發布警戒；本站只是把自己已經公開的
-      數字換一種讀法，方便看出「今天相對於過去半年算什麼程度」。</p>
-    <p>三個設計原則：<strong>可重現</strong>（只用 records.csv 的欄位，任何人都能算出同一個
-      數字，不含外部訊號與人工判斷）、<strong>不漂移</strong>（刻度是校準一次後凍結的常數，
-      不隨新資料重算，所以引用過的分數不會變）、<strong>可拆解</strong>（首頁直接列出四個
-      分項各得幾分，不做黑箱）。</p>
-    <p>計算方式：每項觀測值先依下表的轉折點做分段線性內插，換成 0–100 的分項分數，再加權
-      相加：</p>
-    <p><strong>指數 = {formula}</strong>（公告有偵獲空飄氣球再 +{PAI_BALLOON_BOOST}，
-      四捨五入後夾在 0–100）</p>
-    <p>「0 一律得 0 分」是刻意的：沒有越線就是沒有越線，不因為「多數日子都是 0」而拿到基礎分。
-      刻度轉折點校準自 2026 年 1 月起的實際分布，上緣對齊歷史高標。</p>
-    <div class="pai-tbl"><table><thead><tr><th>分項</th><th>權重</th>
-      <th>刻度（原始值→分數）</th></tr></thead><tbody>{knot_rows}</tbody></table></div>
-    <div class="pai-tbl"><table><thead><tr><th>區間</th><th>分帶</th><th>意義</th></tr></thead>
-      <tbody>{band_rows}</tbody></table></div>
-    <p>首頁的 ▲▼ 箭頭比較的是<strong>當日指數與近 {PAI_TREND_WINDOW} 個有資料日的平均</strong>，
-      差距超過 {PAI_TREND_EPS} 分才顯示方向。不用「與前一日相比」，是因為本站資料是脈衝式的
-      （日間變動中位數約 16 分），逐日比較幾乎天天亮箭頭，等於沒有資訊。</p>
-    <p>整站配色也綁在這個指數上：指數 ≥ {PAI_DARK} 的日子全站轉為深色，其餘為淺色。</p>
-    <p>刻度日後若需重新校準（例如共軍活動規模長期上移，使刻度失去鑑別力），會把版本號往上加
-      並在此說明，<strong>不追溯改寫舊分數</strong>。</p>"""
-
-    return f"""
-    <h2 id="pai">PLA Activity Index ({PAI_VERSION})</h2>
-    <p>The 0–100 figure on the front page compresses the day's four observations into one
-      number that can be compared across days. It is <strong>not an official alert
-      level</strong> — only Taiwan's MND and national security bodies issue those. This is
-      simply another way of reading figures already published, so a reader can tell how today
-      compares with the past half-year.</p>
-    <p>Three design rules: <strong>reproducible</strong> (it uses only fields in records.csv,
-      no external signals and no human judgement, so anyone can recompute it),
-      <strong>non-drifting</strong> (the scale is a set of constants calibrated once and frozen,
-      never recomputed against fresh history, so a score that has been cited stays put), and
-      <strong>decomposable</strong> (the front page shows what each of the four components
-      scored — no black box).</p>
-    <p>Each observation is mapped to a 0–100 sub-score by piecewise-linear interpolation over
-      the knots below, then weighted:</p>
-    <p><strong>Index = {formula}</strong> (plus {PAI_BALLOON_BOOST} if the bulletin reports
-      balloon activity; rounded and clamped to 0–100)</p>
-    <p>Zero always scores zero, deliberately: no crossing means no crossing — it does not earn
-      a baseline score merely because most days are zero. The knots are calibrated on the actual
-      distribution since January 2026, with the top of each scale set at historical highs.</p>
-    <div class="pai-tbl"><table><thead><tr><th>Component</th><th>Weight</th>
-      <th>Scale (value→score)</th></tr></thead><tbody>{knot_rows}</tbody></table></div>
-    <div class="pai-tbl"><table><thead><tr><th>Range</th><th>Band</th><th>Meaning</th></tr></thead>
-      <tbody>{band_rows}</tbody></table></div>
-    <p>The ▲▼ arrow compares <strong>today's index with the average of the last
-      {PAI_TREND_WINDOW} days that have data</strong>, and only shows a direction when the gap
-      exceeds {PAI_TREND_EPS} points. Day-over-day comparison is not used: this data is bursty
-      (median day-to-day swing ≈ 16 points), so it would flag a direction almost every day and
-      carry no information.</p>
-    <p>The site's colour scheme follows the same index: days scoring {PAI_DARK} or above render
-      the whole site dark, everything else light.</p>
-    <p>Should the scale ever need recalibrating (for instance if PLA activity shifts upward
-      enough that the scale loses discrimination), the version number will increment and the
-      change will be documented here. <strong>Past scores are not rewritten.</strong></p>"""
-
 
 def build_about(df, lang, out_dir, s):
     """Methodology / data-source page. Bilingual via lang branch (en = no CJK)."""
@@ -3374,126 +2429,173 @@ def build_about(df, lang, out_dir, s):
         body = f"""\
   <article class="prose">
     <h1 class="prose-title">Methodology &amp; Data Sources</h1>
-    <p class="lead">This site tracks daily PLA military activity around Taiwan. Every figure is
-      transcribed verbatim from the daily public releases of the Republic of China (Taiwan)
-      Ministry of National Defense (MND) — nothing is estimated or inferred.</p>
+    <p class="lead">This site tracks the daily military activity of the People's Liberation
+      Army (PLA) around Taiwan. Every figure is transcribed verbatim from the daily public
+      releases of the Republic of China (Taiwan) Ministry of National Defense (MND) — nothing
+      is estimated or inferred. This page documents the source, update process, and the
+      definitions of key terms such as the "Taiwan Strait median line" versus the
+      "12 nautical-mile territorial sea", so journalists and researchers can verify and cite
+      the data.</p>
     <div class="about-meta">
       <span>Coverage: {start} – {end}</span>
       <span>{n} daily records</span>
       <span>License: CC BY 4.0</span>
     </div>
 
-    <h2>Source &amp; updates</h2>
-    <ul>
-      <li>Single source: the <a href="{MND}" target="_blank" rel="noopener">ROC MND "Real-time
-        Military Activity" bulletins</a> and flight-path graphics — transcribed and visualized
-        only; nothing unconfirmed by the MND is added.</li>
-      <li>Fetched automatically after the MND publishes around midday Taiwan time (≈ 12:00–14:00);
-        if it does not publish, that day stays blank — never filled with an estimate.</li>
-      <li>Records are append-only and never rewritten, so cited figures stay stable; values are
-        checked for consistency before publishing.</li>
-    </ul>
+    <h2>Data source</h2>
+    <p>The single source is the <a href="{MND}" target="_blank" rel="noopener">ROC Ministry
+      of National Defense "Real-time Military Activity" bulletins</a> — the official daily
+      announcements and flight-path graphics on PLA activity in the airspace and waters around
+      Taiwan. This site only transcribes, structures and visualizes that data; it never
+      incorporates information not confirmed by the MND.</p>
 
-    <h2>Lines &amp; terms</h2>
+    <h2>Update frequency</h2>
+    <p>Updated automatically once per day, fetched after the MND publishes around midday Taiwan
+      time (≈ 12:00–14:00), with backup retry runs. If the MND is delayed or does not publish
+      on a given day, that day is left blank rather than filled with an estimate. Historical
+      records are append-only and never altered once written, so cited figures stay stable.</p>
+
+    <h2>Key term definitions</h2>
     <div class="def-card">
       <div class="term">Taiwan Strait median line <span class="en">/ Davis Line</span></div>
-      <p>An informal line down the centre of the strait, never recognized by any treaty. For
-        decades both sides largely refrained from crossing it, so a crossing is a strong political
-        signal — but it <strong>does not constitute a violation of sovereign airspace under
-        international law</strong> and does not trigger the right of self-defense. "Median-line
-        crossings" here means the PLA sorties that crossed it that day.</p>
+      <p>An informal line down the centre of the Taiwan Strait, never recognized by any formal
+        treaty between the two sides. For decades aircraft and vessels largely refrained from
+        crossing it, so a crossing carries strong political and military signalling weight.
+        However, crossing the median line <strong>does not constitute a violation of territory
+        or sovereign airspace under international law</strong> and does not automatically
+        trigger the right of self-defense. The "median-line crossings" figure on this site
+        counts the PLA sorties that crossed this line on a given day.</p>
     </div>
     <div class="def-card">
       <div class="term">12 NM territorial sea</div>
-      <p>Under UNCLOS, the 12 nautical miles from the baseline are a state's territorial sea and
-        the airspace above it is sovereign airspace — the boundary that actually carries legal
-        weight. PLA aircraft or vessels coming inside this line is a different order of event from
-        a median-line crossing.</p>
+      <p>Under the UN Convention on the Law of the Sea, the 12 nautical miles measured from the
+        baseline constitute a state's territorial sea, and the airspace above it is sovereign
+        airspace — the boundary that actually carries legal weight. Once PLA aircraft or vessels
+        enter the territorial sea or airspace within this line, Taiwan may take defensive action
+        under international law and its Defense Act. This is a different order of event from a
+        median-line crossing.</p>
     </div>
     <div class="def-card">
       <div class="term">ADIZ <span class="en">Air Defense Identification Zone</span></div>
-      <p>Declared for the early identification of airborne objects, and far larger than sovereign
-        airspace. Entering an ADIZ is not a violation of sovereignty; it is used to gauge intensity.</p>
+      <p>A zone declared for the early identification of airborne objects; it is far larger than
+        sovereign airspace. Entering an ADIZ is not a violation of sovereignty, but is commonly
+        used to gauge the intensity and posture of activity.</p>
     </div>
     <div class="def-card">
       <div class="term">Sorties &amp; vessels</div>
-      <p>"Sorties" is the number of PLA aircraft missions detected that day; "vessels" the number
-        of PLA Navy ships — both per the MND's own count.</p>
+      <p>"Sorties" is the number of PLA aircraft missions detected that day, per the MND's own
+        count; "vessels" is the number of PLA Navy ships detected that day. Other activity such
+        as surveillance balloons is noted separately in the notes column of the daily records.</p>
     </div>
 
-{pai_method_html(lang, s)}
+    <h2>How the data is compiled</h2>
+    <p>The pipeline is deterministic and uses no manual estimation:</p>
+    <ul>
+      <li>MND bulletin → fields extracted into a single master CSV;</li>
+      <li>Automated validation: median-line crossings may not exceed total sorties; the crossing
+        rate must match the computed value (±1%); no duplicate dates; aircraft-type values must
+        be valid;</li>
+      <li>Only after validation passes are the static pages and charts generated, in both
+        Chinese and English.</li>
+    </ul>
 
-    <h2>The arms dataset</h2>
-    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset covering US
-      Foreign Military Sales to Taiwan notified to Congress by the Defense Security Cooperation
-      Agency (DSCA) since 2019. A DSCA notification is <strong>not</strong> a signed contract or a
-      delivery, and notified values are ceilings. Direct commercial sales are excluded; every case
-      is compiled by hand with its own source link.</p>
+    <h2>Arms-procurement tracking method</h2>
+    <p>The <a href="/en/arsenal/">Arms Delivery Tracker</a> is a separate dataset from the daily
+      activity log. It follows US Foreign Military Sales (FMS) to Taiwan notified to Congress by the
+      Defense Security Cooperation Agency (DSCA) since 2019. Note that a DSCA notification is the
+      congressional-notification stage only — it is <strong>not</strong> a signed contract, and
+      neither is a delivery; the Letter of Offer and Acceptance (LOA) and delivery schedule come
+      later, and notified values are ceilings that signed amounts often fall below. Direct commercial
+      sales and US-forces transfers are excluded. Each case is compiled by hand from the official
+      DSCA notice (or a web-archive snapshot where the original page is offline), with delivery
+      progress cross-checked against CNA / MND / defense-trade press, and every case carries its own
+      source link.</p>
 
     <h2>Citation &amp; license</h2>
     <p>The underlying figures are public information from the MND. This site's compilation, field
       structure and charts are released under <a href="{CC}" target="_blank" rel="noopener">CC
-      BY 4.0</a>. Please credit:</p>
+      BY 4.0</a>. Journalists and researchers are welcome to cite them, please credit:</p>
     <p><strong>Source: ROC Ministry of National Defense; compilation &amp; charts: PLA Activity
       Tracker ({BASE_URL}).</strong></p>
-    <p>Raw data (CSV): <a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></p>
+    <ul>
+      <li>Raw data (CSV): <a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></li>
+      <li>Related posts: <a href="{BLOG_URL}" target="_blank" rel="noopener">Blog</a></li>
+    </ul>
   </article>"""
     else:
         body = f"""\
   <article class="prose">
     <h1 class="prose-title">方法論與資料來源</h1>
-    <p class="lead">本站每日追蹤解放軍在台灣周邊的軍事活動。數字全部逐字取自中華民國國防部
-      每日公告，不推估、不加工。</p>
+    <p class="lead">本站每日追蹤中國解放軍（PLA）在台灣周邊的軍事活動。所有數字均逐字取自
+      中華民國國防部每日公布的資料，不推估、不加工。本頁說明資料來源、更新方式，以及
+      「海峽中線」與「12 浬領海線」等關鍵名詞的定義差異，供媒體與研究者查證引用。</p>
     <div class="about-meta">
       <span>資料區間：{start} ～ {end}</span>
       <span>{n} 筆每日紀錄</span>
       <span>授權：CC BY 4.0</span>
     </div>
 
-    <h2>資料來源與更新</h2>
-    <ul>
-      <li>唯一來源：<a href="{MND}" target="_blank" rel="noopener">國防部「即時軍事動態」</a>
-        的每日公告與航跡圖，只做轉錄與視覺化，不加入未經證實的訊息。</li>
-      <li>每天中午公布後自動擷取（台灣時間 12:00–14:00）；當日沒發布就留空，不用估計值補。</li>
-      <li>歷史資料只新增、不改寫，引用過的數字不會變；寫入前自動檢查數值一致性，沒過就不出版。</li>
-    </ul>
+    <h2>資料來源</h2>
+    <p>唯一來源為 <a href="{MND}" target="_blank" rel="noopener">中華民國國防部「即時軍事動態」</a>，
+      即國防部每日就「中共解放軍進入我周邊海空域動態」所發布的官方公告與航跡圖。
+      本站僅做轉錄、結構化與視覺化，不引用任何未經國防部證實的訊息。</p>
 
-    <h2>界線與名詞</h2>
+    <h2>更新頻率</h2>
+    <p>每日自動更新一次，於台灣時間中午國防部公布後擷取（約 12:00–14:00），並設有備援班次重試。
+      若當日國防部延遲或未發布，則當日從缺，不以估計值填補。歷史資料一旦寫入即不再修改（僅新增），
+      以確保被引用的數字穩定不變。</p>
+
+    <h2>關鍵名詞定義</h2>
     <div class="def-card">
       <div class="term">海峽中線 <span class="en">Taiwan Strait median line / Davis Line</span></div>
-      <p>海峽中央一條沒有條約承認的默契界線。長年雙方多半不越線，越線因此是強烈的政治訊號；
-        但它<strong>不構成國際法上的領空侵犯</strong>，也不觸發自衛權。本站「逾越中線」＝當日
-        越線的共機架次。</p>
+      <p>台灣海峽中央一條未經雙方正式條約承認的默契分界線。長期以來兩岸軍機艦多半不越線，
+        因此越線具有高度政治與軍事訊號意義。但越過中線<strong>並不構成國際法上的領土或領空侵犯</strong>，
+        不會自動觸發自衛權。本站「逾越中線」數字即指當日越過此線的共機架次。</p>
     </div>
     <div class="def-card">
       <div class="term">12 浬領海線 <span class="en">12 NM territorial sea</span></div>
-      <p>依《聯合國海洋法公約》，自基線起算 12 浬為領海、其上空為領空，這才是有法律效力的
-        邊界。共機艦進到這條線以內，與越過中線是兩個不同層級的事件。</p>
+      <p>依《聯合國海洋法公約》，自基線起算 12 浬為一國領海，其上空為領空，是真正具法律意義的邊界。
+        共機艦一旦進入此界線內的領海或領空，依國際法及我國《國防法》，台灣方得採取防衛行動。
+        這與「越中線」屬於兩個不同層級的事件。</p>
     </div>
     <div class="def-card">
       <div class="term">防空識別區 <span class="en">ADIZ</span></div>
-      <p>為早期識別空中目標而劃設，範圍遠大於領空。進入 ADIZ 不等於侵犯主權，只用來看活動強度。</p>
+      <p>為早期識別空中目標而劃設的空域，範圍遠大於領空。進入 ADIZ 不等於侵犯主權，
+        但常被用來觀察活動強度與態勢。</p>
     </div>
     <div class="def-card">
       <div class="term">架次與共艦 <span class="en">sorties &amp; vessels</span></div>
-      <p>「架次」＝當日偵獲的共機出動次數，「共艦」＝艦艇艘數，均以國防部計數為準。</p>
+      <p>「架次」為當日偵獲的共機出動次數，以國防部計數為準；「共艦」為當日偵獲的解放軍海軍艦艇艘數。
+        空飄氣球等其他活動另記於每日紀錄的備註欄。</p>
     </div>
 
-{pai_method_html(lang, s)}
+    <h2>數據如何整理</h2>
+    <p>處理流程為決定式（deterministic），不使用人工估計：</p>
+    <ul>
+      <li>國防部公告 → 擷取欄位寫入單一 CSV 主檔；</li>
+      <li>自動驗證：逾越中線數不得大於總架次、越線率與計算值一致（容許 ±1%）、日期不重複、機型值合法；</li>
+      <li>通過驗證後才產生靜態網頁與圖表，中英雙語同步輸出。</li>
+    </ul>
 
-    <h2>軍購資料</h2>
-    <p><a href="/arsenal/">軍購交付追蹤</a>是另一組獨立資料，收 2019 年起美國國防安全合作署
-      （DSCA）通知國會的對台軍售案。DSCA 公告<strong>不等於簽約或交付</strong>，金額是上限。
-      不含商售案；每案人工整理、逐案附來源。</p>
+    <h2>軍購追蹤資料方法</h2>
+    <p><a href="/arsenal/">軍購交付追蹤</a>是與每日動態獨立的另一組資料，追蹤自 2019 年起、
+      經美國國防安全合作署（DSCA）通知國會的對台軍售案（FMS）。須留意 DSCA 公告僅是「國會通知」
+      階段，<strong>並不等於已簽約，也不等於已交付</strong>；實際發價書（LOA）與交付時程另計，
+      且公告金額為上限，實際簽約金額常較低。本資料不含商售案與美軍自用移撥。每一案均逐案人工
+      整理自 DSCA 官方公告（原頁下架者引用網路檔案館快照），交付進度輔以中央社／國防部／專業
+      軍事媒體報導交叉查證，且每一案都附上各自的來源連結。</p>
 
     <h2>引用與授權</h2>
     <p>底層數字屬國防部公開資訊。本站的整理、欄位結構與圖表以
-      <a href="{CC}" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎引用，請註明：</p>
+      <a href="{CC}" target="_blank" rel="noopener">CC BY 4.0</a> 釋出，歡迎媒體與研究者引用，請註明：</p>
     <p><strong>資料來源：中華民國國防部；整理與圖表：解放軍擾台動態追蹤（{BASE_URL}）。</strong></p>
-    <p>原始資料（CSV）：<a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></p>
+    <ul>
+      <li>原始資料（CSV）：<a href="{CSV}" target="_blank" rel="noopener">{CSV}</a></li>
+      <li>相關發布：<a href="{BLOG_URL}" target="_blank" rel="noopener">部落格</a></li>
+    </ul>
   </article>"""
 
-    head = make_head(lang, 'about', s, head_extra=page_jsonld(lang, s, 'about'))
+    head = make_head(lang, 'about', s)
     html = f"""{head}
 <body>
 <header class="site-header">
@@ -3501,7 +2603,6 @@ def build_about(df, lang, out_dir, s):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
-      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('about', lang, 'about', s)}
   </div>
@@ -3549,41 +2650,32 @@ ARSENAL_OG_IMG     = 'assets/arsenal/og-arsenal.jpg'   # 相對路徑；make_hea
 # 呼叫時傳入的值一致（build_arsenal 用 'arsenal'，build_arsenal_detail 用 'ars_{key}'）
 ARSENAL_OG_PAGES = {'arsenal', 'ars_harpoon', 'ars_patriot', 'ars_himars'}
 
-# 系統卡片牆：主要裝備矩陣（category≠sustainment 且 qty 非空，共 23 案）歸併為
-# 「武器系統」卡。case_id → system_card_key；同一系統多案共用一張卡，卡圖為
-# assets/arsenal/card-{key}.jpg（條件式渲染：檔案存在才掛圖，否則退無圖版）。
-# 目前定義的合併：HIMARS（20-77 已交付＋26-01 已公告）、魚叉（20-68 岸置＋22-45
-# 空射）；其餘一案一卡。約 21 張卡。
-ARSENAL_SYSCARD = {
-    '19-21': 'stinger',   '19-22': 'm1a2',     '19-50': 'f16v',
-    '20-07': 'mk48',      '20-69': 'slamer',   '20-75': 'ms110',
-    '20-77': 'himars',    '26-01': 'himars',
-    '20-68': 'harpoon',   '22-45': 'harpoon',
-    '20-74': 'mq9b',      '21-44': 'm109a6',   '22-46': 'aim9x',
-    '22-70': 'volcano',   '24-47': 'switchblade', '24-56': 'altius600',
-    '24-48': 'nasams',    '25-01': 'mk75',     '25-04': 'c4mod',
-    '25-108': 'm109a7',   '26-02': 'tow',      '26-06': 'javelin',
-    '26-09': 'altius700',
-}
-# 合併卡的顯示名稱（key → (zh, en)）；未列出的單案卡沿用該案 system_zh/system_en。
-ARSENAL_SYSCARD_NAME = {
-    'himars':  ('海馬斯多管火箭系統', 'M142 HIMARS Rocket System'),
-    'harpoon': ('魚叉飛彈（岸置＋空射）', 'Harpoon Missiles (Coastal + Air-launched)'),
+# 進度矩陣 case_id → 縮圖檔名。同一系統多案共用同圖（例：26-01 與 20-77 同為
+# HIMARS）。不在此表中的案（qty 非空但無對應圖）一律顯示占位磚。
+ARSENAL_CASE_THUMB = {
+    '19-21': 'thumb-stinger.jpg',
+    '19-22': 'thumb-m1a2.jpg',
+    '19-50': 'thumb-f16v.jpg',
+    '20-07': 'thumb-mk48.jpg',
+    '20-69': 'thumb-slamer.jpg',
+    '20-77': 'thumb-himars.jpg',
+    '20-74': 'thumb-mq9b.jpg',
+    '21-44': 'thumb-m109a6.jpg',
+    '22-45': 'thumb-harpoon_air.jpg',
+    '22-46': 'thumb-aim9x.jpg',
+    '22-70': 'thumb-volcano.jpg',
+    '25-01': 'thumb-mk75.jpg',
+    '25-108': 'thumb-m109a7.jpg',
+    '26-01': 'thumb-himars.jpg',
+    '26-02': 'thumb-tow.jpg',
+    '26-06': 'thumb-javelin.jpg',
+    '26-09': 'thumb-altius700.jpg',
 }
 # 無圖案的類別占位單字。zh 頁用單字，en 頁需避免殘留中文（validate.py 的 en 頁
 # 中文檢查會攔到），改用對應類別代碼。
 ARSENAL_CAT_GLYPH = {
     'aircraft': '機', 'missile': '彈', 'ground': '陸',
     'naval': '艦', 'uas': '無', 'c4isr': '訊', 'sustainment': '',
-}
-# 無圖卡的「設計化占位帶」用詞（與圖帶同高，類別大字＋斜紋底，取代單獨空白）。
-ARSENAL_CAT_WORD = {
-    'aircraft': '航空系統', 'missile': '飛彈系統', 'ground': '地面系統',
-    'naval': '艦載系統', 'uas': '無人系統', 'c4isr': '通訊指管',
-}
-ARSENAL_CAT_WORD_EN = {
-    'aircraft': 'AIRCRAFT', 'missile': 'MISSILE', 'ground': 'GROUND',
-    'naval': 'NAVAL', 'uas': 'UNMANNED', 'c4isr': 'C4ISR',
 }
 ARSENAL_CAT_GLYPH_EN = {
     'aircraft': 'AC', 'missile': 'MSL', 'ground': 'GRD',
@@ -3810,8 +2902,8 @@ def _ars_reads_html(df_ars, df_peers, lang, s):
              'The December 2025 HIMARS package (case 26-01) includes 420 M57 ATACMS — deep-strike missiles with '
              'roughly 300 km range. Willingness to sell a weapon that can strike deep across the strait signals a '
              'higher tier of trust in Taiwan.',
-             'This is our own contextual reading, not an official position: the only citable document is the '
-             'DSCA notice itself, and Washington has made no corresponding statement about a "trust tier".',
+             'This reading is contextual inference and still needs a DoD/CRS-grade source before publication; '
+             'it currently cites only the DSCA notice.',
              src_at),
         ]
     else:
@@ -3836,8 +2928,7 @@ def _ars_reads_html(df_ars, df_peers, lang, s):
             ('ATACMS 陸軍戰術飛彈：信任層級的指標',
              '2025 年 12 月的 HIMARS 大案（案號 26-01）包含 420 枚 M57 ATACMS——射程約 300 公里的縱深'
              '打擊武器。美國願意出售此級可打擊對岸縱深的武器，象徵對台信任層級的提升。',
-             '這一段是本站的脈絡判讀，不是官方說法：目前可引的只有 DSCA 公告本身，'
-             '美方並未就「信任層級」做過對應表述。',
+             '此判讀屬脈絡推論，上線前仍需補 DoD／CRS 級來源佐證，目前僅引 DSCA 公告。',
              src_at),
         ]
 
@@ -3847,6 +2938,43 @@ def _ars_reads_html(df_ars, df_peers, lang, s):
         srch = f'<div class="ars-src">{_src_chip(src, lang)}</div>' if src else ''
         blocks.append(f'<div class="ars-point"><h3>{title}</h3><p>{body}{cav}</p>{srch}</div>')
     return '<div class="ars-reads">' + ''.join(blocks) + '</div>'
+
+
+def _ars_delay_table_html(df_ars, lang, s):
+    a = s['ars']
+    id2name = {r['case_id']: (r['system_en'] if lang == 'en' else r['system_zh'])
+               for _, r in df_ars.iterrows()}
+    body = []
+    for cid in ARSENAL_DELAY_ORDER:
+        if cid not in df_ars['case_id'].values:
+            continue
+        zh, en, src, tag = ARSENAL_DELAYS[cid]
+        reason = html.escape(en if lang == 'en' else zh)
+        tl = _DELAY_TAG[tag][1] if lang == 'en' else _DELAY_TAG[tag][0]
+        srch = _src_chip(src, lang) if src else '—'
+        body.append(
+            f'<tr><td>{html.escape(id2name.get(cid, cid))}</td>'
+            f'<td class="special-cell" style="max-width:none">〔{tl}〕{reason}</td>'
+            f'<td>{srch}</td></tr>' if lang != 'en' else
+            f'<tr><td>{html.escape(id2name.get(cid, cid))}</td>'
+            f'<td class="special-cell" style="max-width:none">[{tl}] {reason}</td>'
+            f'<td>{srch}</td></tr>')
+    # counter-examples
+    counters = []
+    for cid, czh, cen, src in ARSENAL_COUNTERS:
+        name = id2name.get(cid, cid)
+        txt = html.escape(cen if lang == 'en' else czh)
+        counters.append(
+            f'<div class="c"><div class="t">{html.escape(name)}</div><p>{txt} '
+            f'{_src_chip(src, lang)}</p></div>')
+    return (
+        f'<div class="ars-tbl-wrap tbl-wrap"><table><thead><tr>'
+        f'<th>{a["delay_col_case"]}</th><th>{a["delay_col_reason"]}</th>'
+        f'<th>{a["delay_col_src"]}</th></tr></thead><tbody>'
+        + ''.join(body) + '</tbody></table></div>'
+        + f'<div class="ars-sec-title" style="margin-top:1.5rem;border:0;padding:0">'
+          f'{a["counter_title"]}</div>'
+        + '<div class="ars-counter">' + ''.join(counters) + '</div>')
 
 
 def _ars_chart_html(df_ars, lang, s):
@@ -3884,18 +3012,6 @@ def _ars_chart_html(df_ars, lang, s):
 def _ars_cases_html(df_ars, lang, s):
     a = s['ars']
     df = df_ars.sort_values('announce_date', ascending=False)
-    # 延宕標籤也掛在全表的狀態欄：系統卡牆只收 qty 非空的主要裝備，像 20-87 野戰資訊
-    # 通信系統（qty 空白）登錄了延宕理由卻無處露出。全表是唯一涵蓋 49 案的地方。
-    def _chip(r):
-        """桌機表格沒有展開列，所以理由掛在標籤的 title 上；手機卡片版另在 body 展開
-        理由全文（見下）。缺了這段，qty 空白因而進不了系統卡牆的案子（如 20-87
-        野戰資訊通信系統）會只看到「延宕」卻查不到原因。"""
-        if r['case_id'] not in ARSENAL_DELAYS:
-            return ''
-        zh, en, _src, tag = ARSENAL_DELAYS[r['case_id']]
-        tip = html.escape(en if lang == 'en' else zh, quote=True)
-        return (f'<span class="ars-delaychip" title="{tip}" aria-label="{tip}">'
-                f'{a["matrix_delay_chip"]}</span>')
     # desktop table
     rows = []
     for _, r in df.iterrows():
@@ -3905,7 +3021,7 @@ def _ars_cases_html(df_ars, lang, s):
             f'<td style="white-space:normal;max-width:280px">{name}</td>'
             f'<td>{_ars_cat_badge(r["category"], s)}</td>'
             f'<td class="num">{fmt_money(r["value_usd_m"], lang)}</td>'
-            f'<td class="ars-td-st">{_ars_status_badge(r["delivery_status"], s)}{_chip(r)}</td>'
+            f'<td>{_ars_status_badge(r["delivery_status"], s)}</td>'
             f'<td>{_ars_srcs(r, s) or "—"}</td></tr>')
     table = (f'<div class="ars-tbl-wrap tbl-wrap"><table><thead><tr>'
              f'<th>{a["th_date"]}</th><th>{a["th_system"]}</th><th>{a["th_cat"]}</th>'
@@ -3920,7 +3036,7 @@ def _ars_cases_html(df_ars, lang, s):
         meta = (f'<span>{html.escape(r["announce_date"])}</span>'
                 f'<span>{_ars_cat_badge(r["category"], s)}</span>'
                 f'<span>{fmt_money(r["value_usd_m"], lang)}</span>'
-                f'<span>{_ars_status_badge(r["delivery_status"], s)}{_chip(r)}</span>')
+                f'<span>{_ars_status_badge(r["delivery_status"], s)}</span>')
         if lang == 'en':
             body_parts = []
             if qtyl:
@@ -3939,9 +3055,6 @@ def _ars_cases_html(df_ars, lang, s):
             srcs = _ars_srcs(r, s)
             if srcs:
                 body += f'<br>{srcs}'
-        delay = _ars_delay_html(r['case_id'], lang)
-        if delay:
-            body += f'<br>{delay}'
         cards.append(
             f'<details class="ars-card"><summary>'
             f'<div class="ars-card-top"><span class="ars-card-sys">{name}</span></div>'
@@ -3949,171 +3062,6 @@ def _ars_cases_html(df_ars, lang, s):
             f'<div class="ars-card-body">{body}</div></details>')
     return (f'<div class="ars-cases">{table}'
             f'<div class="ars-cards">' + ''.join(cards) + '</div></div>')
-
-
-_ARS_ST_ORDER = {'completed': 0, 'delivering': 1, 'announced': 2, 'unknown': 3, 'cancelled': 4}
-
-
-def _ars_base_unit(u):
-    """去掉單位的括號附注（『套(發射系統)』→『套』），供合併卡判斷單位是否一致。"""
-    for sep in ('(', '（'):
-        if sep in u:
-            u = u.split(sep)[0]
-    return u.strip()
-
-
-def _ars_agg_label(cases, lang):
-    """回傳 (主數字標, 括號分項)。單案＝該案數量標，無分項；多案且單位一致＝加總＋
-    按案分項（含狀態）；單位不一致＝並列各案數量，無分項。"""
-    if len(cases) == 1:
-        r = cases[0]
-        return _ars_qty_label(r['qty'], r['qty_unit'], lang), ''
-    units = {_ars_base_unit(r['qty_unit']) for r in cases}
-    join = ' + ' if lang == 'en' else '＋'
-    if len(units) == 1:
-        total = sum(int(float(r['qty'])) for r in cases)
-        main = _ars_qty_label(str(total), _ars_base_unit(cases[0]['qty_unit']), lang)
-        parts = []
-        for r in cases:
-            zh, en, _ = ARSENAL_STATUS[r['delivery_status']]
-            lbl = en if lang == 'en' else zh
-            parts.append(f'{int(float(r["qty"])):,} {lbl}')
-        brk = ('(' + join.join(parts) + ')') if lang == 'en' else '（' + join.join(parts) + '）'
-        return main, brk
-    main = join.join(_ars_qty_label(r['qty'], r['qty_unit'], lang) for r in cases)
-    return main, ''
-
-
-def _ars_syscards_html(df_ars, lang, s):
-    """系統卡片牆。主要裝備（category≠sustainment 且 qty 非空）依 ARSENAL_SYSCARD
-    歸併為系統，依系統內最高進度排序、同組依合計案值由大到小，再拆成兩組：
-      1. 已交付／交付中／已終止 → 16:9 圖卡（有 card-{key}.jpg 用照片，否則類別斜紋帶）
-      2. 已公告／進度未確認     → 縮圖緊湊列（進度條全空的圖卡沒有資訊量）
-    回傳 (圖卡 HTML, 緊湊列 HTML, 圖卡數, 緊湊列數)。"""
-    a = s['ars']
-    major = df_ars[(df_ars['category'] != 'sustainment') & (df_ars['qty'] != '')]
-    # 依 ARSENAL_SYSCARD 分組，保留每案原始 dict
-    groups = {}
-    for _, r in major.iterrows():
-        key = ARSENAL_SYSCARD.get(r['case_id'], r['case_id'])
-        groups.setdefault(key, []).append(r)
-    cards = []
-    for key, rows in groups.items():
-        rows = sorted(rows, key=lambda r: (_ARS_ST_ORDER.get(r['delivery_status'], 3),
-                                           -float(r['value_usd_m'])))
-        top_st = min(_ARS_ST_ORDER.get(r['delivery_status'], 3) for r in rows)
-        tot_val = sum(float(r['value_usd_m']) for r in rows)
-        cards.append((top_st, -tot_val, key, rows))
-    cards.sort(key=lambda c: (c[0], c[1]))
-
-    prog, pend = [], []
-    for top_st, neg_val, key, rows in cards:
-        tot_val = -neg_val
-        first = rows[0]
-        if key in ARSENAL_SYSCARD_NAME:
-            name_zh, name_en = ARSENAL_SYSCARD_NAME[key]
-        else:
-            name_zh, name_en = first['system_zh'], first['system_en']
-        name = html.escape(name_en if lang == 'en' else name_zh)
-        # zh 頁附 en 副標；en 頁主名已是英文，不重複
-        sub = f'<span class="en">{html.escape(name_en)}</span>' if lang != 'en' else ''
-        main_agg, brk = _ars_agg_label(rows, lang)
-        agg_html = (f'<span class="ars-scard-agg">{html.escape(main_agg)}'
-                    + (f'<span class="brk">{html.escape(brk)}</span>' if brk else '')
-                    + '</span>')
-        # 進度列（每案一條）
-        prows = []
-        for r in rows:
-            qtyl = _ars_qty_label(r['qty'], r['qty_unit'], lang)
-            prows.append(
-                f'<div class="ars-scard-row">'
-                f'<div class="ars-scard-row-top">'
-                f'<span class="ars-scard-case">{html.escape(r["case_id"])}</span>'
-                f'<span class="ars-scard-qty">{html.escape(qtyl)}</span>'
-                f'{_ars_status_badge(r["delivery_status"], s)}</div>'
-                f'{_ars_bar(r["delivery_status"])}</div>')
-        rows_html = '<div class="ars-scard-rows">' + ''.join(prows) + '</div>'
-        # 展開內容：按案分段（案號＋名稱＋既有延宕/來源明細）
-        segs = []
-        for r in rows:
-            seg_name = html.escape(r['system_en'] if lang == 'en' else r['system_zh'])
-            segs.append(f'<div class="ars-scard-seg">'
-                        f'<div class="ars-scard-seg-h">{html.escape(r["case_id"])} · {seg_name}</div>'
-                        f'{_ars_matrix_detail(r, s, lang)}</div>')
-        detail_html = '<div class="ars-scard-detail">' + ''.join(segs) + '</div>'
-        # 延宕標記只掛在「真的有登錄延宕理由」的卡上（ARSENAL_DELAYS）。展開提示一律中性，
-        # 否則 49 案中僅 7 案延宕、卡卡都寫「展開延宕理由」會讓讀者誤以為每案都延宕
-        # （2026-07-30 使用者回報）。
-        has_delay = any(r['case_id'] in ARSENAL_DELAYS for r in rows)
-        chip = (f'<span class="ars-delaychip">{a["matrix_delay_chip"]}</span>'
-                if has_delay else '')
-        caret = (f'<span class="ars-scard-foot">'
-                 f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
-                 f'{chip}</span>')
-        # 圖帶條件式渲染
-        card_file = f'card-{key}.jpg'
-        if (ARSENAL_ASSET_DIR / card_file).exists():
-            img_html = (f'<div class="ars-scard-img">'
-                        f'<img src="/assets/arsenal/{card_file}" alt="{name}" loading="lazy"></div>')
-            head_html = (f'<div class="ars-scard-head">'
-                         f'<div class="ars-scard-titles">'
-                         f'<span class="ars-scard-name">{name}{sub}</span></div>'
-                         f'{agg_html}</div>')
-        else:
-            # 無圖卡：不再撐 16:9 的空圖帶（看起來像圖片壞了），改成一條矮斜紋帶。
-            # 原本磚上的類別大字（「無人系統」）與下方卡名（「ALTIUS 600M-V無人機系統」）
-            # 語意重複，2026-07-30 移除，只留一行說明為什麼沒有照片。
-            noimg_note = 'No public-domain archive photo' if lang == 'en' else '無公開領域檔案照'
-            img_html = (f'<div class="ars-scard-img ars-scard-band ars-scard-band-slim"'
-                        f' aria-hidden="true">'
-                        f'<span class="band-note">{noimg_note}</span></div>')
-            head_html = (f'<div class="ars-scard-head">'
-                         f'<div class="ars-scard-titles">'
-                         f'<span class="ars-scard-name">{name}{sub}</span></div>'
-                         f'{agg_html}</div>')
-        if top_st in _ARS_PENDING_ST:
-            # 尚未開始交付（已公告／進度未確認）：進度條必然全空，做成圖卡會讓卡牆下半段
-            # 變成一片空白長條（2026-07-30 使用者回報）。改用縮圖緊湊列，資訊密度更高，
-            # 且依案值排序讓最大案（F-16V 80 億）居首、不會因為降格而被埋掉。
-            pend.append(_ars_prow_html(key, name, sub, main_agg, brk, tot_val,
-                                       rows, first, chip, detail_html, lang, s))
-        else:
-            prog.append(
-                f'<details class="ars-syscard"><summary>{img_html}'
-                f'<div class="ars-scard-body">{head_html}{rows_html}{caret}</div>'
-                f'</summary>{detail_html}</details>')
-    return (('<div class="ars-syscards">' + ''.join(prog) + '</div>') if prog else '',
-            ('<div class="ars-prows">' + ''.join(pend) + '</div>') if pend else '',
-            len(prog), len(pend))
-
-
-# 尚未開始交付的狀態：進度條為 0，不做圖卡（見 _ars_syscards_html 內註解）
-_ARS_PENDING_ST = frozenset({2, 3})   # announced / unknown（_ARS_ST_ORDER 的序號）
-
-
-def _ars_prow_html(key, name, sub, main_agg, brk, tot_val, rows, first,
-                   chip, detail_html, lang, s):
-    """尚未開始交付的系統：縮圖＋單列緊湊格。縮圖用既有 thumb-{key}.jpg，
-    沒有縮圖的用類別單字磚（不再掛 16:9 空圖帶）。"""
-    a = s['ars']
-    thumb_file = f'thumb-{key}.jpg'
-    if (ARSENAL_ASSET_DIR / thumb_file).exists():
-        thumb = (f'<span class="ars-prow-thumb">'
-                 f'<img src="/assets/arsenal/{thumb_file}" alt="{name}" loading="lazy"></span>')
-    else:
-        glyph_map = ARSENAL_CAT_GLYPH_EN if lang == 'en' else ARSENAL_CAT_GLYPH
-        thumb = (f'<span class="ars-prow-thumb ars-prow-glyph" aria-hidden="true">'
-                 f'{glyph_map.get(first["category"], "")}</span>')
-    qty = html.escape(main_agg) + (f' <span class="brk">{html.escape(brk)}</span>' if brk else '')
-    badges = ''.join(_ars_status_badge(r['delivery_status'], s) for r in rows)
-    return (f'<details class="ars-prow"><summary>{thumb}'
-            f'<span class="ars-prow-main">'
-            f'<span class="ars-prow-name">{name}{sub}</span>'
-            f'<span class="ars-prow-meta">{qty}<span class="dot">·</span>'
-            f'{fmt_money(tot_val, lang)}</span></span>'
-            f'<span class="ars-prow-tags">{badges}{chip}'
-            f'<span class="tri">▸</span></span>'
-            f'</summary>{detail_html}</details>')
 
 
 def build_arsenal(df_ars, df_peers, lang, out_dir, s):
@@ -4126,10 +3074,6 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     n_cancel  = int((df_ars['delivery_status'] == 'cancelled').sum())
     latest    = df_ars['announce_date'].max()
     total_disp = f'{total_m / 100:.0f}' if lang != 'en' else fmt_money(total_m, lang)
-    # 資料更新日：讀 data/arsenal_updated.txt——只在軍購資料實際調整時由編修流程
-    # 更新該檔（見 project-reference「軍購資料更新流程」），每日 CI 重建不會動它。
-    upd_file = DATA_FILE.parent / 'arsenal_updated.txt'
-    data_updated = upd_file.read_text(encoding='utf-8').strip() if upd_file.exists() else latest
 
     # KPI 卡（2×3）
     unit_case = a['kpi_unit_case']
@@ -4139,34 +3083,52 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
         (str(n_deliver), a['kpi_deliver'], 'y'),
         (str(n_done), a['kpi_done'], ''),
         (str(n_cancel), a['kpi_cancel'], ''),
-        (f'<span style="font-size:1.2rem">{data_updated}</span>', a['kpi_latest'], ''),
+        (f'<span style="font-size:1.2rem">{latest}</span>', a['kpi_latest'], ''),
     ]
     kpi_html = ''.join(
         f'<div class="ars-kpi"><div class="ars-kpi-n {cls}">{val}</div>'
         f'<div class="ars-kpi-l">{lab}</div></div>'
         for val, lab, cls in kpis)
 
-    # 主要裝備系統卡片牆（category≠sustainment 且 qty 非空 → 歸併為系統卡）
-    prog_html, pend_html, n_prog, n_pend = _ars_syscards_html(df_ars, lang, s)
-    matrix_html = (f'<div class="ars-grp"><span class="ars-grp-t">{a["grp_active"]}</span>'
-                   f'<span class="ars-grp-n">{a["grp_count"].format(n=n_prog)}</span></div>'
-                   f'{prog_html}')
-    if pend_html:
-        matrix_html += (f'<div class="ars-grp"><span class="ars-grp-t">{a["grp_pend"]}</span>'
-                        f'<span class="ars-grp-n">{a["grp_count"].format(n=n_pend)}</span></div>'
-                        f'{pend_html}')
+    # 進度矩陣：主要裝備（category≠sustainment 且 qty 非空），依交付進度排序
+    # （已完成→交付中→僅公告→未知→終止），同組內依案值由大到小
+    major = df_ars[(df_ars['category'] != 'sustainment') & (df_ars['qty'] != '')].copy()
+    _st_order = {'completed': 0, 'delivering': 1, 'announced': 2, 'unknown': 3, 'cancelled': 4}
+    major['_st'] = major['delivery_status'].map(_st_order).fillna(3)
+    major = major.sort_values(['_st', 'value_usd_m'], ascending=[True, False])
+    mrows = []
+    for _, r in major.iterrows():
+        name = html.escape(r['system_en'] if lang == 'en' else r['system_zh'])
+        qtyl = _ars_qty_label(r['qty'], r['qty_unit'], lang)
+        qspan = f'<span class="qty">{qtyl}</span>' if qtyl else ''
+        caret = ('▸ ' + a['matrix_expand'])
+        thumb_file = ARSENAL_CASE_THUMB.get(r['case_id'])
+        if thumb_file:
+            thumb_html = (f'<img class="ars-row-thumb" src="/assets/arsenal/{thumb_file}" '
+                          f'alt="{name}" loading="lazy">')
+        else:
+            glyph_map = ARSENAL_CAT_GLYPH_EN if lang == 'en' else ARSENAL_CAT_GLYPH
+            glyph = glyph_map.get(r['category'], '')
+            thumb_html = f'<div class="ars-row-thumb ars-row-thumb-ph" aria-hidden="true">{glyph}</div>'
+        mrows.append(
+            f'<details class="ars-row"><summary>'
+            f'<div class="ars-row-flex">{thumb_html}<div class="ars-row-main">'
+            f'<div class="ars-row-top"><span class="ars-name">{name}{qspan}</span>'
+            f'{_ars_status_badge(r["delivery_status"], s)}</div>'
+            f'{_ars_bar(r["delivery_status"])}</div></div>'
+            f'<span class="ars-caret"><span class="tri">▸</span>{a["matrix_expand"]}</span>'
+            f'</summary>{_ars_matrix_detail(r, s, lang)}</details>')
+    matrix_html = '<div class="ars-matrix">' + ''.join(mrows) + '</div>'
 
     reads_html   = _ars_reads_html(df_ars, df_peers, lang, s)
-    # 延宕對照表已移除（2026-07-24 使用者裁定）：與系統卡展開內容重複；
-    # _ars_delay_table_html 一併移除，延宕資訊唯一入口＝卡片展開區。
+    delay_html   = _ars_delay_table_html(df_ars, lang, s)
     chart_html   = _ars_chart_html(df_ars, lang, s)
     cases_html   = _ars_cases_html(df_ars, lang, s)
     wcards_html  = _ars_weapon_cards_html(lang, s)
     divert_link  = '/en/arsenal/' if lang == 'en' else '/arsenal/'
 
     today_label = fmt_date_display(df_ars['announce_date'].max(), lang)
-    head = make_head(lang, 'arsenal', s, head_extra=arsenal_jsonld(lang, s, df_ars),
-                     page_path='/arsenal/', abs_assets=True)
+    head = make_head(lang, 'arsenal', s, page_path='/arsenal/', abs_assets=True)
     html_doc = f"""{head}
 <body>
 <div class="top-bar">
@@ -4178,7 +3140,6 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
-      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('arsenal', lang, 'arsenal', s)}
   </div>
@@ -4196,7 +3157,6 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     <div class="ars-sec-title">{a['matrix_title']}</div>
     {matrix_html}
     <p class="ars-note">{a['matrix_note']}</p>
-    <p class="ars-note">{a['matrix_scope']}</p>
   </section>
 
   <section class="ars-section anim-ready">
@@ -4208,6 +3168,12 @@ def build_arsenal(df_ars, df_peers, lang, out_dir, s):
     <div class="ars-sec-title">{a['read_title']}</div>
     <p class="ars-lead">{a['read_intro']}</p>
     {reads_html}
+  </section>
+
+  <section class="ars-section anim-ready">
+    <div class="ars-sec-title">{a['delay_title']}</div>
+    <p class="ars-lead">{a['delay_intro']}</p>
+    {delay_html}
   </section>
 
   <section class="ars-section anim-ready">
@@ -4537,9 +3503,7 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
     w = ARSENAL_DETAIL[weapon_key]
     name = w['name_en'] if lang == 'en' else w['name_zh']
     page_name = f'ars_{weapon_key}'
-    head = make_head(lang, page_name, s,
-                     head_extra=arsenal_jsonld(lang, s, df_ars, weapon_key),
-                     page_path=f'/arsenal/{weapon_key}.html', abs_assets=True)
+    head = make_head(lang, page_name, s, page_path=f'/arsenal/{weapon_key}.html', abs_assets=True)
     back_href = '/en/arsenal/' if lang == 'en' else '/arsenal/'
 
     hero_img = _ars_detail_hero_img_html(weapon_key, name, lang)
@@ -4569,14 +3533,6 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
             f'{_ars_pac3_wall_html(df_peers, lang, s)}</section>')
 
     today_label = fmt_date_display(df_ars['announce_date'].max(), lang)
-
-    # 同系列內頁互連（SEO：內頁之間傳遞權重＋給爬蟲第二條入路）
-    sib_pfx = '/en/arsenal/' if lang == 'en' else '/arsenal/'
-    sib_links = ''.join(
-        f'<a class="ars-back" href="{sib_pfx}{k}.html" style="margin-right:1.2rem">'
-        f'{html.escape(ARSENAL_DETAIL[k]["name_en" if lang == "en" else "name_zh"])} →</a>'
-        for k in ARSENAL_DETAIL if k != weapon_key)
-
     html_doc = f"""{head}
 <body>
 <div class="top-bar">
@@ -4588,7 +3544,6 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
     <div class="site-brand">
       <div class="site-title">{s['site_title']}</div>
       <div class="site-sub">{s['site_sub']}</div>
-      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
     </div>
     {nav_html('arsenal', lang, page_name, s)}
   </div>
@@ -4626,11 +3581,6 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
     <div class="ars-sec-title">{a['src_title']}</div>
     {srcs}
   </section>
-
-  <section class="ars-section anim-ready">
-    <div class="ars-sec-title">{a['more_title']}</div>
-    <p>{sib_links}</p>
-  </section>
 </main>
 
 {_ANIM_JS}
@@ -4645,410 +3595,10 @@ def build_arsenal_detail(weapon_key, df_ars, df_peers, lang, out_dir, s):
 
 # ── sitemap.xml / robots.txt ──────────────────────────────────────────────────
 
-# ── card.html：每日分享圖卡（1080×1580，客戶端 canvas 繪製 → 一鍵下載 PNG）────
-#
-# 設計約束（動這段之前先讀）：
-# 1. 全部用 Canvas 2D 自己畫，不用 html2canvas、不用 Leaflet 圖磚。圖磚是跨域點陣圖，
-#    畫進 canvas 會污染 canvas 導致 toBlob 失敗；自繪 SVG 式地圖也在小尺寸下更清楚。
-# 2. 地圖輪廓來自 data/geo_card.json（Natural Earth 10m，已裁切＋簡化，靜態不隨每日
-#    資料變動）。空域方框／中線座標與首頁 _MAP_JS 一致，空域判斷共用 zones_from_special。
-# 3. 圖卡固定深色，不跟隨全站嚴重日主題——分享圖在各家 App 的深色底上都要能看。
-# 4. 鐵律 7：不在 build/CI 產圖，一律瀏覽器端渲染。
-
-_CARD_JS = """\
-(function(){
-var D=__DATA__;
-var C=document.getElementById('cardcv');
-if(!C||!C.getContext)return;
-var x=C.getContext('2d');
-var W=1080,H=1580,P=72;
-var F='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif';
-var CO={bg:'#0d1114',tx:'#eaf0f4',hd:'#cbd6dd',lbl:'#9fb0ba',sub:'#7f8f9a',dim:'#5b6a74',
-        y:'#f5c842',r:'#e0575c',g:'#4dba6a',sea:'#0a0f12',land:'#191f25',tw:'#2a333a'};
-var LS='letterSpacing' in x;
-
-// 軍事風字型：只有拉丁字母與數字有，中文沒有，所以中文標題維持乾淨黑體，
-// 只有英文副標、日期與三個數字換成它（字級比照使用者 2026-08-05 在 Canva 母版的設定）。
-// 2026-08-05 使用者比過 Rubik Distressed／Dirt／Black Ops One 後選定 Black Ops One
-// （乾淨的軍用體，不做破損處理——在動態牆縮圖下比破損字型好讀）。
-// 字型由 card.html 的 <link> 從 Google Fonts 載入。
-var FD='"Black Ops One",'+F;
-
-function ff(sz,w,sp,fam){x.font=(w||400)+' '+sz+'px '+(fam||F);if(LS)x.letterSpacing=(sp||0)+'px';}
-function txt(t,px_,py_,sz,col,w,al,sp,fam){ff(sz,w,sp,fam);x.fillStyle=col;x.textAlign=al||'left';
-  x.textBaseline='alphabetic';x.fillText(t,px_,py_);x.textAlign='left';if(LS)x.letterSpacing='0px';}
-function tw_(t,sz,w,sp,fam){ff(sz,w,sp,fam);var v=x.measureText(t).width;if(LS)x.letterSpacing='0px';return v;}
-function line(x1,y1,x2,y2,col,w){x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);
-  x.strokeStyle=col;x.lineWidth=w||1;x.stroke();}
-
-function paint(){
-// ── 背景 ──────────────────────────────────────────────────────────────────
-x.fillStyle=CO.bg;x.fillRect(0,0,W,H);
-
-// ── 抬頭（置中海報式：標題置中、日期顯示為資料期間範圍）──────────────────
-// 抬頭三行的間距刻意不等距：中文標題與英文副標是同一個單位（貼近，19px），
-// 副標到日期拉開（26px），日期到強度列再拉開（30px）——等距排會讓四行讀起來
-// 像一團，是使用者 2026-08-13 回報「上方擠」的主因。
-txt(D.title,W/2,110,62,CO.hd,700,'center',2);
-txt(D.sub,W/2,148,28,CO.dim,400,'center',3,FD);
-// 不顯示星期：公告涵蓋前一日至發布日，跨兩天標一個星期會誤導。
-txt(D.dl.slice(0,4)+'.'+D.dr,W/2,194,30,CO.sub,400,'center',1.6,FD);
-// ── 活動強度指數（原本這裡是一條 140px 的純裝飾分隔線）─────────────────────
-// 佔高與原本的分隔線相當（單行、約 24px），刻意不新增區塊。
-// 垂直位置的推算方式（改任何一個數字都要重算，別憑目測）：
-//   日期的墨跡底 ≈ 基線−1；強度列的墨跡 ≈ [pby−22, pby+2]；三個大數字的墨跡頂 ≈ 基線−75。
-// 目標是強度列上下各留 30px：日期基線 194 → pby 245 → 大數字基線 352。
-function rr(rx,ry,rw,rh,rd){x.beginPath();
-  if(x.roundRect){x.roundRect(rx,ry,rw,rh,rd);}else{
-    x.moveTo(rx+rd,ry);x.arcTo(rx+rw,ry,rx+rw,ry+rh,rd);x.arcTo(rx+rw,ry+rh,rx,ry+rh,rd);
-    x.arcTo(rx,ry+rh,rx,ry,rd);x.arcTo(rx,ry,rx+rw,ry,rd);}
-  x.fill();}
-var PB=D.pai,pbW=176,pbH=9,pgap=17,pby=245;
-var wpl=tw_(PB.label,24,500,1.6),wps=tw_(String(PB.score),32,400,0,FD),
-    wpb=tw_(PB.band,25,700,2);
-var ptot=wpl+pgap+wps+pgap+pbW+pgap+wpb,psx=(W-ptot)/2;
-txt(PB.label,psx,pby,24,CO.sub,500,'left',1.6);psx+=wpl+pgap;
-txt(String(PB.score),psx,pby+3,32,PB.color,400,'left',0,FD);psx+=wps+pgap;
-x.fillStyle='rgba(255,255,255,0.10)';rr(psx,pby-15,pbW,pbH,pbH/2);
-x.fillStyle=PB.color;rr(psx,pby-15,Math.max(pbH,pbW*PB.score/100),pbH,pbH/2);
-psx+=pbW+pgap;
-txt(PB.band,psx,pby,25,PB.color,700,'left',2);
-
-// ── 當日三數字（置中對稱：數字在上、標籤在下）────────────────────────────
-// 當日活動空域不再另立一行——地圖上已有空域標籤，同一資訊寫兩次只是佔版面。
-var cw=(W-2*P)/3;
-var st=[[D.l_ac,String(D.ac),CO.y,D.s_ac],
-        [D.l_ml,String(D.ml),CO.y,D.cr],
-        [D.l_sh,String(D.sh),CO.r,D.s_sh]];
-for(var i=0;i<3;i++){
-  var ccx=P+cw*i+cw/2;
-  // 數字用戰損字型：它只有一種字重，指定 900 會觸發瀏覽器合成粗體、把破損紋理糊掉，
-  // 所以這裡固定 400，字距也回到 0（-2 是給原本黑體收緊用的）。
-  txt(st[i][1],ccx,352,116,st[i][2],400,'center',0,FD);
-  txt(st[i][0],ccx,396,26,CO.lbl,500,'center',1.8);
-  if(st[i][3])txt(st[i][3],ccx,432,24,CO.sub,500,'center',1);
-}
-
-// ── 地圖（滿版出血）────────────────────────────────────────────────────────
-// MTOP 452（原 436）：三個數字下移 16px 後讓出來的位置。MH 因此 816→800，
-// 取景比例 K=MH/5.67*CS≈129 仍高於 MW/9.0=120 的下限，左緣不會露出 geo 裁切直邊。
-// 再往下壓地圖就會逼近下限，要加東西請改動別處。
-var MTOP=452,MBOT=1252,MH=MBOT-MTOP,MX=0,MW=W;
-// 取景：先讓北部空域框頂(26.5)與西南空域框底(21.0)都進得來，再以 MW/9.0 設
-// 經度視野下限——超過下限，左緣會露出 geo_card.json 被裁切出的直邊。
-var LONC=120.32,LATC=23.78,CS=Math.cos(LATC*Math.PI/180);
-var K=Math.max(MH/5.67*CS,MW/9.0),KY=K/CS;
-var LON0=LONC-MW/2/K,LATT=LATC+MH/2/KY;
-function pX(lo){return MX+(lo-LON0)*K;}
-function pY(la){return MTOP+(LATT-la)*KY;}
-
-x.save();
-x.beginPath();x.rect(MX,MTOP,MW,MH);x.clip();
-x.fillStyle=CO.sea;x.fillRect(MX,MTOP,MW,MH);
-
-function ringPath(rings){x.beginPath();
-  for(var a=0;a<rings.length;a++){var r=rings[a];
-    for(var b=0;b<r.length;b++){var qx=pX(r[b][0]),qy=pY(r[b][1]);
-      if(b)x.lineTo(qx,qy);else x.moveTo(qx,qy);}
-    x.closePath();}}
-
-ringPath(D.geo.cn);x.fillStyle=CO.land;x.fill();
-
-// 12 浬領海：沿本島外緣由粗到細疊四層綠，做出向外淡出的漸層帶
-// （與首頁 _MAP_JS 的 gradZone12 同一種分層做法，只是改用等距外擴的描邊）
-var bw=[0.40,0.30,0.21,0.12],ba=[0.04,0.07,0.11,0.16];
-ringPath([D.geo.tw[0]]);x.lineJoin='round';
-for(var bi=0;bi<bw.length;bi++){
-  x.lineWidth=bw[bi]*KY;x.strokeStyle='rgba(77,186,106,'+ba[bi]+')';x.stroke();}
-// 離島 12 浬光暈（澎湖／綠島／蘭嶼），同 _MAP_JS 的 gradCircle 分層
-function gradCircle(la,lo,km){
-  var sc=[1.0,0.72,0.47,0.25],fo=[0.06,0.11,0.17,0.25],rp=km/111.0*KY;
-  for(var i=sc.length-1;i>=0;i--){
-    x.beginPath();x.arc(pX(lo),pY(la),rp*sc[i],0,6.2832);
-    x.fillStyle='rgba(77,186,106,'+fo[i]+')';x.fill();}}
-gradCircle(23.57,119.62,38);gradCircle(22.67,121.47,22.2);gradCircle(22.05,121.55,22.2);
-
-ringPath(D.geo.tw);x.fillStyle=CO.tw;x.fill();
-x.strokeStyle='rgba(150,172,188,0.30)';x.lineWidth=1.2;x.stroke();
-
-// 活動空域：照首頁 gradZone 的做法——以焦點為中心逐層縮小疊加同色低透明度，
-// 疊出中心濃、邊緣淡的漸層（不是單一色塊，也不描邊框）。
-var ZP={n:[[[25.5,120.3],[26.5,120.3],[26.5,122.5],[25.5,122.0]],[25.6,121.2],[26.16,120.72]],
-        c:[[[25.05,119.75],[25.05,120.45],[23.6,120.05],[23.6,118.95]],[24.3,119.8],[24.88,119.98]],
-        sw:[[[23.0,117.0],[23.0,119.8],[21.0,121.0],[21.0,117.0]],[22.2,119.5],[21.72,117.35]],
-        s:[[[21.9,120.05],[21.9,121.9],[21.0,121.9],[21.0,120.05]],[21.45,121.0],[21.72,121.45]],
-        e:[[[22.0,122.0],[24.5,122.0],[24.5,123.5],[22.0,123.5]],[23.0,122.1],[24.28,122.15]],
-        ne:[[[26.5,120.7],[26.5,122.2],[25.4,121.8],[25.4,121.0]],[25.5,121.2],[25.62,121.42]]};
-// 等高線式疊加：與首頁 _MAP_JS 的 gradZone 用同一組縮放係數與透明度，
-// 一層層看得見邊界（使用者 2026-07-31 指定要跟網頁一致）。
-// 不要描邊、也不要整塊上模糊——前者「有框線很怪」，後者會糊成沒有形狀的光斑。
-var ZSC=[1.0,0.78,0.58,0.40,0.24],ZFO=[0.04,0.07,0.10,0.14,0.19];
-var zl=[];
-function zonePath(co,fp,sc){x.beginPath();
-  for(var j=0;j<co.length;j++){
-    var la=fp[0]+sc*(co[j][0]-fp[0]),lo=fp[1]+sc*(co[j][1]-fp[1]);
-    var zx=pX(lo),zy2=pY(la);if(j)x.lineTo(zx,zy2);else x.moveTo(zx,zy2);}
-  x.closePath();}
-for(var zk in ZP){
-  if(!D.zones[zk])continue;
-  var Z=ZP[zk],co=Z[0],fp=Z[1],lp=Z[2];
-  for(var si=ZSC.length-1;si>=0;si--){
-    zonePath(co,fp,ZSC[si]);x.fillStyle='rgba(245,200,66,'+ZFO[si]+')';x.fill();}
-  zl.push([D.zn[zk],pX(lp[1]),pY(lp[0])]);
-}
-
-// 海峽中線（首末各外推一段，讓線貫穿整個畫面而不是斷在半空）
-var MLPT=[[27.3,120.82],[26.5,120.5],[26.0,120.3],[25.5,120.0],[25.0,119.8],[24.5,119.5],
-          [24.0,119.2],[23.5,119.1],[23.0,119.0],[22.5,118.9],[20.4,118.48]];
-x.beginPath();
-for(var mi=0;mi<MLPT.length;mi++){var mx=pX(MLPT[mi][1]),my=pY(MLPT[mi][0]);
-  if(mi)x.lineTo(mx,my);else x.moveTo(mx,my);}
-x.setLineDash(D.ml>0?[16,11]:[11,10]);
-x.strokeStyle=D.ml>0?'rgba(224,87,92,0.92)':'rgba(120,150,165,0.55)';
-x.lineWidth=D.ml>0?3.5:2.4;x.stroke();x.setLineDash([]);
-
-// 地名與空域名稱
-x.shadowColor='rgba(0,0,0,0.85)';x.shadowBlur=12;
-txt(D.lbl.tw,pX(120.96),pY(24.28),32,'#f2f7fa',700,'left',3);
-txt(D.lbl.ph,pX(119.24),pY(23.36),20,'#a9b7c0',500,'left',1);
-txt(D.lbl.km,pX(118.06),pY(24.34),20,'#a9b7c0',500,'left',1);
-txt(D.lbl.mz,pX(119.62),pY(26.02),20,'#a9b7c0',500,'left',1);
-for(var zi=0;zi<zl.length;zi++){txt(zl[zi][0],zl[zi][1],zl[zi][2],26,CO.y,700,'left',1.5);}
-x.shadowBlur=0;
-
-// 上下淡出，讓地圖融進版面而不是關在框裡
-var gt=x.createLinearGradient(0,MTOP,0,MTOP+80);
-gt.addColorStop(0,CO.bg);gt.addColorStop(1,'rgba(13,17,20,0)');
-x.fillStyle=gt;x.fillRect(MX,MTOP,MW,80);
-var gb=x.createLinearGradient(0,MBOT-150,0,MBOT);
-gb.addColorStop(0,'rgba(13,17,20,0)');gb.addColorStop(1,CO.bg);
-x.fillStyle=gb;x.fillRect(MX,MBOT-150,MW,150);
-x.restore();
-
-// ── 圖例：橫排置中貼地圖底緣（畫在淡出之後，才不會被洗淡）─────────────────
-var ly=MBOT-26,lc='rgba(220,229,236,0.85)';
-var w1=tw_(D.leg.ml,23,500,1),w2=tw_(D.leg.nm,23,500,1),w3=D.hasZone?tw_(D.leg.zone,23,500,1):0;
-var tot=(60+w1)+46+(60+w2)+(D.hasZone?46+60+w3:0);
-var lx=(W-tot)/2;
-x.setLineDash([9,7]);x.strokeStyle=D.ml>0?'rgba(224,87,92,0.92)':'rgba(120,150,165,0.55)';
-x.lineWidth=3.5;x.beginPath();x.moveTo(lx,ly-8);x.lineTo(lx+46,ly-8);x.stroke();x.setLineDash([]);
-txt(D.leg.ml,lx+60,ly,23,lc,500,'left',1);
-lx+=60+w1+46;
-x.fillStyle='rgba(77,186,106,0.32)';x.fillRect(lx,ly-17,46,13);
-txt(D.leg.nm,lx+60,ly,23,lc,500,'left',1);
-if(D.hasZone){lx+=60+w2+46;
-  x.fillStyle='rgba(245,200,66,0.34)';x.fillRect(lx,ly-17,46,13);
-  txt(D.leg.zone,lx+60,ly,23,lc,500,'left',1);}
-
-// ── 頁尾：月累計（標籤灰、數字白粗）＋一行置中落款 ────────────────────────
-// 三行置中堆疊，字級比照使用者 Canva 母版（36／42／33，全部粗體）。
-// 「資料來源／國防部」與網址之間刻意拉開並夾一條分隔線——兩行貼太近會被誤讀成
-// 「國防部的網址是這個」（使用者 2026-08-05 指正）。
-var mtxt='';for(var mi2=0;mi2<D.moseg.length;mi2++)mtxt+=D.moseg[mi2][0];
-txt(mtxt,W/2,1312,36,CO.lbl,700,'center',0.5);
-txt(D.src,W/2,1404,42,CO.dim,700,'center',1);
-// 原本是 92px 寬、2px 粗的深色短線，在 #0d1114 上幾乎看不見，讀起來像中間空了一大行
-//（使用者 2026-08-13 回報）。改成 420px 寬的 1px 細線：筆觸更輕、但長度撐得起
-// 上下兩行的寬度，才看得出是一條刻意的分隔線而不是空白。
-// y 用 .5：canvas 的 1px 線畫在整數座標會跨兩列做反鋸齒，顏色被攤掉一半、看起來糊，
-// 半像素才會落成一條實心的髮絲線。
-line(W/2-210,1452.5,W/2+210,1452.5,'#2a343b',1);
-txt(D.site,W/2,1520,33,CO.sub,700,'center',1.5);
-// 地圖免責標示改留在地圖內右下角（公告只給空域名稱、沒有邊界，框是推定的示意範圍）
-txt(D.mapnote,W-P,MBOT-14,19,CO.dim,400,'right',1);
-
-}
-
-paint();
-// canvas 用到的網頁字型**不會**被瀏覽器自動下載——字型是依 DOM 的使用情況才載，
-// 而這支字型只出現在 canvas 裡。所以要用 fonts.load() 明確觸發下載，載完重畫一次。
-// paint() 開頭就重填背景，重畫是安全的（不會疊字）。
-if(document.fonts&&document.fonts.load){
-  document.fonts.load('400 116px "Black Ops One"').then(paint).catch(function(){});
-}
-
-// ── 下載 ──────────────────────────────────────────────────────────────────
-var btn=document.getElementById('carddl');
-if(btn)btn.addEventListener('click',function(){
-  try{
-    C.toBlob(function(b){
-      if(!b)return;
-      var u=URL.createObjectURL(b),a=document.createElement('a');
-      a.href=u;a.download='pla-tracker-'+D.date+'.png';
-      document.body.appendChild(a);a.click();a.remove();
-      setTimeout(function(){URL.revokeObjectURL(u);},8000);
-    },'image/png');
-  }catch(e){
-    var st2=document.getElementById('cardmsg');
-    if(st2)st2.textContent='\\u700f\\u89bd\\u5668\\u4e0d\\u652f\\u63f4\\u81ea\\u52d5\\u4e0b\\u8f09\\uff0c\\u8acb\\u9577\\u6309\\u5716\\u7247\\u5132\\u5b58\\u3002';
-  }
-});
-})();"""
-
-
-def build_card(df, out_dir, s):
-    """產生 card.html：當日分享圖卡（中文版；直式 1080×1580）。
-
-    圖卡本身在瀏覽器端畫進 <canvas>，按鈕把 canvas 轉成 PNG 下載；
-    手機也可長按 canvas 直接存圖。"""
-    latest = df.iloc[-1]
-    prev   = df.iloc[-2] if len(df) > 1 else latest
-
-    def _i(v):
-        return int(v) if pd.notna(v) else 0
-
-    ac_val = _i(latest['aircraft_total'])
-    ml_val = _i(latest['median_line_cross'])
-    sh_val = _i(latest['ships_total'])
-    cr_str = (f"{float(latest['cross_rate']):.0f}%"
-              if str(latest['cross_rate']) not in ('', 'nan') else '—')
-
-    def _delta_text(cur, old):
-        """圖卡上寫「較昨日 +15」而不是孤零零的 ▲15——圖被單獨分享出去時，
-        沒有頁面上下文可以解釋箭頭跟誰比。"""
-        try:
-            d = int(float(cur) - float(old))
-        except Exception:
-            return ''
-        if d == 0:
-            return '與昨日持平'
-        return f'較昨日 {"+" if d > 0 else "−"}{abs(d)}'
-
-    raw_special = (latest['special_event']
-                   if str(latest['special_event']) not in ('', 'nan') else '')
-    zones = zones_from_special(raw_special)
-
-    today = latest['date']
-    dt    = pd.to_datetime(today)
-
-    df_mo  = df[df['date'].str.startswith(today[:7])]
-    mo_ac  = int(df_mo['aircraft_total'].fillna(0).sum())
-    mo_ml  = int(df_mo['median_line_cross'].fillna(0).sum())
-    mo_sh  = df_mo['ships_total'].fillna(0).mean() if len(df_mo) else 0.0
-    mo_rate = f'{mo_ml / mo_ac * 100:.0f}%' if mo_ac > 0 else '—'
-
-    geo = json.loads(GEO_FILE.read_text(encoding='utf-8'))
-    _pai = pai_score(latest)
-
-    data = {
-        'date':  today,
-        'title': '中國擾台趨勢數據分析',
-        'sub':   'PLA ACTIVITY AROUND TAIWAN',
-        'dl':    dt.strftime('%Y.%m.%d'),
-        # 國防部公告涵蓋前一日至發布日的活動，圖卡顯示資料期間而非單一發布日
-        'dr':    (dt - pd.Timedelta(days=1)).strftime('%m.%d') + ' – ' + dt.strftime('%m.%d'),
-        'ac': ac_val, 'ml': ml_val, 'sh': sh_val,
-        'cr': cr_str if ac_val else '',   # 零架次日不留一個孤零零的破折號
-        # 圖卡標籤用「越過中線」而非站內慣用的「逾越中線」：canvas 逐字做字型
-        # fallback，「逾」在多數 Windows／iOS 的字型鏈裡掉到另一套字型，粗細與
-        # 其他三字對不上（使用者 2026-08-05 回報）。換字比追字型可靠。
-        'l_ac': '共機架次', 'l_ml': '越過中線', 'l_sh': '共艦',
-        's_ac': _delta_text(latest['aircraft_total'], prev['aircraft_total']),
-        's_sh': _delta_text(latest['ships_total'], prev['ships_total']),
-        'zones': zones,
-        'hasZone': any(zones.values()),
-        'zn':  {'n': '北部空域', 'c': '中部空域', 'sw': '西南部空域',
-                's': '南部空域', 'e': '東部空域', 'ne': '東北部空域'},
-        'lbl': {'tw': '台灣', 'ph': '澎湖', 'km': '金門', 'mz': '馬祖'},
-        # 圖例同樣避開字型鏈會掉字的字：「浬」與「逾」一樣會換到別套字型（粗細不一致），
-        # 改用「海里」——意思相同且兩字都在主字型內。
-        'leg': {'ml': '海峽中線', 'nm': '12 海里領海', 'zone': '當日活動空域'},
-        'mapnote': '地圖為示意圖',
-        # 月累計拆成 [文字, 是否強調] 分段，前端以灰標籤／白粗數字混排
-        'moseg': [[f'{dt.month} 月至今 ', 0], [str(len(df_mo)), 1], [' 天', 0],
-                  ['　｜　共機 ', 0], [str(mo_ac), 1], [' 架次', 0],
-                  ['　｜　越過中線 ', 0], [str(mo_ml), 1], [f'（{mo_rate}）', 0]],
-        'site': SITE_HOST,
-        'src':  '資料來源 / 中華民國國防部',
-        # 活動強度指數：取代原本抬頭下方那條純裝飾的分隔線，位置與佔高不變，
-        # 所以不會擠壓到下面的三個數字與地圖（版面高度是圖卡的硬約束）。
-        # 圖卡固定深色底，直接取 _PAI_COLORS['dark']。
-        'pai': {'label': '活動強度指數', 'score': _pai['score'],
-                'band':  STRINGS['zh']['pai_bands'][_pai['band']],
-                'color': _PAI_COLORS['dark'][_pai['band']]},
-        'geo':  geo,
-    }
-    js = _CARD_JS.replace('__DATA__', json.dumps(data, ensure_ascii=False))
-
-    title = f'分享圖卡 {dt.strftime("%Y/%m/%d")} — 中國擾台趨勢數據分析'
-    desc  = ('把當日共機架次、逾越中線比例與活動空域做成 1080×1580 分享圖卡，'
-             '一鍵下載 PNG。資料來源：國防部。')
-    # 工具頁：內容全在 canvas 裡（爬蟲讀不到），故 noindex 避免薄內容頁；
-    # follow 保留給站內連結傳遞。也因此不進 sitemap。
-    html_out = f"""\
-<!DOCTYPE html>
-<html lang="zh-Hant" data-theme="dark">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title}</title>
-<meta name="description" content="{desc}">
-<meta name="robots" content="noindex,follow">
-<link rel="canonical" href="{canon_url('/card.html')}">
-<meta name="theme-color" content="#0d1114">
-<!-- 軍用體：只給圖卡的英文與數字用，其他頁面不載（省一次外部請求）。
-     canvas 不會自動觸發字型下載，_CARD_JS 內另有 fonts.load() 明確載入後重畫。 -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap">
-<link rel="icon" type="image/svg+xml" href="favicon.svg?v={_VER}">
-<link rel="stylesheet" href="style.css?v={_VER}">
-<style>
-.card-main{{max-width:640px;margin:0 auto;padding:1.6rem 1rem 3rem}}
-.card-h{{font-size:.78rem;font-weight:700;letter-spacing:.14em;color:var(--sub);
-  text-transform:uppercase;margin:0 0 .9rem}}
-#cardcv{{width:100%;height:auto;display:block;border-radius:12px;
-  border:1px solid var(--bdr);background:#0d1114}}
-.card-actions{{display:flex;gap:.7rem;align-items:center;margin:1.1rem 0 .6rem;
-  flex-wrap:wrap}}
-.card-btn{{appearance:none;border:0;background:var(--y);color:#14181b;
-  font-weight:700;font-size:.88rem;letter-spacing:.04em;padding:.72rem 1.4rem;
-  border-radius:999px;cursor:pointer;font-family:inherit;
-  display:inline-flex;align-items:center;gap:.45rem}}
-.card-btn:hover{{filter:brightness(1.08)}}
-.card-hint{{color:var(--sub);font-size:.75rem;line-height:1.75}}
-</style>
-</head>
-<body>
-<div class="top-bar">
-  <span>{s['unclassified']}</span>
-  <span>ROC MND · {fmt_date(today)}</span>
-</div>
-<header class="site-header">
-  <div class="header-inner">
-    <div class="site-brand">
-      <div class="site-title">{s['site_title']}</div>
-      <div class="site-sub">{s['site_sub']}</div>
-      <a class="site-hub" href="{HUB_URL}" rel="noopener">{s['brand_hub']} ↗</a>
-    </div>
-    {nav_html('card', 'zh', 'card', s)}
-  </div>
-</header>
-<main class="card-main">
-  <h1 class="card-h">{fmt_date_full(today, 'zh')} · 分享圖卡</h1>
-  <canvas id="cardcv" width="1080" height="1580" role="img"
-    aria-label="{fmt_date_full(today, 'zh')} 共機 {ac_val} 架次，逾越中線 {ml_val} 架次（{cr_str}），中共艦艇 {sh_val} 艘"></canvas>
-  <div class="card-actions">
-    <button id="carddl" class="card-btn" type="button">下載 PNG</button>
-    <span id="cardmsg" class="card-hint"></span>
-  </div>
-  <p class="card-hint">直式 1080×1580，適合 Threads；手機也可長按圖片儲存。
-  地圖為示意圖，非實際航跡，空域範圍依國防部公告文字判讀。</p>
-</main>
-<script>
-(function(){{
-  function draw(){{ {js} }}
-  if(document.fonts&&document.fonts.ready){{document.fonts.ready.then(draw).catch(draw);}}
-  else{{draw();}}
-}})();
-</script>
-</body></html>"""
-    (out_dir / 'card.html').write_text(html_out, encoding='utf-8')
-    print('[OK] card.html')
-
-
 def build_sitemap(df):
     """Generate sitemap.xml covering both languages, with hreflang alternates."""
     data_mod   = df['date'].max()                       # 資料頁用最新資料日期
-    build_mod  = f'{_VER[:4]}-{_VER[4:6]}-{_VER[6:8]}'  # 靜態頁用 build 日期（_VER 含時分，只取到日）
+    build_mod  = f'{_VER[:4]}-{_VER[4:6]}-{_VER[6:]}'   # 靜態頁用 build 日期
     pages = [
         ('index',   'daily',   '1.0', data_mod),
         ('records', 'daily',   '0.9', data_mod),
@@ -5057,8 +3607,8 @@ def build_sitemap(df):
     ]
     blocks = []
     for page, freq, prio, mod in pages:
-        zh = canon_url(f'/{page}.html')
-        en = canon_url(f'/{page}.html', '/en')
+        zh = f'{BASE_URL}/{page}.html'
+        en = f'{BASE_URL}/en/{page}.html'
         for loc in (zh, en):
             blocks.append(
                 '  <url>\n'
@@ -5073,8 +3623,8 @@ def build_sitemap(df):
             )
 
     # /arsenal/（目錄式路徑，非 .html）：zh + en。index 加 3 個武器內頁。
-    ars_zh = canon_url('/arsenal/')
-    ars_en = canon_url('/arsenal/', '/en')
+    ars_zh = f'{BASE_URL}/arsenal/'
+    ars_en = f'{BASE_URL}/en/arsenal/'
     for loc in (ars_zh, ars_en):
         blocks.append(
             '  <url>\n'
@@ -5088,8 +3638,8 @@ def build_sitemap(df):
             '  </url>'
         )
     for wkey in ARS_DETAIL_PAGES:
-        d_zh = canon_url(f'/arsenal/{wkey}.html')
-        d_en = canon_url(f'/arsenal/{wkey}.html', '/en')
+        d_zh = f'{BASE_URL}/arsenal/{wkey}.html'
+        d_en = f'{BASE_URL}/en/arsenal/{wkey}.html'
         for loc in (d_zh, d_en):
             blocks.append(
                 '  <url>\n'
@@ -5113,13 +3663,6 @@ def build_sitemap(df):
 def build_robots():
     """Generate robots.txt pointing at the sitemap."""
     txt = ('User-agent: *\n'
-           'Allow: /\n\n'
-           '# AI 搜尋引用爬蟲（依現有全站放行政策明列，非額外限制）\n'
-           'User-agent: OAI-SearchBot\n'
-           'Allow: /\n\n'
-           'User-agent: Claude-SearchBot\n'
-           'Allow: /\n\n'
-           'User-agent: PerplexityBot\n'
            'Allow: /\n\n'
            f'Sitemap: {BASE_URL}/sitemap.xml\n')
     (SITE_DIR / 'robots.txt').write_text(txt, encoding='utf-8')
@@ -5154,7 +3697,6 @@ if __name__ == '__main__':
         for wkey in ARS_DETAIL_PAGES:
             build_arsenal_detail(wkey, df_ars, df_peers, lang, ars_dir, s)
 
-    build_card(df, SITE_DIR, STRINGS['zh'])   # 分享圖卡（僅中文版）
     build_sitemap(df)
     build_robots()
 

@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
 
+# AI 搜尋引用爬蟲（依現有全站放行政策明列，非額外限制）
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
 Sitemap: https://pla-tracker.skyfaring.net/sitemap.xml
