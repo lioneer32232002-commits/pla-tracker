@@ -117,14 +117,3 @@
   `~/.claude/projects/E--repos-pla-tracker/*.jsonl` 裡當次執行的權限錯誤，不要先懷疑 Canva 掛了。
 - 品牌範本（Brand Template）**不適用**：官方自動填入只能換文字與圖片，換不了形狀。
 
-- [2026-08-31] 使用者又調整了一次母版視覺（大數字加了描邊／立體效果、底部多一條
-  499.6×6.1 的裝飾線 `LBCTx5DtKn9RY8ts`，母版 updated 16:29 TW，晚於當日排程 14:42 產出的圖卡）。
-  當日全表核對結果：**作業表登記的 49 個元素 id 全部存在**，`map_element`
-  （690／-22／1125×850）與 `activity_index.positions_measured` 全部相符，頁 id 仍是
-  `PBrY48DlSrkTrB5h`，畫布仍 1080×1920，每個文字元素都只有單一 textRegion。
-  結論：`canva_zone_ops.json` 不需更新，每日流程不受影響。
-  **核對母版的最短方法**（使用者說「我改了 canva」時照做）：`read-design` 開 transaction
-  讀母版 → 只看四件事 (1) 49 個 id 是否都在、(2) `map_element` 的 top/left/width/height、
-  (3) 頁 id 與畫布尺寸、(4) 每個要換字的文字元素是否仍只有一個 textRegion（被拆成多段
-  會讓 `replace_text` 只換到第一段）。這四項過了就不必管字級、顏色、位置的變動——
-  每日操作不碰那些。
