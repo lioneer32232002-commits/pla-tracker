@@ -259,4 +259,5 @@ date,aircraft_total,median_line_cross,cross_rate,aircraft_type,ships_total,activ
 2026-08-28,0,0,,Zero,13,,,
 2026-08-29,0,0,,Zero,13,,,
 2026-08-30,3,3,100.0,Manned,13,,,北部及東部空域(共3架次)
-2026-08-31,4,3,75,Manned,10,,,北部空域(3架次)
+2026-08-31,4,3,75.0,Manned,10,,,北部空域(3架次)
+2026-09-01,2,0,0,Manned,10,,,北部及東部空域(2架次)
