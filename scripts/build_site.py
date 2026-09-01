@@ -2463,12 +2463,20 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
     if lang == 'en' or abs_assets:
         css_href = f'/style.css?v={_VER}'
         fav_href = f'/favicon.svg?v={_VER}'
+        # Google 的 favicon 支援格式沒有 SVG（只有 BMP/GIF/ICO/JPEG/PNG/PPM/TIFF），
+        # 所以 SVG 之外一定要有點陣備援。兩個檔由 scripts/build_favicons.py 產生，
+        # 改了 favicon.svg 要重跑那支。⚠️ 說明只能寫在這裡，不要寫成 HTML 註解——
+        # 模板會原樣輸出到 en/ 各頁，而 validate.py 會擋英文頁出現中文（2026-09-01 踩過）。
+        fav_png = f'/favicon-96.png?v={_VER}'
+        fav_ico = f'/favicon.ico?v={_VER}'
         ver_path = '/version.txt'
         og_image = f'{BASE_URL}/og-en.png'
         og_locale, og_locale_alt = 'en_US', 'zh_TW'
     else:
         css_href = f'style.css?v={_VER}'
         fav_href = f'favicon.svg?v={_VER}'
+        fav_png = f'favicon-96.png?v={_VER}'
+        fav_ico = f'favicon.ico?v={_VER}'
         ver_path = 'version.txt'
         og_image = f'{BASE_URL}/og.png'
         og_locale, og_locale_alt = 'zh_TW', 'en_US'
@@ -2509,6 +2517,8 @@ def make_head(lang, page_name, s, head_extra='', page_path=None, abs_assets=Fals
 <meta name="twitter:image" content="{og_image}">
 <meta name="twitter:image:alt" content="{og_alt}">
 <link rel="icon" type="image/svg+xml" href="{fav_href}">
+<link rel="icon" type="image/png" sizes="96x96" href="{fav_png}">
+<link rel="icon" type="image/x-icon" href="{fav_ico}">
 <link rel="stylesheet" href="{css_href}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -4990,6 +5000,8 @@ def build_card(df, out_dir, s):
      canvas 不會自動觸發字型下載，_CARD_JS 內另有 fonts.load() 明確載入後重畫。 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap">
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v={_VER}">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96.png?v={_VER}">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v={_VER}">
 <link rel="stylesheet" href="style.css?v={_VER}">
 <style>
 .card-main{{max-width:640px;margin:0 auto;padding:1.6rem 1rem 3rem}}
