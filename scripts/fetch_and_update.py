@@ -25,6 +25,9 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).parent))
+from build_site import ZONE_COUNT_TAIL  # 空域數量尾巴的單一真相來源
+
 ROOT       = Path(__file__).parent.parent
 DATA_FILE  = ROOT / 'data' / 'records.csv'
 CACHE_DIR  = ROOT / 'data' / '.cache'
@@ -258,7 +261,9 @@ _ZONE_PAREN_RE = re.compile(r'[（(]([^（）()]*空域[^（）()]*)[）)]')
 # 把「…空域15架次」正規化成站內既有寫法「…空域(15架次)」。
 # 這不是美觀問題：build_site._extract_crossing_regions 的正則要求區域字串**以「空域」結尾**，
 # 沒括號的話英文版翻不出來，validate 會擋下「en 頁含中文字元」（2026-08-13 實際踩到）。
-_ZONE_COUNT_RE = re.compile(r'^(.*空域)\s*(\d+\s*架次)$')
+# 尾巴片段 ZONE_COUNT_TAIL 自 build_site 匯入：括號、量詞（共／計）、單位（架／架次）
+# 的各種寫法都收，group(2) 只取數字，統一輸出成「(N架次)」。
+_ZONE_COUNT_RE = re.compile(r'^(.*空域)\s*' + ZONE_COUNT_TAIL + r'$')
 
 
 def zone_phrase_from_text(article_text):
@@ -275,7 +280,7 @@ def zone_phrase_from_text(article_text):
         return ''
     phrase = m.group(1).strip()
     m2 = _ZONE_COUNT_RE.match(phrase)
-    return f'{m2.group(1)}({m2.group(2).replace(" ", "")})' if m2 else phrase
+    return f'{m2.group(1)}({m2.group(2)}架次)' if m2 else phrase
 
 
 def looks_like_bulletin(text):
@@ -521,7 +526,7 @@ def main():
     se = str(data.get('special_event', '')).strip()
     m_zc = _ZONE_COUNT_RE.match(se)
     if m_zc:
-        data['special_event'] = f'{m_zc.group(1)}({m_zc.group(2).replace(" ", "")})'
+        data['special_event'] = f'{m_zc.group(1)}({m_zc.group(2)}架次)'
         log(f'空域字串正規化：{se} → {data["special_event"]}')
 
     # 3. 寫入 CSV

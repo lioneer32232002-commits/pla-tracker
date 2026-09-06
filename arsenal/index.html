@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="light">
+<html lang="zh-Hant" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,7 +9,7 @@
 <link rel="alternate" hreflang="zh-Hant" href="https://pla-tracker.skyfaring.net/arsenal/">
 <link rel="alternate" hreflang="en" href="https://pla-tracker.skyfaring.net/en/arsenal/">
 <link rel="alternate" hreflang="x-default" href="https://pla-tracker.skyfaring.net/arsenal/">
-<meta name="theme-color" content="#f5f4f0">
+<meta name="theme-color" content="#090d0f">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="中國擾台趨勢數據分析">
 <meta property="og:title" content="台灣對美軍購交付追蹤 — 中國擾台趨勢數據分析">
@@ -26,14 +26,14 @@
 <meta name="twitter:description" content="2019 年以來台灣對美軍購交付追蹤：49 案、逐案案值、交付進度、延宕與官方理由，每一筆都可溯源到美國國防安全合作署（DSCA）官方公告。">
 <meta name="twitter:image" content="https://pla-tracker.skyfaring.net/assets/arsenal/og-arsenal.jpg">
 <meta name="twitter:image:alt" content="台灣對美軍購交付追蹤 — 中國擾台趨勢數據分析">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202609050400">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png?v=202609050400">
-<link rel="icon" type="image/x-icon" href="/favicon.ico?v=202609050400">
-<link rel="stylesheet" href="/style.css?v=202609050400">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=202609060422">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png?v=202609060422">
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=202609060422">
+<link rel="stylesheet" href="/style.css?v=202609060422">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202609050400')location.reload(true);});</script>
+<script>fetch('/version.txt?t='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(v=>{if(v.trim()!=='202609060422')location.reload(true);});</script>
 
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "ItemList", "name": "對美軍購交付追蹤", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "魚叉反艦飛彈", "url": "https://pla-tracker.skyfaring.net/arsenal/harpoon"}, {"@type": "ListItem", "position": 2, "name": "愛國者防空飛彈系統", "url": "https://pla-tracker.skyfaring.net/arsenal/patriot"}, {"@type": "ListItem", "position": 3, "name": "海馬斯多管火箭系統", "url": "https://pla-tracker.skyfaring.net/arsenal/himars"}]}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "首頁", "item": "https://pla-tracker.skyfaring.net/"}, {"@type": "ListItem", "position": 2, "name": "對美軍購交付追蹤", "item": "https://pla-tracker.skyfaring.net/arsenal/"}]}</script>
@@ -73,15 +73,15 @@
     <div class="ars-sec-title">歷年軍售公告金額<span class="sub">單位：億美元 · 依 DSCA 公告年</span></div>
     <div class="ars-chart-wrap"><div class="ars-chart-canvas"><canvas id="ars-year"></canvas></div></div><script>(function(){
 var Y=["2019", "2020", "2021", "2022", "2023", "2024", "2025"],V=[107.24, 58.61, 7.5, 21.37, 18.59, 36.31, 114.35],TOP=[["F-16V Block 70 戰機 80.0億", "M1A2T戰車 20.0億", "F-16飛行員訓練計畫延續(鳳凰計畫) 5.00億"], ["岸置反艦飛彈系統(魚叉) 23.7億", "SLAM-ER增程距外陸攻飛彈 10.1億", "PAC-3飛彈翻修暨驗證 6.20億"], ["M109A6帕拉丁155公厘自走砲系統 7.50億"], ["「鋪路爪」預警雷達系統（SRP）後勤支援延續合約 6.65億", "AGM-84L-1魚叉Block II空射反艦飛彈（含4枚演訓飛彈） 3.55億", "F-16／C-130／IDF飛機標準零附件（後勤供應合作協議CLSSA擴充） 3.30億"], ["F-16戰機用彈藥（HARM／AMRAAM） 6.19億", "F-16紅外線搜索追蹤系統(IRST) 5.00億", "CM34甲車用30mm彈藥 3.32億"], ["NASAMS中程防空系統 11.6億", "AN/TPS-77與AN/TPS-78雷達系統(交鑰匙) 8.28億", "F-16機用備份零件暨AESA主動相位陣列雷達支援 3.20億"], ["M142海馬斯多管火箭系統 40.5億", "M109A7自走砲 40.3億", "ALTIUS-700M/600遊蕩彈藥暨無人系統 11.0億"]];
-var xA={grid:{display:false},ticks:{color:"#6b7a84",font:{size:11},maxRotation:0},border:{display:false}};
-var yA={grid:{color:function(c){return c.tick.value===0?"#cfc9ba":'transparent';}},ticks:{color:"#6b7a84",font:{size:10},maxTicksLimit:5,callback:function(v){return v;}},border:{display:false},beginAtZero:true};
+var xA={grid:{display:false},ticks:{color:"#96b0b8",font:{size:11},maxRotation:0},border:{display:false}};
+var yA={grid:{color:function(c){return c.tick.value===0?"#3a4448":'transparent';}},ticks:{color:"#96b0b8",font:{size:10},maxTicksLimit:5,callback:function(v){return v;}},border:{display:false},beginAtZero:true};
 var opts={animation:{duration:700,easing:'easeOutQuart'},responsive:true,maintainAspectRatio:false,
   plugins:{legend:{display:false},tooltip:{callbacks:{
     label:function(c){return ""+c.parsed.y.toFixed(1)+"\u5104";},
     afterBody:function(items){var i=items[0].dataIndex;return TOP[i]||[];}
   }}},scales:{x:xA,y:yA}};
 new Chart(document.getElementById('ars-year'),{type:'bar',data:{labels:Y,datasets:[
-  {data:V,backgroundColor:"#d99f00",hoverBackgroundColor:"#d99f00",borderRadius:3,maxBarThickness:54}
+  {data:V,backgroundColor:"#f5c842",hoverBackgroundColor:"#f5c842",borderRadius:3,maxBarThickness:54}
 ]},options:opts});
 })();</script>
   </section>

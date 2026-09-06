@@ -1112,10 +1112,19 @@ _STATIC_EN = {
 }
 
 
+# 空域字串結尾的「數量尾巴」：公告與模型輸出寫過「…空域15架次」「…空域共13架次」
+# 「…空域(13架次)」「…空域(1架)」四種寫法。量詞前綴（共／計）與單位（架／架次）會變，
+# 括號也可有可無，所以集中定義一次；fetch_and_update.py 直接 import 這個片段做正規化，
+# 兩邊共用同一組認定，避免各寫一份而漂移（2026-08-14、2026-09-06 各因此讓當日 CI 全紅）。
+ZONE_COUNT_TAIL = r'[（(]?\s*(?:共|計|合計|總計)?\s*(\d+)\s*架(?:次)?\s*[）)]?'
+
+
 def _extract_crossing_regions(text):
     """Extract region list from '...進入{regions}空域' or '...逾越中線進入{regions}空域'."""
     # Try to find "{regions}空域" pattern at the end
-    m = re.search(r'(?:進入|入侵)?([一-鿿及、，,\s]+?)空域$', text.strip())
+    # 先剝掉結尾的數量尾巴（「共13架次」「(13架次)」…），否則 空域$ 的錨定會整組不匹配。
+    stripped = re.sub(ZONE_COUNT_TAIL + r'$', '', text.strip()).strip()
+    m = re.search(r'(?:進入|入侵)?([一-鿿及、，,\s]+?)空域$', stripped)
     if m:
         parts = re.split(r'[、及，,\s]+', m.group(1).strip())
         en_regions = [_map_region(p) for p in parts if p.strip()]
@@ -1185,7 +1194,7 @@ def translate_special_event(text):
             # Extract everything after 逾越中線 (or 逾越海峽中線).
             # 結尾允許無括號的「N架次」——公告與模型輸出都出現過這種寫法
             # （2026-08-14：「…空域6架次」讓本函式整組不匹配，英文版殘留中文）。
-            m = re.search(r'逾越(?:海峽)?中線進入(.+?空域)(?:(\d+)架次)?$', part)
+            m = re.search(r'逾越(?:海峽)?中線進入(.+?空域)(?:' + ZONE_COUNT_TAIL + r')?$', part)
             if m:
                 regions = _extract_crossing_regions(m.group(1))
                 if regions:
