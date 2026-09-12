@@ -728,7 +728,7 @@ STRINGS = {
     'en': {
         'html_lang': 'en',
         'page_titles': {
-            'index':   'PLA Activity Tracker — Taiwan Strait',
+            'index':   'PLA Tracker (platracker) — Daily Taiwan Strait Activity',
             'records': 'Daily Records — PLA Activity Tracker',
             'monthly': 'Monthly Stats — PLA Activity Tracker',
             'about':   'Methodology & Data Sources — PLA Activity Tracker',
@@ -738,7 +738,7 @@ STRINGS = {
             'ars_himars':  'HIMARS: Taiwan Procurement & Combat Record — PLA Activity Tracker',
         },
         'meta_descs': {
-            'index':   'Daily tracking of PLA military activity around Taiwan: aircraft sorties, Taiwan Strait median-line crossings, naval vessels and trends. Source: ROC Ministry of National Defense daily releases.',
+            'index':   'Daily tracking of PLA aircraft sorties, ship counts and Taiwan Strait median-line crossings, sourced from Taiwan\'s Ministry of National Defense.',
             'records': 'Daily log of PLA activity around Taiwan: per-day sorties, median-line crossings, aircraft type and vessel counts. Source: ROC MND, updated daily.',
             'monthly': 'Monthly PLA activity statistics for the Taiwan Strait: total sorties, median-line crossings, crossing rate and average vessels per day. Source: ROC MND.',
             'about':   'Methodology: data source (ROC MND daily releases), update frequency, the difference between the Taiwan Strait median line and the 12 NM territorial sea, data compilation and citation/licensing.',
