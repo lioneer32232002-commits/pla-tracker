@@ -47,8 +47,9 @@ TAG_COLORS = {
 CNA_KEYWORDS = [
     '解放軍', '共機', '共艦', '台海', '軍演', '擾台', 'ADIZ',
     '國防', '軍事', '飛彈', '航母', '東部戰區', '共軍',
-    # 國內國防治理／預算爭議（用於「國防內耗並置」貼文角度的素材來源）。
-    # 注意：不用「刪減」「凍結」等泛用詞單獨當關鍵字，會撈進大量無關新聞。
+    # 國防產業／軍購動態。注意：不用「刪減」「凍結」等泛用詞單獨當關鍵字，
+    # 會撈進大量無關新聞。（2026-09-12 起貼文不再並置預算／在野黨議題，
+    # 新聞只當情勢摘要的軍事背景參考。）
     '無人機', '軍購', '潛艦', '洩密', '情資', '中科院',
 ]
 
@@ -323,7 +324,11 @@ def compute_comparison(df: pd.DataFrame) -> list[dict]:
     rows = []
     for col, label, is_rate in fields:
         cur = today[col]
-        if not has_yesterday or pd.isna(yesterday[col]) or pd.isna(cur):
+        if pd.isna(cur):
+            # 零架次日 cross_rate 可能為空：顯示「—」而不是 nan%
+            rows.append({'label': label, 'value': '—', 'delta': '—'})
+            continue
+        if not has_yesterday or pd.isna(yesterday[col]):
             rows.append({'label': label,
                          'value': f'{cur:.1f}%' if is_rate else str(int(cur)),
                          'delta': '—'})
@@ -437,59 +442,37 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
             # 新 tokenizer 同樣文字多約三成 token，額度從 2000 提高避免報告被截斷
             max_tokens=3000,
             thinking={"type": "disabled"},
-            messages=[{"role": "user", "content": f"""你是台海情報分析官。你的任務是把今日 PLA 數據與各方新聞整合成一份情報簡報，找出因果關係並做事實查核，並草擬社群貼文。
+            messages=[{"role": "user", "content": f"""你是台海情報分析官。你的任務是把今日 PLA 數據整理成一段情勢摘要，並草擬社群貼文。
 
 ## 輸入資料
 
 **PLA 數據（來源：中華民國國防部每日公告，為本報告的唯一數據基礎）**
 {summary}
 
-**近48小時新聞標題（括號內為來源與日期）**{news_block}
+**近48小時國防相關新聞標題（僅供軍事背景參考，括號內為來源與日期）**{news_block}
 
 ## 輸出要求
 
-用繁體中文，依序寫出以下五節。前四節每個陳述後面必須用「〔來源〕」標注依據（數據請寫「國防部數據」，新聞請寫「[編號] 來源名稱」）；第五節（Threads 貼文建議）不需要標註來源。
+用繁體中文，**嚴格**依下面的格式輸出兩節，節名照抄、各占一行；不要加 Markdown 標題（# 或 ##）、不要加開場白或結語、不要加「〔來源〕」標註。
 
----
+【情勢摘要】
+今日 PLA 動態的客觀描述，3–4 句一段，不分點。包含架次、越線、艦艇數字，與昨日及近7日均值比較；有空域就寫空域，有特殊事件就寫特殊事件。
+最後補一句活動強度指數：寫成「本站自算的活動強度指數 {{分數}}（{{分帶}}），近{PAI_TREND_WINDOW}日平均 {{prev_days_avg}}」。指數是 activity_index 欄位算好的，直接引用，不要自己重算或改寫分帶名稱。
+新聞標題只在直接關係到共軍軍事活動（例如軍演、艦隊動向、美日軍方回應）時才可用一句帶到；台灣國內政治、預算、立法院攻防一律不寫。
 
-**情勢摘要**
-今日 PLA 動態的客觀描述（2-3句），包含架次、越線、艦艇數字，與昨日及近7日均值比較。
-最後補一句活動強度指數：寫成「活動強度指數 {{分數}}（{{分帶}}），近{PAI_TREND_WINDOW}日平均 {{prev_days_avg}}」，
-並在同句內用「本站自算」四字標明它不是官方數據。指數是 activity_index 欄位算好的，
-直接引用，不要自己重算或改寫分帶名稱。
+【Threads 貼文建議】
+草擬 2 則 Threads 貼文草稿（一主一備，語氣或切入角度要不同），供使用者挑選、修改後自行發文。兩則之間用單獨一行「---」分隔，前後不要加其他文字、不要加編號或「主／備」字樣。
 
-**因果鏈**
-找出新聞與數據之間值得並置觀察的事件連結，每條屬於以下兩類之一：
-• 因果類：[行為方] 做了什麼〔來源〕 → [回應方] 如何回應〔來源〕（僅在新聞標題可支持明確行動—回應關係時使用）
-• 🔗關聯類：🔗關聯：[事件A]〔來源〕與[事件B]〔來源／國防部數據〕時間相近或主題相關，值得並置觀察（不主張因果，只指出關聯）
-
-規則：因果類只寫能在新聞標題中找到依據的行動—回應；只要時間相近或主題相關但無法確認因果，一律改用「🔗關聯」類，不要勉強套用因果語氣（不再使用「⚠️推論」標記於此節，該標記移至下方事實查核）。只有完全找不到任何可並置觀察的新聞事件時，此節才寫「本日無明確可並置事件」。
-
-**美日智庫動向**
-美國、日本官方及智庫對當前局勢的立場與動作（2-3條），每條標注新聞來源編號。若新聞中無相關內容，此節省略。
-
-**事實查核**
-針對「因果鏈」節中每條陳述，逐一標記：
-✅ 確認：因果類陳述，有新聞標題或數據直接支持行動—回應關係
-⚠️ 推論：因果類陳述，僅基於時間相關性或情境推斷，無直接聲明
-🔗 關聯：關聯類陳述，不主張因果，但引用的新聞標題或數據須確實存在於輸入資料中
-（❌ 無法確認者不得出現在分析中；🔗 關聯類條目一律不得虛構未出現在輸入新聞列表中的事件）
-
-**Threads 貼文建議**
-草擬 2 則 Threads 貼文草稿（一主一備，語氣或切入角度要不同），供使用者挑選、修改後自行發文。每則內容骨架固定為兩段式並置：
-
-第(1)段——今日共軍「用什麼形式」擾台：不只列數字，要描述形式（例如主力機種、越線架次集中在哪個空域、艦艇規模與活動型態、有無特殊事件），數字一律以上方「情勢摘要」的國防部數據為準，不得與之不符。
-
-第(2)段——台灣國內國防新聞並置：特別是在野黨延宕國防的動態（例如刪減/凍結國防或無人機預算、洩漏軍事情資、阻礙軍工程序如炸藥許可延宕等），事件敘述只能取自輸入新聞標題，不得虛構或寫死沒有來源的具體情節（人名、金額、日期）。若當日輸入新聞中沒有這類國內國防新聞，此段可省略，或改用一句泛稱帶過（例如「國防預算爭議仍在立法院拉鋸」這類不指涉具體情節的說法），不得杜撰事件細節。
+每則內容：描述今日共軍「用什麼形式」擾台——不只列數字，要描述形式（主力機種、越線架次集中在哪個空域、艦艇規模與活動型態、有無特殊事件），並和近期趨勢比一下（例如連續幾天零越線、比近7日均值高多少）。數字一律以上方國防部數據為準，不得與之不符。
 
 通用要求：
 - 繁體中文，口語但克制，不要誇張聳動或情緒化用詞
+- **不要提國防預算、立法院、在野黨或任何台灣國內政治議題**（使用者明確要求排除）
 - 不要引入美製武器戰果或武器歷史相關內容（使用者明確要求排除）
-- 每則不超過500字（含標點），語氣像資訊帳號分享觀察，不是新聞稿
+- 每則不超過300字（含標點），語氣像資訊帳號分享觀察，不是新聞稿
 - 每則結尾另起一行附上：https://pla-tracker.skyfaring.net
-- 兩則草稿之間用單獨一行「---」分隔，前後不要加其他文字
 - 人名、金額、日期等具體細節，輸入資料中沒有來源就不要寫死
-- 可以引用活動強度指數當作第(1)段的開場或收尾（例如「今天的活動強度指數 XX，屬 OO」），
+- 可以引用活動強度指數當作開場或收尾（例如「今天的活動強度指數 XX，屬 OO」），
   但**必須寫明是本站自算的指數**，絕對不可寫成「警戒等級」「警報」或任何暗示官方發布的說法。
   不確定怎麼寫就不要寫指數，寧可只用國防部的原始數字。"""}],
         )
@@ -500,96 +483,127 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
         raise ValueError('Claude 回應中沒有文字區塊')
     except Exception as e:
         print(f'[email] Claude API 分析生成失敗: {e}')
-        return '（今日情勢分析與 Threads 貼文草稿產生失敗，請查看 GitHub Actions 執行紀錄）'
+        return '【情勢摘要】\n（今日情勢摘要與 Threads 貼文草稿產生失敗，請查看 GitHub Actions 執行紀錄）'
 
 
 # ── 寄信 ──────────────────────────────────────────────────
 
-def comparison_html(rows: list[dict]) -> str:
-    """今日 vs 昨日對比列（純 Python 計算結果，與 LLM 分析內容獨立，確保數字可靠）。"""
+def kpi_html(rows: list[dict]) -> str:
+    """今日 vs 昨日：五格數字卡（純 Python 計算結果，與 LLM 內容獨立，數字保證準確）。
+    用 <table> 而不是 flex/grid——Gmail 手機版不吃 grid。
+    """
     if not rows:
         return ''
-    items = ''
-    for r in rows:
-        # 活動強度指數那列帶分帶色（其餘四列是國防部原始數字，維持預設色）
-        style = f' style="color:{r["color"]}"' if r.get('color') else ''
-        items += (f'<span style="margin-right:18px;white-space:nowrap">{r["label"]} '
-                  f'<b{style}>{r["value"]}</b> '
-                  f'<span style="color:#8aa0b0;font-size:.85em">（{r["delta"]}）</span></span>')
+    cells = []
+    for i, r in enumerate(rows):
+        color = r.get('color') or '#e8f0f6'
+        border = 'border-right:1px solid #16283a;' if i < len(rows) - 1 else ''
+        cells.append(
+            f'<td style="padding:10px 4px;text-align:center;vertical-align:top;{border}">'
+            f'<div style="color:#7f95a6;font-size:11px;letter-spacing:.06em;'
+            f'white-space:nowrap">{r["label"]}</div>'
+            f'<div style="color:{color};font-size:22px;font-weight:bold;'
+            f'line-height:1.3;margin-top:2px;white-space:nowrap">{r["value"]}</div>'
+            f'<div style="color:#5b7386;font-size:11px;white-space:nowrap">'
+            f'昨 {r["delta"]}</div>'
+            f'</td>'
+        )
     return (
-        f'<div style="margin-bottom:14px;padding-bottom:12px;'
-        f'border-bottom:1px solid #1a3040;font-size:.92em;line-height:2">'
-        f'<span style="color:#8aa0b0;font-size:.78em;display:block;margin-bottom:4px">'
-        f'今日 vs 昨日</span>{items}</div>'
+        '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" '
+        'style="background:#0d1b2a;border:1px solid #16283a;border-radius:6px;'
+        'border-collapse:separate;margin-bottom:18px"><tr>'
+        + ''.join(cells) + '</tr></table>'
     )
+
+
+def parse_analysis(analysis: str) -> dict:
+    """把模型輸出拆成 {'summary': str, 'posts': [str, ...], 'raw': str}。
+    格式對不上（模型沒照格式、或 API 失敗的替代文字）→ summary 為空、posts 為空，
+    由 render 端整段原樣顯示，信不會因為解析失敗而寄不出去。
+    """
+    text = analysis.strip()
+    # 模型偶爾仍會加 Markdown 標題或粗體，先剝掉
+    text = re.sub(r'(?m)^\s*#{1,6}\s*', '', text)
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+    m_s = re.search(r'【情勢摘要】\s*(.*?)\s*(?=【Threads 貼文建議】|\Z)', text, re.S)
+    m_p = re.search(r'【Threads 貼文建議】\s*(.*)\Z', text, re.S)
+    summary = m_s.group(1).strip() if m_s else ''
+    posts = []
+    if m_p:
+        posts = [p.strip() for p in re.split(r'(?m)^\s*---\s*$', m_p.group(1)) if p.strip()]
+    return {'summary': summary, 'posts': posts, 'raw': text}
+
+
+def _esc(s: str) -> str:
+    return (s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
+
+
+def _section_title(text: str) -> str:
+    return (f'<div style="color:#f5c842;font-size:13px;font-weight:bold;'
+            f'letter-spacing:.08em;margin:0 0 10px">{text}</div>')
+
+
+def render_email_html(analysis: str, today_str: str,
+                      comparison: list[dict] | None = None) -> str:
+    parsed = parse_analysis(analysis)
+
+    # 情勢摘要：一段正文
+    if parsed['summary']:
+        summary_html = _esc(parsed['summary']).replace('\n', '<br>')
+    else:
+        summary_html = _esc(parsed['raw']).replace('\n', '<br>')
+    summary_block = (
+        f'<div style="background:#0d1b2a;border-left:3px solid #f5c842;'
+        f'padding:16px 20px;border-radius:4px;margin-bottom:22px">'
+        f'{_section_title("情勢摘要")}'
+        f'<div style="font-size:15px;line-height:1.9;color:#dbe6ef">{summary_html}</div>'
+        f'</div>'
+    )
+
+    # Threads 貼文建議：每則一張卡，白底黑字、字級略大，方便直接選取複製
+    posts_block = ''
+    if parsed['posts']:
+        cards = ''
+        for i, p in enumerate(parsed['posts'][:2]):
+            tag = '草稿 A · 主' if i == 0 else '草稿 B · 備'
+            body = _esc(p)
+            body = re.sub(r'(https?://\S+)',
+                          r'<a href="\1" style="color:#2a6f9e;text-decoration:none">\1</a>',
+                          body)
+            body = body.replace('\n', '<br>')
+            cards += (
+                f'<div style="background:#f4f7fa;color:#1c2a36;border-radius:8px;'
+                f'padding:16px 18px;margin-bottom:12px;font-size:15px;line-height:1.85">'
+                f'<div style="color:#5b7386;font-size:11px;letter-spacing:.08em;'
+                f'margin-bottom:8px">{tag}</div>'
+                f'{body}</div>'
+            )
+        posts_block = (
+            f'<div style="margin-bottom:22px">'
+            f'{_section_title("THREADS 貼文建議")}'
+            f'{cards}'
+            f'<div style="color:#5b7386;font-size:11px">兩則擇一，修改後自行發文。</div>'
+            f'</div>'
+        )
+
+    return f"""<html><head><meta charset="utf-8"></head><body style="background:#0a1520;color:#c8d8e8;font-family:'Microsoft JhengHei','PingFang TC',Arial,sans-serif;padding:24px 16px;max-width:600px;margin:auto">
+  <div style="border-bottom:2px solid #f5c842;padding-bottom:10px;margin-bottom:18px">
+    <span style="color:#f5c842;font-size:18px;font-weight:bold">PLA 擾台動態 日報</span>
+    <span style="color:#8aa0b0;font-size:13px;margin-left:12px">{today_str}</span>
+  </div>
+  {kpi_html(comparison or [])}
+  {summary_block}
+  {posts_block}
+  <div style="margin-top:8px;font-size:11px;color:#3a6070;text-align:center">
+    資料來源：中華民國國防部 &nbsp;·&nbsp; 活動強度指數為本站自算 &nbsp;·&nbsp;
+    <a href="https://pla-tracker.skyfaring.net" style="color:#3a6070">pla-tracker</a>
+  </div>
+</body></html>"""
 
 
 def send_email(analysis: str, today_str: str, news: list[dict], comparison: list[dict] | None = None):
-    # 標準分隔線 "---"（獨立成行）轉為 <hr>，用於 Threads 貼文草稿之間的視覺分隔。
-    analysis_html = re.sub(r'(?m)^\s*---\s*$', '\0HR\0', analysis)
-    analysis_html = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', analysis_html)
-    analysis_html = re.sub(r'〔(.+?)〕', r'<span style="color:#556a7a;font-size:.85em">〔\1〕</span>', analysis_html)
-    analysis_html = analysis_html.replace(' → ', ' <span style="color:#f5c842">→</span> ')
-    analysis_html = analysis_html.replace('✅', '<span style="color:#5bc8af">✅</span>')
-    analysis_html = analysis_html.replace('⚠️', '<span style="color:#f5c842">⚠️</span>')
-    analysis_html = analysis_html.replace('\n', '<br>').replace('• ', '&bull;&nbsp;')
-    analysis_html = analysis_html.replace(
-        '\0HR\0', '<hr style="border:none;border-top:1px dashed #234a5a;margin:14px 0">'
-    )
-
-    comp_html = comparison_html(comparison or [])
-
-    def news_group_html(tag: str, items: list[dict]) -> str:
-        if not items:
-            return ''
-        color = TAG_COLORS.get(tag, '#aaa')
-        rows  = ''.join(
-            f'<div style="margin:6px 0;line-height:1.5">'
-            f'<a href="{n["link"]}" style="color:#c8d8e8;text-decoration:none">{n["title"]}</a>'
-            f'<span style="color:#4a6a7a;font-size:.76em"> &nbsp;{n["source"]} · {n["pub"]}</span>'
-            f'</div>'
-            for n in items
-        )
-        return (
-            f'<div style="margin-bottom:14px">'
-            f'<span style="color:{color};font-size:.75em;font-weight:bold;'
-            f'border:1px solid {color};border-radius:3px;padding:1px 6px;'
-            f'margin-bottom:6px;display:inline-block">{tag}</span>'
-            f'<div style="font-size:.8em;margin-top:4px">{rows}</div>'
-            f'</div>'
-        )
-
-    tw_news   = [n for n in news if n.get('tag') == '台灣']
-    intl_news = [n for n in news if n.get('tag') == '美日官方']
-    tank_news = [n for n in news if n.get('tag') == '智庫']
-
-    news_html = ''
-    if tw_news or intl_news or tank_news:
-        body = (
-            news_group_html('台灣', tw_news)
-            + news_group_html('美日官方', intl_news)
-            + news_group_html('智庫', tank_news)
-        )
-        news_html = f"""
-  <div style="margin-top:20px;border-top:1px solid #1a3040;padding-top:14px">
-    <div style="color:#f5c842;font-size:.82em;font-weight:bold;margin-bottom:12px;letter-spacing:.04em">
-      近48小時國防相關新聞
-    </div>
-    {body}
-  </div>"""
-
-    html = f"""<html><body style="background:#0a1520;color:#c8d8e8;font-family:'Microsoft JhengHei',Arial,sans-serif;padding:24px 20px;max-width:640px;margin:auto">
-  <div style="border-bottom:2px solid #f5c842;padding-bottom:10px;margin-bottom:20px">
-    <span style="color:#f5c842;font-size:1.15em;font-weight:bold">PLA 擾台動態 日報</span>
-    <span style="color:#8aa0b0;font-size:.85em;margin-left:12px">{today_str}</span>
-  </div>
-  <div style="background:#0d1b2a;border-left:3px solid #f5c842;padding:16px 20px;border-radius:4px;line-height:1.9;font-size:.95em">
-    {comp_html}{analysis_html}
-  </div>{news_html}
-  <div style="margin-top:16px;font-size:.72em;color:#3a6070;text-align:center">
-    資料來源：中華民國國防部 &nbsp;·&nbsp; pla-tracker
-  </div>
-</body></html>"""
+    # news 目前不進信件內容（2026-09-12 起拿掉新聞附錄），保留參數是為了主流程呼叫不變。
+    html = render_email_html(analysis, today_str, comparison)
 
     msg = MIMEMultipart('alternative')
     # 主旨帶指數：手機通知列只看得到主旨，一個數字就能判斷今天要不要點開
