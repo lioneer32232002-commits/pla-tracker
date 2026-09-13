@@ -354,6 +354,8 @@ def compute_comparison(df: pd.DataFrame) -> list[dict]:
         delta = '—'
     rows.append({'label': f'強度指數 {PAI_VERSION}',
                  'value': f'{p_today["score"]}（{PAI_BAND_ZH[p_today["band"]]}）',
+                 'score': p_today['score'],
+                 'band':  PAI_BAND_ZH[p_today['band']],
                  'delta': delta,
                  'color': PAI_BAND_COLOR[p_today['band']]})
     return rows
@@ -488,32 +490,51 @@ def build_analysis(df: pd.DataFrame, news: list[dict]) -> str:
 
 # ── 寄信 ──────────────────────────────────────────────────
 
+def _delta_html(delta: str) -> str:
+    """'+7' → '▲ 7'、'-13' → '▼ 13'、'±0' → '持平'、'—' → '—'；一律灰色（描述，不示警）。"""
+    if delta in ('—', ''):
+        return '<span style="color:#5b7386">—</span>'
+    if delta.startswith('±'):
+        return '<span style="color:#5b7386">持平</span>'
+    arrow = '▲' if delta.startswith('+') else '▼'
+    return f'<span style="color:#7f95a6">{arrow} {delta.lstrip("+-")}</span>'
+
+
 def kpi_html(rows: list[dict]) -> str:
-    """今日 vs 昨日：五格數字卡（純 Python 計算結果，與 LLM 內容獨立，數字保證準確）。
-    用 <table> 而不是 flex/grid——Gmail 手機版不吃 grid。
+    """今日數字（純 Python 計算結果，與 LLM 內容獨立，數字保證準確）。
+    版型：強度指數當主視覺放大，其餘四個國防部數字排成一列小標籤，只靠留白分隔，
+    不用格線也不用表格（2026-09-13 使用者要求）。inline-block 在手機會自動換行。
     """
     if not rows:
         return ''
-    cells = []
-    for i, r in enumerate(rows):
-        color = r.get('color') or '#e8f0f6'
-        border = 'border-right:1px solid #16283a;' if i < len(rows) - 1 else ''
-        cells.append(
-            f'<td style="padding:10px 4px;text-align:center;vertical-align:top;{border}">'
-            f'<div style="color:#7f95a6;font-size:11px;letter-spacing:.06em;'
-            f'white-space:nowrap">{r["label"]}</div>'
-            f'<div style="color:{color};font-size:22px;font-weight:bold;'
-            f'line-height:1.3;margin-top:2px;white-space:nowrap">{r["value"]}</div>'
-            f'<div style="color:#5b7386;font-size:11px;white-space:nowrap">'
-            f'昨 {r["delta"]}</div>'
-            f'</td>'
+    pai  = next((r for r in rows if r.get('color')), None)
+    mnd  = [r for r in rows if not r.get('color')]
+
+    hero = ''
+    if pai:
+        hero = (
+            f'<div style="color:#7f95a6;font-size:11px;letter-spacing:.08em;'
+            f'margin-bottom:2px">活動強度指數 {PAI_VERSION} · 本站自算</div>'
+            f'<div style="line-height:1.1;margin-bottom:16px">'
+            f'<span style="color:{pai["color"]};font-size:44px;font-weight:bold">'
+            f'{pai.get("score", pai["value"])}</span>'
+            f'<span style="color:{pai["color"]};font-size:18px;font-weight:bold;'
+            f'margin-left:10px">{pai.get("band", "")}</span>'
+            f'<span style="font-size:12px;margin-left:12px">昨 {_delta_html(pai["delta"])}</span>'
+            f'</div>'
         )
-    return (
-        '<table role="presentation" cellpadding="0" cellspacing="0" width="100%" '
-        'style="background:#0d1b2a;border:1px solid #16283a;border-radius:6px;'
-        'border-collapse:separate;margin-bottom:18px"><tr>'
-        + ''.join(cells) + '</tr></table>'
+
+    chips = ''.join(
+        f'<span style="display:inline-block;margin:0 22px 10px 0;white-space:nowrap">'
+        f'<span style="color:#7f95a6;font-size:12px">{r["label"]}</span> '
+        f'<span style="color:#e8f0f6;font-size:20px;font-weight:bold;margin-left:4px">'
+        f'{r["value"]}</span> '
+        + (f'<span style="font-size:11px;margin-left:4px">{_delta_html(r["delta"])}</span>'
+           if r["value"] != '—' else '')
+        + '</span>'
+        for r in mnd
     )
+    return f'<div style="margin-bottom:12px">{hero}<div>{chips}</div></div>'
 
 
 def parse_analysis(analysis: str) -> dict:
